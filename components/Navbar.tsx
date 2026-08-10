@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { ChevronDown, Menu, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import WeatherWidget from "@/components/WeatherWidget";
@@ -21,6 +21,7 @@ export default function Navbar({ categories = [] }: NavbarProps) {
   const desktopMenuRef = useRef<HTMLDivElement>(null);
   const t = useTranslations("Nav");
   const pathname = usePathname();
+  const currentLocale = useLocale();
 
   const isExcursionsActive =
     pathname === "/excursions" || pathname.startsWith("/excursions/");
@@ -116,7 +117,7 @@ export default function Navbar({ categories = [] }: NavbarProps) {
             {t("contact")}
           </Link>
           <div className="hidden items-center gap-2 md:flex">
-            <WeatherWidget compact />
+            <WeatherWidget compact locale={currentLocale} />
           </div>
           <LanguageSwitcher />
         </nav>

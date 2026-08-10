@@ -1,15 +1,83 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 import { useLocale } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { routing, type AppLocale } from "@/i18n/routing";
 
-const localeOptions: { code: AppLocale; label: string; flag: string }[] = [
-  { code: "en", label: "English", flag: "🇺🇸" },
-  { code: "es", label: "Spanish", flag: "🇪🇸" },
-  { code: "fr-ca", label: "French", flag: "🇫🇷" },
+function FlagIcon({ children }: { children: ReactNode }) {
+  return (
+    <span
+      className="inline-flex h-4 w-6 shrink-0 overflow-hidden rounded-sm border border-gray-200/40 shadow-sm"
+      aria-hidden
+    >
+      <svg viewBox="0 0 640 480" className="h-full w-full" preserveAspectRatio="xMidYMid slice">
+        {children}
+      </svg>
+    </span>
+  );
+}
+
+function UsFlag() {
+  return (
+    <FlagIcon>
+      <path fill="#b22234" d="M0 0h640v480H0" />
+      <path
+        stroke="#fff"
+        strokeWidth="36.9"
+        d="M0 55.4h640M0 129.2h640M0 203h640M0 276.9h640M0 350.8h640M0 424.6h640"
+      />
+      <path fill="#3c3b6e" d="M0 0h256v259H0" />
+      <g fill="#fff">
+        {[0, 1, 2, 3, 4].map((row) =>
+          [0, 1, 2, 3, 4, 5].map((col) => (
+            <circle
+              key={`a-${row}-${col}`}
+              cx={24 + col * 42}
+              cy={24 + row * 52}
+              r="10"
+            />
+          )),
+        )}
+        {[0, 1, 2, 3].map((row) =>
+          [0, 1, 2, 3, 4].map((col) => (
+            <circle
+              key={`b-${row}-${col}`}
+              cx={45 + col * 42}
+              cy={50 + row * 52}
+              r="10"
+            />
+          )),
+        )}
+      </g>
+    </FlagIcon>
+  );
+}
+
+function EsFlag() {
+  return (
+    <FlagIcon>
+      <path fill="#c60b1e" d="M0 0h640v480H0" />
+      <path fill="#ffc400" d="M0 120h640v240H0" />
+    </FlagIcon>
+  );
+}
+
+function FrFlag() {
+  return (
+    <FlagIcon>
+      <path fill="#002654" d="M0 0h213.3v480H0" />
+      <path fill="#fff" d="M213.3 0h213.4v480H213.3" />
+      <path fill="#ce1126" d="M426.7 0H640v480H426.7" />
+    </FlagIcon>
+  );
+}
+
+const localeOptions: { code: AppLocale; label: string; flag: ReactNode }[] = [
+  { code: "en", label: "English", flag: <UsFlag /> },
+  { code: "es", label: "Spanish", flag: <EsFlag /> },
+  { code: "fr-ca", label: "French", flag: <FrFlag /> },
 ];
 
 type LanguageSwitcherProps = {
@@ -29,9 +97,9 @@ const resolveAppLocale = (raw: string): AppLocale => {
 };
 
 const localeMeta = (code: AppLocale) => {
-  if (code === "en") return { label: "English", flag: "🇺🇸" };
-  if (code === "es") return { label: "Spanish", flag: "🇪🇸" };
-  return { label: "French", flag: "🇫🇷" };
+  if (code === "en") return { label: "English", flag: <UsFlag /> };
+  if (code === "es") return { label: "Spanish", flag: <EsFlag /> };
+  return { label: "French", flag: <FrFlag /> };
 };
 
 export default function LanguageSwitcher({ compact = false }: LanguageSwitcherProps) {
@@ -74,13 +142,7 @@ export default function LanguageSwitcher({ compact = false }: LanguageSwitcherPr
         onClick={() => setOpen((v) => !v)}
         className={`grid items-center rounded-full border border-slate-200 bg-white font-medium text-slate-900 shadow-sm outline-none transition hover:border-slate-300 focus-visible:border-cyan-500 focus-visible:ring-2 focus-visible:ring-cyan-500/20 ${triggerClass}`}
       >
-        <span
-          className="shrink-0 text-base leading-none"
-          style={{ fontFamily: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif' }}
-          aria-hidden
-        >
-          {current.flag}
-        </span>
+        {current.flag}
         <span className="truncate text-center">{current.label}</span>
         <ChevronDown
           className={`h-4 w-4 shrink-0 text-slate-500 transition-transform ${open ? "rotate-180" : ""}`}
@@ -106,13 +168,7 @@ export default function LanguageSwitcher({ compact = false }: LanguageSwitcherPr
                     item.code === activeLocale ? "bg-slate-100 text-slate-900" : "text-slate-800"
                   }`}
                 >
-                  <span
-                    className="shrink-0 text-base leading-none"
-                    style={{ fontFamily: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif' }}
-                    aria-hidden
-                  >
-                    {meta.flag}
-                  </span>
+                  {meta.flag}
                   <span>{meta.label}</span>
                 </button>
               </li>

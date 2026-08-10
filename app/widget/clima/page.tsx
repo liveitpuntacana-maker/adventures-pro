@@ -10,5 +10,5 @@ export const metadata: Metadata = {
 };
 
 export default function ClimaWidgetPage() {
-  return <WeatherWidget />;
+  return <WeatherWidget locale="en" />;
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import TrackedWhatsAppLink from "@/components/meta/TrackedWhatsAppLink";
 import WeatherWidget from "@/components/WeatherWidget";
@@ -17,6 +17,7 @@ const FOOTER_WHATSAPP_URL = getUniversalWhatsAppUrl(
 
 export default function Footer() {
   const t = useTranslations("Footer");
+  const currentLocale = useLocale();
 
   return (
     <footer className="w-full border-t border-white/10 bg-zinc-950 text-gray-400">
@@ -47,7 +48,7 @@ export default function Footer() {
             </Link>
           </div>
           <div className="mt-4 flex justify-center md:hidden">
-            <WeatherWidget compact />
+            <WeatherWidget compact locale={currentLocale} />
           </div>
         </div>
 

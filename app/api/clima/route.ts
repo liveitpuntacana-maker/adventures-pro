@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 export const revalidate = 1800;
 
@@ -13,8 +13,17 @@ type OpenWeatherResponse = {
   }>;
 };
 
-export async function GET() {
+function resolveWeatherLang(lang: string | null): string {
+  const normalized = (lang ?? "en").trim().toLowerCase();
+
+  if (normalized.startsWith("es")) return "es";
+  if (normalized.startsWith("fr")) return "fr";
+  return "en";
+}
+
+export async function GET(request: NextRequest) {
   const apiKey = process.env.WEATHER_API_KEY;
+  const lang = resolveWeatherLang(request.nextUrl.searchParams.get("lang"));
 
   if (!apiKey) {
     return NextResponse.json(
@@ -28,7 +37,7 @@ export async function GET() {
     url.searchParams.set("q", "Punta Cana,DO");
     url.searchParams.set("appid", apiKey);
     url.searchParams.set("units", "metric");
-    url.searchParams.set("lang", "es");
+    url.searchParams.set("lang", lang);
 
     const response = await fetch(url.toString(), {
       next: { revalidate: 1800 },
