@@ -7,6 +7,7 @@ import { client } from "@/sanity/lib/client";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { formatTourPrice, peekBookingUrl } from "@/lib/tourPrice";
 import { tourExcursionPath } from "@/lib/tourSlug";
+import { sortToursPriceZeroLast } from "@/lib/tourFilters";
 import { urlFor } from "@/sanity/lib/image";
 
 type ListingPageProps = {
@@ -87,9 +88,12 @@ export default async function CategoryPage({ params }: ListingPageProps) {
     notFound();
   }
 
-  const tours = await client.fetch<ListingTour[]>(TOURS_BY_CATEGORY_QUERY, {
-    category,
-  });
+  const tours = sortToursPriceZeroLast(
+    await client.fetch<ListingTour[]>(TOURS_BY_CATEGORY_QUERY, {
+      category,
+    }),
+    "asc",
+  );
 
   const categoryTitle = formatCategoryTitle(category);
 

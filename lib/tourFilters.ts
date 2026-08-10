@@ -40,6 +40,35 @@ export function matchesPriceRange(price: number, range: PriceRange): boolean {
   return price > 500;
 }
 
+export function compareTourPriceZeroLast(
+  priceA: number,
+  priceB: number,
+  sortOrder: SortOrder = "asc",
+): number {
+  const aFinite = Number.isFinite(priceA);
+  const bFinite = Number.isFinite(priceB);
+  const aVal = aFinite ? priceA : sortOrder === "asc" ? Infinity : -Infinity;
+  const bVal = bFinite ? priceB : sortOrder === "asc" ? Infinity : -Infinity;
+
+  if (aVal === 0 && bVal !== 0) return 1;
+  if (bVal === 0 && aVal !== 0) return -1;
+
+  return sortOrder === "asc" ? aVal - bVal : bVal - aVal;
+}
+
+export function sortToursPriceZeroLast<T extends TourWithPrice>(
+  tours: T[],
+  sortOrder: SortOrder = "asc",
+): T[] {
+  return [...tours].sort((a, b) =>
+    compareTourPriceZeroLast(
+      getTourNumericPrice(a),
+      getTourNumericPrice(b),
+      sortOrder,
+    ),
+  );
+}
+
 export function filterAndSortTours<T extends TourWithPrice>(
   tours: T[],
   sortOrder: SortOrder,
@@ -49,11 +78,5 @@ export function filterAndSortTours<T extends TourWithPrice>(
     matchesPriceRange(getTourNumericPrice(tour), priceRange),
   );
 
-  return [...filtered].sort((a, b) => {
-    const priceA = getTourNumericPrice(a);
-    const priceB = getTourNumericPrice(b);
-    const aVal = Number.isFinite(priceA) ? priceA : sortOrder === "asc" ? Infinity : -Infinity;
-    const bVal = Number.isFinite(priceB) ? priceB : sortOrder === "asc" ? Infinity : -Infinity;
-    return sortOrder === "asc" ? aVal - bVal : bVal - aVal;
-  });
+  return sortToursPriceZeroLast(filtered, sortOrder);
 }

@@ -7,6 +7,10 @@ import { Link } from "@/i18n/navigation";
 import { urlFor } from "@/sanity/lib/image";
 import { formatTourPrice, peekBookingUrl } from "@/lib/tourPrice";
 import { tourExcursionPath } from "@/lib/tourSlug";
+import {
+  compareTourPriceZeroLast,
+  parseNumericPrice,
+} from "@/lib/tourFilters";
 
 export type DiscoveryTour = {
   _id: string;
@@ -38,25 +42,8 @@ const priceRangeFilters: { id: PriceRange; label: string }[] = [
   { id: "premium", label: "Premium" },
 ];
 
-const parseNumericPrice = (value?: string | number | null) => {
-  if (value == null) return Number.NaN;
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-  if (typeof value !== "string") return Number.NaN;
-  const trimmed = value.trim();
-  if (!trimmed) return Number.NaN;
-  const cleaned = trimmed.replace(/[^\d.,-]/g, "");
-  if (!cleaned) return Number.NaN;
-  let normalized = cleaned;
-  if (cleaned.includes(",") && cleaned.includes(".")) {
-    normalized = cleaned.replace(/,/g, "");
-  } else if (cleaned.includes(",") && !cleaned.includes(".")) {
-    normalized = /,\d{1,2}$/.test(cleaned) ? cleaned.replace(",", ".") : cleaned.replace(/,/g, "");
-  }
-  const parsed = Number(normalized);
-  return Number.isFinite(parsed) ? parsed : Number.NaN;
-};
-
-const getFirstPricingValue = (tour: DiscoveryTour) => parseNumericPrice(tour.pricing?.[0]?.price);
+const getFirstPricingValue = (tour: DiscoveryTour) =>
+  parseNumericPrice(tour.pricing?.[0]?.price);
 
 const buildImageUrl = (image: unknown) => {
   try {
@@ -71,7 +58,7 @@ export default function LiveDiscoveryHub({ tours }: { tours?: DiscoveryTour[] })
   const [activePriceRange, setActivePriceRange] = useState<PriceRange>("all");
 
   const filteredTours = useMemo(() => {
-    return (tours ?? []).filter((tour) => {
+    const filtered = (tours ?? []).filter((tour) => {
       const safeCategory = tour.category ?? "";
       const matchesCategory = activeCategory === "all" || safeCategory === activeCategory;
 
@@ -90,6 +77,10 @@ export default function LiveDiscoveryHub({ tours }: { tours?: DiscoveryTour[] })
 
       return matchesCategory && matchesPriceRange;
     });
+
+    return [...filtered].sort((a, b) =>
+      compareTourPriceZeroLast(getFirstPricingValue(a), getFirstPricingValue(b), "asc"),
+    );
   }, [activePriceRange, activeCategory, tours]);
 
   const resultsHref = useMemo(() => {

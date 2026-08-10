@@ -2,6 +2,7 @@ import TourCard from "@/components/TourCard";
 import FeaturedAdventuresHeading from "@/components/FeaturedAdventuresHeading";
 import FeaturedAdventuresEmpty from "@/components/FeaturedAdventuresEmpty";
 import { peekBookingUrl } from "@/lib/tourPrice";
+import { sortToursPriceZeroLast } from "@/lib/tourFilters";
 
 export type FeaturedTour = {
   _id: string;
@@ -13,6 +14,7 @@ export type FeaturedTour = {
   peekProId?: string;
   currency?: string;
   pricing?: Array<{ price?: number | string | null }>;
+  price?: number | string | null;
   rating?: number | null;
   reviewsCount?: number | null;
 };
@@ -22,14 +24,16 @@ type FeaturedAdventuresProps = {
 };
 
 export default function FeaturedAdventures({ tours }: FeaturedAdventuresProps) {
+  const sortedTours = sortToursPriceZeroLast(tours, "asc");
+
   return (
     <section className="w-full">
       <FeaturedAdventuresHeading />
-      {tours.length === 0 ? (
+      {sortedTours.length === 0 ? (
         <FeaturedAdventuresEmpty />
       ) : (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {tours.map((tour) => {
+          {sortedTours.map((tour) => {
             const slug = tour.slug ?? "";
             const title = tour.title ?? "Tour";
             const peekUrl = tour.peekProId ? peekBookingUrl(tour.peekProId) : "#";
