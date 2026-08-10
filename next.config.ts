@@ -201,6 +201,7 @@ const reservedRootSlugs = [
   "studio",
   "tours",
   "api",
+  "widget",
   "_next",
   "_vercel",
   // favicon / system / crawlers
