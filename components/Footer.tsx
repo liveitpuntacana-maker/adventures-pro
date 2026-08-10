@@ -1,7 +1,10 @@
+"use client";
+
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import TrackedWhatsAppLink from "@/components/meta/TrackedWhatsAppLink";
+import WeatherWidget from "@/components/WeatherWidget";
 import {
   ADVENTURES_WHATSAPP_PHONE,
   getUniversalWhatsAppUrl,
@@ -42,6 +45,9 @@ export default function Footer() {
             <Link href="/faqs" className="transition hover:text-white">
               {t("faq")}
             </Link>
+          </div>
+          <div className="mt-4 flex justify-center md:hidden">
+            <WeatherWidget compact />
           </div>
         </div>
 

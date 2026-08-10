@@ -1,5 +1,5 @@
 import createMiddleware from "next-intl/middleware";
-import type { NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 
 const intlMiddleware = createMiddleware({
   locales: ["en", "es", "fr-ca"],
@@ -8,8 +8,13 @@ const intlMiddleware = createMiddleware({
 });
 
 export default function middleware(request: NextRequest) {
-  const response = intlMiddleware(request);
   const { pathname } = request.nextUrl;
+
+  if (pathname.startsWith("/widget")) {
+    return NextResponse.next();
+  }
+
+  const response = intlMiddleware(request);
   const match = pathname.match(/^\/(en|es|fr-ca)(\/.*)?$/);
   const pathWithoutLocale = match ? match[2] || "/" : pathname;
 

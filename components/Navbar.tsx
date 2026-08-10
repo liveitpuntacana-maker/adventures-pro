@@ -115,10 +115,10 @@ export default function Navbar({ categories = [] }: NavbarProps) {
           <Link href="/contact" className={`transition ${linkClass(pathname === "/contact" || pathname.startsWith("/contact/"))}`}>
             {t("contact")}
           </Link>
-          <div className="flex items-center gap-2">
+          <div className="hidden items-center gap-2 md:flex">
             <WeatherWidget compact />
-            <LanguageSwitcher />
           </div>
+          <LanguageSwitcher />
         </nav>
         <div className="flex items-center gap-2 md:hidden">
           <LanguageSwitcher compact />

@@ -79,7 +79,7 @@ export default function WeatherWidget({ compact = false }: WeatherWidgetProps) {
     if (state.status === "loading") {
       return (
         <div
-          className="inline-flex h-9 items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2.5"
+          className="inline-flex h-9 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 shadow-sm"
           aria-busy="true"
           aria-label="Cargando clima"
         >
@@ -97,7 +97,7 @@ export default function WeatherWidget({ compact = false }: WeatherWidgetProps) {
 
     return (
       <div
-        className="inline-flex h-9 max-h-9 items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2.5 text-[#0a192f]"
+        className="inline-flex h-9 max-h-9 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 text-[#0a192f] shadow-sm"
         title={`${condition} · Punta Cana`}
       >
         <img
