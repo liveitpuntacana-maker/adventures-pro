@@ -2,7 +2,6 @@ import HeroSearch from "@/components/HeroSearch";
 import HomeHeroText from "@/components/HomeHeroText";
 import HomeHeroSlider from "@/components/HomeHeroSlider";
 import PromoBanner from "@/components/PromoBanner";
-import WeatherWidget from "@/components/WeatherWidget";
 import FeaturedAdventures, { type FeaturedTour } from "@/components/FeaturedAdventures";
 import InteractiveMap from "@/components/InteractiveMap";
 import { mapDestinationsQuery, type MapDestination } from "@/lib/sanityDestinations";
@@ -106,11 +105,7 @@ export default async function Home({ params }: HomePageProps) {
 
         <PromoBanner />
 
-        <section className="mx-auto flex max-w-7xl justify-center px-6 py-10 md:px-10 md:py-12 lg:px-12">
-          <WeatherWidget />
-        </section>
-
-        <section className="mx-auto max-w-7xl px-6 pb-20 pt-6 md:px-10 md:pb-24 md:pt-8 lg:px-12">
+        <section className="mx-auto max-w-7xl px-6 pb-20 pt-14 md:px-10 md:pb-24 md:pt-16 lg:px-12">
           <CategoryBanners categories={categories} locale={locale} />
         </section>
 

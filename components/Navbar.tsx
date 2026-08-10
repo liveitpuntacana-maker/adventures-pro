@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import WeatherWidget from "@/components/WeatherWidget";
 import { categoryExcursionPath } from "@/lib/categoryPath";
 import { type NavCategory } from "@/lib/sanityCategories";
 
@@ -114,7 +115,10 @@ export default function Navbar({ categories = [] }: NavbarProps) {
           <Link href="/contact" className={`transition ${linkClass(pathname === "/contact" || pathname.startsWith("/contact/"))}`}>
             {t("contact")}
           </Link>
-          <LanguageSwitcher />
+          <div className="flex items-center gap-2">
+            <WeatherWidget compact />
+            <LanguageSwitcher />
+          </div>
         </nav>
         <div className="flex items-center gap-2 md:hidden">
           <LanguageSwitcher compact />

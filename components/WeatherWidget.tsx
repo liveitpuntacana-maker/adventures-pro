@@ -14,7 +14,11 @@ type WeatherState =
   | { status: "error"; message: string }
   | { status: "success"; data: WeatherData };
 
-export default function WeatherWidget() {
+type WeatherWidgetProps = {
+  compact?: boolean;
+};
+
+export default function WeatherWidget({ compact = false }: WeatherWidgetProps) {
   const [state, setState] = useState<WeatherState>({ status: "loading" });
 
   useEffect(() => {
@@ -70,6 +74,48 @@ export default function WeatherWidget() {
       cancelled = true;
     };
   }, []);
+
+  if (compact) {
+    if (state.status === "loading") {
+      return (
+        <div
+          className="inline-flex h-9 items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2.5"
+          aria-busy="true"
+          aria-label="Cargando clima"
+        >
+          <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-300 border-t-[#0a192f]" />
+          <span className="hidden h-3 w-14 animate-pulse rounded bg-slate-200 lg:block" />
+        </div>
+      );
+    }
+
+    if (state.status === "error") {
+      return null;
+    }
+
+    const { temperature, condition, iconUrl } = state.data;
+
+    return (
+      <div
+        className="inline-flex h-9 max-h-9 items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2.5 text-[#0a192f]"
+        title={`${condition} · Punta Cana`}
+      >
+        <img
+          src={iconUrl}
+          alt=""
+          width={28}
+          height={28}
+          className="h-7 w-7 shrink-0"
+        />
+        <span className="text-sm font-semibold tabular-nums leading-none">
+          {temperature}°C
+        </span>
+        <span className="hidden text-xs font-medium text-slate-500 lg:inline">
+          Punta Cana
+        </span>
+      </div>
+    );
+  }
 
   if (state.status === "loading") {
     return (
