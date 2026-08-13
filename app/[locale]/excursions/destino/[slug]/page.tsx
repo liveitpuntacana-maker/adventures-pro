@@ -34,6 +34,7 @@ const destinationToursQuery = groq`*[_type == "tour" && destination->slug.curren
   "listingImage": coalesce(listingImage, mainTour->listingImage),
   highlightBadge,
   peekProId,
+  "priceTag": coalesce(priceTag, mainTour->priceTag),
   "currency": coalesce(currency, mainTour->currency, "USD"),
   "duration": coalesce(
     select(isCombo == true => coalesce(

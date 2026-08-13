@@ -24,6 +24,7 @@ const featuredToursQuery = groq`*[_type == "tour" && isFeatured == true] {
   listingImage,
   highlightBadge,
   peekProId,
+  "priceTag": coalesce(priceTag, mainTour->priceTag),
   "currency": coalesce(currency, "USD"),
   "duration": coalesce(duration.en, duration.es, duration.frCA),
   pricing[]{price},

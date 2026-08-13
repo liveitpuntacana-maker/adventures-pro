@@ -21,6 +21,7 @@ export type DiscoveryTour = {
   duration?: string;
   currency?: string;
   peekProId?: string;
+  priceTag?: string | null;
   pricing?: Array<{ price?: number | string | null }>;
 };
 
@@ -151,6 +152,7 @@ export default function LiveDiscoveryHub({ tours }: { tours?: DiscoveryTour[] })
             const computedPrice = Number.isFinite(firstPricingValue)
               ? formatTourPrice(tour.currency ?? "USD", firstPricingValue)
               : "Consultar precio";
+            const priceTag = tour.priceTag?.trim() || "";
             const slug = tour.slug ?? "";
             const title = tour.title ?? "Tour";
             const imageUrl = buildImageUrl(tour.mainImage);
@@ -181,7 +183,14 @@ export default function LiveDiscoveryHub({ tours }: { tours?: DiscoveryTour[] })
                     <span>{tour.duration || "Duration on request"}</span>
                   </div>
                   <h3 className="text-xl font-semibold leading-tight text-slate-900">{title}</h3>
-                  <p className="text-lg font-semibold text-blue-950">From {computedPrice}</p>
+                  <p className="text-lg font-semibold text-blue-950">
+                    From {computedPrice}
+                    {priceTag ? (
+                      <span className="ml-1.5 text-sm font-medium text-slate-500">
+                        ({priceTag})
+                      </span>
+                    ) : null}
+                  </p>
                   <div className="flex flex-col gap-3 sm:flex-row">
                     <a
                       href={peekUrl}

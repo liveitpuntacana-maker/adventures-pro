@@ -21,6 +21,7 @@ type ListingTour = {
   duration?: string;
   listingImage?: unknown;
   peekProId?: string;
+  priceTag?: string | null;
   currency?: string;
   pricing?: Array<{ price?: number | string | null }>;
 };
@@ -43,6 +44,7 @@ const TOURS_BY_CATEGORY_QUERY = groq`*[_type == "tour" && (
   "duration": coalesce(duration.en, duration.es, duration.frCA, duration),
   listingImage,
   peekProId,
+  "priceTag": coalesce(priceTag, mainTour->priceTag),
   "currency": coalesce(currency, "USD"),
   pricing[]{price},
   "price": coalesce(pricing[0].price, 0)
@@ -118,6 +120,7 @@ export default async function CategoryPage({ params }: ListingPageProps) {
             const computedPrice = Number.isFinite(firstPricingValue)
               ? formatTourPrice(tour.currency ?? "USD", firstPricingValue)
               : "Consultar precio";
+            const priceTag = tour.priceTag?.trim() || "";
             const slug = tour.slug ?? "";
             const title = tour.title ?? "Tour";
             const imageUrl = buildImageUrl(tour.listingImage);
@@ -148,7 +151,14 @@ export default async function CategoryPage({ params }: ListingPageProps) {
                     <span>{tour.duration || "Duration on request"}</span>
                   </div>
                   <h3 className="text-xl font-semibold leading-tight text-slate-900">{title}</h3>
-                  <p className="text-lg font-semibold text-blue-950">From {computedPrice}</p>
+                  <p className="text-lg font-semibold text-blue-950">
+                    From {computedPrice}
+                    {priceTag ? (
+                      <span className="ml-1.5 text-sm font-medium text-slate-500">
+                        ({priceTag})
+                      </span>
+                    ) : null}
+                  </p>
                   <div className="flex flex-col gap-3 sm:flex-row">
                     <a
                       href={peekUrl}

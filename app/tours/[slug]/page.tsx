@@ -60,6 +60,7 @@ type TourData = {
   ages?: string;
   starts?: string;
   peekProId: string;
+  priceTag?: string | null;
   mainImage?: { asset: unknown } | null;
   gallery?: GalleryImage[] | null;
   isCombo?: boolean;
@@ -94,6 +95,7 @@ const TOUR_QUERY = `*[_type == "tour" && slug.current in $slugCandidates][0]{
   ),
   isCombo,
   peekProId,
+  "priceTag": coalesce(priceTag, mainTour->priceTag),
   "mainImage": coalesce(listingImage, mainTour->listingImage),
   "gallery": (
     coalesce(gallery, []) +
@@ -721,6 +723,17 @@ export default async function TourDetailPage({ params }: TourPageProps) {
                   strokeWidth={1.75}
                 />
               </div>
+              {tour.priceTag?.trim() ? (
+                <p className="mb-4 text-sm font-medium text-slate-500">
+                  From{" "}
+                  {leadFromFormatted ? (
+                    <span className="font-semibold text-blue-950">{leadFromFormatted}</span>
+                  ) : (
+                    <span className="font-semibold text-blue-950">-</span>
+                  )}{" "}
+                  <span className="text-slate-500">({tour.priceTag.trim()})</span>
+                </p>
+              ) : null}
               <div className="mt-2 space-y-0 rounded-2xl border border-slate-200/80 bg-slate-50/70 px-6 py-2">
                 {(pricing ?? []).map((item) => {
                   const priceValue = parsePriceValue(item.price);
@@ -782,6 +795,11 @@ export default async function TourDetailPage({ params }: TourPageProps) {
             {leadFromFormatted
               ? `From ${leadFromFormatted}`
               : "From -"}
+            {tour.priceTag?.trim() ? (
+              <span className="ml-1.5 text-sm font-medium text-slate-500">
+                ({tour.priceTag.trim()})
+              </span>
+            ) : null}
           </p>
           <BookNowLink
             href={peekUrl}

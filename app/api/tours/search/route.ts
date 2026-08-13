@@ -14,6 +14,7 @@ const tourSearchQuery = groq`*[_type == "tour" && defined(slug.current) && (
   "imageUrl": coalesce(listingImage, mainTour->listingImage).asset->url,
   pricing[]{price},
   "price": coalesce(pricing[0].price, mainTour->pricing[0].price, 0),
+  "priceTag": coalesce(priceTag, mainTour->priceTag),
   "currency": coalesce(currency, mainTour->currency, "USD")
 } | order(price asc) [0...8]`;
 

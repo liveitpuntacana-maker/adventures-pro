@@ -10,6 +10,7 @@ export type ChatKnowledgeTour = {
   title: string;
   slug: string;
   priceFrom: number | null;
+  priceTag: string | null;
   currency: string;
   category: string | null;
   highlight: string;
@@ -50,6 +51,7 @@ export const CHAT_TOURS_QUERY = defineQuery(/* groq */ `
     ),
     "slug": slug.current,
     "priceFrom": coalesce(pricing[0].price, mainTour->pricing[0].price),
+    "priceTag": coalesce(priceTag, mainTour->priceTag),
     "currency": coalesce(currency, mainTour->currency, "USD"),
     "category": coalesce(
       select(
@@ -166,6 +168,7 @@ type RawChatTour = {
   title?: string | null;
   slug?: string | null;
   priceFrom?: number | null;
+  priceTag?: string | null;
   currency?: string | null;
   category?: string | null;
   highlightSource?: string | null;
@@ -201,6 +204,7 @@ export async function getChatKnowledge(locale: string): Promise<ChatKnowledge> {
         typeof tour.priceFrom === "number" && Number.isFinite(tour.priceFrom)
           ? tour.priceFrom
           : null,
+      priceTag: tour.priceTag?.trim() || null,
       currency: (tour.currency || "USD").trim() || "USD",
       category: tour.category?.trim() || null,
       highlight: truncateHighlight(tour.highlightSource),

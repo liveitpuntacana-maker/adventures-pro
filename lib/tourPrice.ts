@@ -2,6 +2,16 @@ export type FormatTourPriceOptions = {
   freeAsWord?: boolean;
 };
 
+/** Append optional Sanity priceTag, e.g. "From $450 USD (4 pax)". */
+export function withPriceTag(
+  priceLabel: string,
+  priceTag?: string | null,
+): string {
+  const tag = priceTag?.trim();
+  if (!tag) return priceLabel;
+  return `${priceLabel} (${tag})`;
+}
+
 export function formatTourPrice(
   currency: string,
   price?: string | number | null,

@@ -5,7 +5,7 @@ import { X } from "lucide-react";
 import { useMemo, useState, useRef, useEffect, useCallback } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
-import { formatTourPrice } from "@/lib/tourPrice";
+import { formatTourPrice, withPriceTag } from "@/lib/tourPrice";
 import { tourExcursionPath } from "@/lib/tourSlug";
 import { type AppLocale } from "@/i18n/routing";
 
@@ -57,6 +57,7 @@ type SearchTourResult = {
   slug?: string;
   imageUrl?: string;
   currency?: string;
+  priceTag?: string | null;
   pricing?: Array<{ price?: number | string | null }>;
 };
 
@@ -81,7 +82,10 @@ const parseNumericPrice = (value?: string | number | null) => {
 const formatResultPrice = (tour: SearchTourResult) => {
   const firstPrice = parseNumericPrice(tour.pricing?.[0]?.price);
   if (Number.isFinite(firstPrice)) {
-    return `From ${formatTourPrice(tour.currency ?? "USD", firstPrice)}`;
+    return withPriceTag(
+      `From ${formatTourPrice(tour.currency ?? "USD", firstPrice)}`,
+      tour.priceTag,
+    );
   }
   return null;
 };

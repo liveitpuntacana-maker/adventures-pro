@@ -16,6 +16,7 @@ type TourCardProps = {
     highlightBadge?: string;
     pricing?: Array<{ price?: number | string | null }>;
     currency?: string;
+    priceTag?: string | null;
     fromPriceLabel?: string;
     peekUrl: string;
     rating?: number | null;
@@ -46,6 +47,7 @@ export default function TourCard({ tour }: TourCardProps) {
   const computedPrice = Number.isFinite(firstPriceValue)
     ? `From ${formatTourPrice(tour.currency || "USD", firstPriceValue)}`
     : tour.fromPriceLabel || "Consultar precio";
+  const priceTag = tour.priceTag?.trim() || "";
   const safeSlug = tour.slug || "";
   const detailsHref = tourExcursionPath(safeSlug);
   const showRating = hasTourRating(tour.rating, tour.reviewsCount);
@@ -95,6 +97,11 @@ export default function TourCard({ tour }: TourCardProps) {
         </h3>
         <p className="text-lg font-semibold text-blue-950">
           {computedPrice}
+          {priceTag ? (
+            <span className="ml-1.5 text-sm font-medium text-slate-500">
+              ({priceTag})
+            </span>
+          ) : null}
         </p>
         <div className="flex flex-col gap-3 sm:flex-row">
           <BookNowLink

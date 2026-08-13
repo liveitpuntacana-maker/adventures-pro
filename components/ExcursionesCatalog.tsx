@@ -24,6 +24,7 @@ export type ExcursionTour = {
   mainImage?: unknown;
   duration?: string;
   peekProId?: string;
+  priceTag?: string | null;
   category?: {
     slug?: string;
     title?: string;
@@ -135,6 +136,7 @@ export default function ExcursionesCatalog({
               const computedPrice = Number.isFinite(firstPricingValue)
                 ? formatTourPrice(tour.currency, firstPricingValue)
                 : "Consultar precio";
+              const priceTag = tour.priceTag?.trim() || "";
               const slug = tour.slug ?? "";
               const title = tour.title ?? "Tour";
               const peekUrl = tour.peekProId ? peekBookingUrl(tour.peekProId) : "#";
@@ -167,7 +169,14 @@ export default function ExcursionesCatalog({
                     <p className="text-sm text-slate-600">
                       {tour.category?.title || tour.category?.slug || "Uncategorized"}
                     </p>
-                    <p className="text-lg font-semibold text-blue-950">From {computedPrice}</p>
+                    <p className="text-lg font-semibold text-blue-950">
+                      From {computedPrice}
+                      {priceTag ? (
+                        <span className="ml-1.5 text-sm font-medium text-slate-500">
+                          ({priceTag})
+                        </span>
+                      ) : null}
+                    </p>
                     <div className="flex flex-col gap-3 sm:flex-row">
                       <BookNowLink
                         href={peekUrl}

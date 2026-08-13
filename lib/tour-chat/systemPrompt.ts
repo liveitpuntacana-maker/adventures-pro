@@ -46,7 +46,9 @@ function formatCatalog(knowledge: ChatKnowledge, locale: AppLocale): string {
       const price =
         tour.priceFrom == null
           ? "price on request"
-          : `from ${tour.currency} ${tour.priceFrom}`;
+          : tour.priceTag
+            ? `from ${tour.currency} ${tour.priceFrom} (${tour.priceTag})`
+            : `from ${tour.currency} ${tour.priceFrom}`;
       const url = tourPublicPath(locale, tour.slug);
       const highlight = tour.highlight ? ` | ${tour.highlight}` : "";
       const category = tour.category ? ` | cat:${tour.category}` : "";
@@ -86,7 +88,9 @@ export function buildSiteChatSystemPrompt(
 - Official from-price: ${
         openTour?.priceFrom == null
           ? "see page / catalog"
-          : `${openTour.currency} ${openTour.priceFrom}`
+          : openTour.priceTag
+            ? `${openTour.currency} ${openTour.priceFrom} (${openTour.priceTag})`
+            : `${openTour.currency} ${openTour.priceFrom}`
       }
 CLOSE RULE FOR THIS PAGE:
 - When the guest asks about THIS tour (price, inclusions, itinerary, availability, “how do I book”), push them to pick a date using the on-page booking CTA labeled **"Book Now"** / **"Book this experience"** (the primary booking button on screen). Do NOT invent alternate checkout links for this same tour.

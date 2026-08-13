@@ -182,11 +182,18 @@ export const tourType = defineType({
       validation: (rule) => rule.min(1),
     }),
     defineField({
+      name: "priceTag",
+      title: "Etiqueta de Precio",
+      description: "Opcional. Clarifica el precio listado (ej: 4 pax, per boat).",
+      type: "string",
+    }),
+    defineField({
       name: "peekProId",
       title: "PeekPro ID",
       type: "string",
       validation: (rule) => rule.required(),
     }),
+
     defineField({
       name: "description",
       title: "Description",

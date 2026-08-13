@@ -19,6 +19,7 @@ export type CategoryTour = {
   listingImage?: { asset: unknown };
   highlightBadge?: string;
   peekProId?: string;
+  priceTag?: string | null;
   currency?: string;
   pricing?: Array<{ price?: number | string | null }>;
   price?: number | string | null;
@@ -135,6 +136,7 @@ export default function CategorySearch({
                   highlightBadge: tour.highlightBadge,
                   pricing: tour.pricing,
                   currency: tour.currency,
+                  priceTag: tour.priceTag,
                   peekUrl,
                   rating: tour.rating,
                   reviewsCount: tour.reviewsCount,
