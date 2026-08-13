@@ -254,6 +254,49 @@ const legacyTourRedirects: Array<{
   },
 ];
 
+const slugMigrationRedirects: Array<{
+  source: string;
+  destination: string;
+  permanent: true;
+}> = [
+  {
+    source: "/en/excursions/deep-sea-fishing-private",
+    destination: "/en/excursions/private-deep-sea-fishing-punta-cana",
+    permanent: true,
+  },
+  {
+    source: "/en/excursions/full-day-tour-in-samana-serenity",
+    destination: "/en/excursions/samana-full-day-tour-punta-cana",
+    permanent: true,
+  },
+  {
+    source: "/en/excursions/party-boat",
+    destination: "/en/excursions/party-boat-tour-in-punta-cana",
+    permanent: true,
+  },
+  {
+    source: "/en/excursions/panaca-horse-show-punta-cana",
+    destination: "/en/excursions/panaca-world-show-punta-cana",
+    permanent: true,
+  },
+  {
+    source: "/en/excursions/macao-beach-buggy-adventure",
+    destination: "/en/excursions/macao-beach-buggy-punta-cana",
+    permanent: true,
+  },
+  {
+    source: "/en/excursions/samana-beyond-instagram-the-side-of-paradise-most-tourists-never-see",
+    destination: "/en/blog/samana-beyond-instagram-the-side-of-paradise-most-tourists-never-see",
+    permanent: true,
+  },
+  {
+    source: "/en/excursions/sea-turtles",
+    destination:
+      "/en/blog/sea-turtles-in-the-dominican-republic-when-where-and-how-to-see-them-responsibly",
+    permanent: true,
+  },
+];
+
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
@@ -274,6 +317,7 @@ const nextConfig: NextConfig = {
       ...faviconRedirects,
       ...wordpressRedirects,
       ...legacyTourRedirects,
+      ...slugMigrationRedirects,
     ];
   },
 };
