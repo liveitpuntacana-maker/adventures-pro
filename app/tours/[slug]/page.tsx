@@ -23,7 +23,8 @@ import {
   type TourReview,
 } from "@/lib/tourRating";
 import { categoryExcursionPath } from "@/lib/categoryPath";
-import { slugLookupVariants } from "@/lib/tourSlug";
+import { slugLookupVariants, tourExcursionPath } from "@/lib/tourSlug";
+import { buildTourProductJsonLd, localizedUrl } from "@/lib/seo";
 import { routing, type AppLocale } from "@/i18n/routing";
 
 type TourPageProps = {
@@ -284,9 +285,34 @@ export default async function TourDetailPage({ params }: TourPageProps) {
   const reviewsCount = tour.reviewsCount ?? reviews.length;
   const showHeroRating = reviewsCount > 0;
   const showReviewsSection = reviews.length > 0;
+  const pageUrl = localizedUrl(activeLocale, tourExcursionPath(tour.slug));
+  const seoDescription = infoTourLines.join(" ");
+  const seoImage = (() => {
+    try {
+      return tour.mainImage?.asset
+        ? urlFor(tour.mainImage).width(1200).height(630).fit("crop").url()
+        : null;
+    } catch {
+      return null;
+    }
+  })();
+  const tourJsonLd = buildTourProductJsonLd({
+    name: tour.title,
+    description: seoDescription || null,
+    image: seoImage,
+    url: pageUrl,
+    price: Number.isFinite(adultLeadPriceValue) ? adultLeadPriceValue : null,
+    priceCurrency: currency,
+  });
 
   return (
     <div className="bg-slate-50 text-slate-900">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(tourJsonLd),
+        }}
+      />
       <TourViewContent
         slug={tour.slug}
         title={tour.title}

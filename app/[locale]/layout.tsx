@@ -7,7 +7,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SiteWideAIChatLazy from "@/components/chat/SiteWideAIChatLazy";
 import { routing, type AppLocale } from "@/i18n/routing";
-import { buildPageMetadata } from "@/lib/seo";
+import { buildPageMetadata, buildTravelAgencyJsonLd } from "@/lib/seo";
 import { client } from "@/sanity/lib/client";
 import { navCategoriesQuery, type NavCategory } from "@/lib/sanityCategories";
 
@@ -55,9 +55,16 @@ export default async function LocaleLayout({
   const categories = await client
     .fetch<NavCategory[]>(navCategoriesQuery, { locale })
     .catch(() => []);
+  const travelAgencyJsonLd = buildTravelAgencyJsonLd();
 
   return (
     <NextIntlClientProvider messages={messages}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(travelAgencyJsonLd),
+        }}
+      />
       <Navbar categories={categories} />
       {children}
       <Footer />
