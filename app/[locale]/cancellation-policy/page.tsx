@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { AppLocale } from "@/i18n/routing";
 import { buildPageMetadata } from "@/lib/seo";
+import { getDefaultOgImage } from "@/lib/ogImage";
 
 export const revalidate = 86400;
 
@@ -20,6 +21,7 @@ export async function generateMetadata({
     pathname: "/cancellation-policy",
     title: t("cancellation.title"),
     description: t("cancellation.description"),
+    image: await getDefaultOgImage(),
     // English-only legal text; see the note in terms-and-conditions.
     availableLocales: ["en"],
     noIndex: locale !== "en",

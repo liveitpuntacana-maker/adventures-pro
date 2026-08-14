@@ -1,8 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 import { Clock3 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
@@ -49,12 +48,15 @@ export default function ExcursionesCatalog({
   categories: CatalogCategory[];
 }) {
   const tFilters = useTranslations("TourFilters");
-  // Read ?category= here rather than on the server so the page itself can be
-  // prerendered; the filtering below is client-side either way.
-  const searchParams = useSearchParams();
-  const [activeCategory, setActiveCategory] = useState<string>(
-    searchParams.get("category") || "all",
-  );
+  const [activeCategory, setActiveCategory] = useState<string>("all");
+
+  // The ?category= preselection is applied after mount instead of with
+  // useSearchParams: that hook forces a Suspense bailout, which left the
+  // prerendered HTML empty — no heading and none of the tour links for Google.
+  useEffect(() => {
+    const category = new URLSearchParams(window.location.search).get("category");
+    if (category) setActiveCategory(category);
+  }, []);
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
   const [priceRange, setPriceRange] = useState<PriceRange>("all");
 

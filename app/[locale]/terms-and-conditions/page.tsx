@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { AppLocale } from "@/i18n/routing";
 import { buildPageMetadata } from "@/lib/seo";
+import { getDefaultOgImage } from "@/lib/ogImage";
 
 export const revalidate = 86400;
 
@@ -20,6 +21,7 @@ export async function generateMetadata({
     pathname: "/terms-and-conditions",
     title: t("terms.title"),
     description: t("terms.description"),
+    image: await getDefaultOgImage(),
     // The legal text itself is only available in English. Declaring Spanish
     // and French versions of an English document would create duplicates, so
     // the other locales stay readable but out of the index until translated.

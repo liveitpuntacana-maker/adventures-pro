@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import { groq } from "next-sanity";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -113,14 +112,10 @@ export default async function ExcursionesPage({ params }: PageProps) {
   return (
     <>
       <JsonLd data={jsonLd} />
-      {/* The catalog reads ?category= via useSearchParams, so it needs a
-          Suspense boundary for the page to stay prerenderable. */}
-      <Suspense fallback={null}>
-        <ExcursionesCatalog
-          tours={tours}
-          categories={[{ slug: "all", title: "All" }, ...categories]}
-        />
-      </Suspense>
+      <ExcursionesCatalog
+        tours={tours}
+        categories={[{ slug: "all", title: "All" }, ...categories]}
+      />
     </>
   );
 }

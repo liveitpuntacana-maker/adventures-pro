@@ -90,6 +90,26 @@ export function buildLanguageAlternates(
   return languages;
 }
 
+/** Suffix appended by the title template in the locale layout. */
+const TITLE_SUFFIX = " | Adventures Finder";
+/** Google truncates around 60 characters; past that the tail is wasted. */
+const MAX_TITLE_LENGTH = 60;
+
+/**
+ * Decides whether a page title should carry the brand suffix.
+ *
+ * Returns a plain string when the suffix fits (the layout template appends it),
+ * or `{ absolute }` when it does not — so long CMS titles are not cut off by
+ * Google, and titles that already end in the brand name never get it twice.
+ */
+export function resolveTitle(title: string): string | { absolute: string } {
+  const clean = title.trim().replace(/\s*\|\s*Adventures Finder\s*$/i, "").trim();
+  const withSuffix = clean.length + TITLE_SUFFIX.length;
+
+  if (withSuffix <= MAX_TITLE_LENGTH) return clean;
+  return { absolute: clean };
+}
+
 export function truncateMetaDescription(value: string, maxLength = 160): string {
   const normalized = value.replace(/\s+/g, " ").trim();
   if (normalized.length <= maxLength) return normalized;
@@ -137,6 +157,9 @@ export function buildPageMetadata({
   const languages = buildLanguageAlternates(pathname, availableLocales);
   const resolvedImage = image || SITE_LOGO_URL;
   const resolvedAlt = imageAlt || title || SITE_NAME;
+  const resolvedDescription = description
+    ? truncateMetaDescription(description)
+    : undefined;
 
   const ogImages = [
     {
@@ -148,8 +171,8 @@ export function buildPageMetadata({
   ];
 
   return {
-    ...(title ? { title } : {}),
-    ...(description ? { description } : {}),
+    ...(title ? { title: resolveTitle(title) } : {}),
+    ...(resolvedDescription ? { description: resolvedDescription } : {}),
     alternates: {
       canonical,
       languages,
@@ -161,7 +184,7 @@ export function buildPageMetadata({
       siteName: SITE_NAME,
       locale: htmlLangForLocale(locale).replace("-", "_"),
       ...(title ? { title } : {}),
-      ...(description ? { description } : {}),
+      ...(resolvedDescription ? { description: resolvedDescription } : {}),
       images: ogImages,
       ...(type === "article" && publishedTime ? { publishedTime } : {}),
       ...(type === "article" && modifiedTime ? { modifiedTime } : {}),
@@ -169,7 +192,7 @@ export function buildPageMetadata({
     twitter: {
       card: "summary_large_image",
       ...(title ? { title } : {}),
-      ...(description ? { description } : {}),
+      ...(resolvedDescription ? { description: resolvedDescription } : {}),
       images: [{ url: resolvedImage, alt: resolvedAlt }],
     },
   };
