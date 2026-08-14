@@ -15,7 +15,8 @@ import { SANITY_TAGS, tagForDocumentType } from "@/lib/sanityCache";
  *   URL:      https://www.adventuresfinder.com/api/revalidate
  *   Trigger:  Create, Update, Delete
  *   Secret:   the value of SANITY_REVALIDATE_SECRET
- *   Payload:  {"_type": "_type"}
+ *   Payload:  {"_type": _type}   <- unquoted value, or GROQ sends the literal
+ *                                   string "_type" and every tag gets purged
  *
  * Sanity does not send the secret itself: it signs the request body with it
  * and sends an HMAC in the sanity-webhook-signature header, which is what we
