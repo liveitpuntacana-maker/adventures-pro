@@ -19,6 +19,7 @@ import {
   buildFaqJsonLd,
   buildItemListJsonLd,
   buildPageMetadata,
+  shouldIndexListing,
   toItemListEntries,
 } from "@/lib/seo";
 
@@ -36,6 +37,7 @@ type CategoryData = {
   mainImage?: unknown;
   bannerImage?: unknown;
   seoIntro?: string | null;
+  tourCount?: number;
 };
 
 const categoryBySlugQuery = groq`*[_type == "category" && slug.current == $slug][0] {
@@ -44,7 +46,11 @@ const categoryBySlugQuery = groq`*[_type == "category" && slug.current == $slug]
   "slug": slug.current,
   mainImage,
   bannerImage,
-  "seoIntro": select($locale == "fr-ca" => seoIntro.frCA, seoIntro[$locale])
+  "seoIntro": select($locale == "fr-ca" => seoIntro.frCA, seoIntro[$locale]),
+  "tourCount": count(*[_type == "tour" && (
+    $slug in categories[]->slug.current ||
+    category->slug.current == $slug
+  )])
 }`;
 
 const categoryToursQuery = groq`*[_type == "tour" && (
@@ -118,6 +124,9 @@ export async function generateMetadata({
       sanityOgImage(category.mainImage) ??
       (await getDefaultOgImage()),
     imageAlt: t("category.title", { name }),
+    // A category with almost nothing to list is not worth indexing; it comes
+    // back on its own once enough tours point at it.
+    noIndex: !shouldIndexListing(category.tourCount),
   });
 }
 

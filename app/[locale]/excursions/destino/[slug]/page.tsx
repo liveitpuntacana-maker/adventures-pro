@@ -19,6 +19,7 @@ import {
   buildFaqJsonLd,
   buildItemListJsonLd,
   buildPageMetadata,
+  shouldIndexListing,
   toItemListEntries,
 } from "@/lib/seo";
 
@@ -35,6 +36,7 @@ type DestinationData = {
   slug?: string;
   mainImage?: unknown;
   seoIntro?: string | null;
+  tourCount?: number;
 };
 
 const destinationBySlugQuery = groq`*[_type == "destination" && slug.current == $slug][0] {
@@ -42,7 +44,8 @@ const destinationBySlugQuery = groq`*[_type == "destination" && slug.current == 
   "title": coalesce(select($locale == "fr-ca" => title.frCA, title[$locale]), title.en, title.es, title.frCA),
   "slug": slug.current,
   mainImage,
-  "seoIntro": select($locale == "fr-ca" => seoIntro.frCA, seoIntro[$locale])
+  "seoIntro": select($locale == "fr-ca" => seoIntro.frCA, seoIntro[$locale]),
+  "tourCount": count(*[_type == "tour" && destination->slug.current == $slug])
 }`;
 
 const destinationToursQuery = groq`*[_type == "tour" && destination->slug.current == $slug] {
@@ -111,6 +114,8 @@ export async function generateMetadata({
     image:
       sanityOgImage(destination.mainImage) ?? (await getDefaultOgImage()),
     imageAlt: t("destination.title", { name }),
+    // See the note in the category page: empty listings stay out of the index.
+    noIndex: !shouldIndexListing(destination.tourCount),
   });
 }
 

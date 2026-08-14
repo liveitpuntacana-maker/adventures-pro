@@ -32,6 +32,20 @@ export const OG_IMAGE_HEIGHT = 630;
  */
 export const MIN_REVIEWS_FOR_AGGREGATE_RATING = 3;
 
+/**
+ * Minimum tours a category or destination must list to be worth indexing.
+ *
+ * A listing page with nothing (or almost nothing) to list is the doorway
+ * pattern Google penalises. Below this it is served noindex and kept out of
+ * the sitemap; it starts being indexed again on its own as soon as enough
+ * tours point at it.
+ */
+export const MIN_TOURS_FOR_INDEXING = 2;
+
+export function shouldIndexListing(tourCount?: number | null): boolean {
+  return (tourCount ?? 0) >= MIN_TOURS_FOR_INDEXING;
+}
+
 export const STATIC_PATHS = [
   "/",
   "/about",

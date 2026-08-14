@@ -7,20 +7,28 @@ import {
   buildSitemapEntry,
   categoryPathFromSlug,
   destinationPathFromSlug,
+  shouldIndexListing,
   tourPathFromSlug,
 } from "@/lib/seo";
 import { SANITY_TAGS, sanityCache } from "@/lib/sanityCache";
 
 export const revalidate = 3600;
 
+// tourCount mirrors the noindex rule on the listing pages: a sitemap that
+// submits noindexed URLs shows up as an error in Search Console.
 const categoriesQuery = groq`*[_type == "category" && defined(slug.current)]{
   "slug": slug.current,
-  _updatedAt
+  _updatedAt,
+  "tourCount": count(*[_type == "tour" && (
+    ^.slug.current in categories[]->slug.current ||
+    category->slug.current == ^.slug.current
+  )])
 }`;
 
 const destinationsQuery = groq`*[_type == "destination" && defined(slug.current)]{
   "slug": slug.current,
-  _updatedAt
+  _updatedAt,
+  "tourCount": count(*[_type == "tour" && destination->slug.current == ^.slug.current])
 }`;
 
 const toursQuery = groq`*[_type == "tour" && defined(slug.current)]{
@@ -35,17 +43,22 @@ const postsQuery = groq`*[_type == "post" && defined(slug.current)]{
 }`;
 
 type SlugRow = { slug: string; _updatedAt?: string };
+type ListingRow = SlugRow & { tourCount?: number };
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [categories, destinations, tours, posts] = await Promise.all([
     client
-      .fetch<SlugRow[]>(categoriesQuery, {}, sanityCache([SANITY_TAGS.category]))
+      .fetch<ListingRow[]>(
+        categoriesQuery,
+        {},
+        sanityCache([SANITY_TAGS.category, SANITY_TAGS.tour]),
+      )
       .catch(() => []),
     client
-      .fetch<SlugRow[]>(
+      .fetch<ListingRow[]>(
         destinationsQuery,
         {},
-        sanityCache([SANITY_TAGS.destination]),
+        sanityCache([SANITY_TAGS.destination, SANITY_TAGS.tour]),
       )
       .catch(() => []),
     client
@@ -64,16 +77,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // teaches Google to ignore the field entirely.
   const staticEntries = STATIC_PATHS.map((pathname) => buildSitemapEntry(pathname));
 
-  const categoryEntries = categories.map((category) =>
-    buildSitemapEntry(categoryPathFromSlug(category.slug), category._updatedAt),
-  );
+  const categoryEntries = categories
+    .filter((category) => shouldIndexListing(category.tourCount))
+    .map((category) =>
+      buildSitemapEntry(categoryPathFromSlug(category.slug), category._updatedAt),
+    );
 
-  const destinationEntries = destinations.map((destination) =>
-    buildSitemapEntry(
-      destinationPathFromSlug(destination.slug),
-      destination._updatedAt,
-    ),
-  );
+  const destinationEntries = destinations
+    .filter((destination) => shouldIndexListing(destination.tourCount))
+    .map((destination) =>
+      buildSitemapEntry(
+        destinationPathFromSlug(destination.slug),
+        destination._updatedAt,
+      ),
+    );
 
   const tourEntries = tours.map((tour) =>
     buildSitemapEntry(tourPathFromSlug(tour.slug), tour._updatedAt),
