@@ -13,6 +13,7 @@
     "@google/genai": "^2.13.0",
     "@sanity/image-url": "^2.1.1",
     "@sanity/vision": "^5.22.0",
+    "@sanity/webhook": "^4.0.4",
     "lucide-react": "^1.11.0",
     "next": "16.2.4",
     "next-intl": "^4.9.2",
