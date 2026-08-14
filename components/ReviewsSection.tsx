@@ -1,7 +1,10 @@
+import Image from "next/image";
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { client } from "@/sanity/lib/client";
 import { urlFor } from "@/sanity/lib/image";
+import { SANITY_TAGS, sanityCache } from "@/lib/sanityCache";
 
 type Review = {
   _id: string;
@@ -22,6 +25,9 @@ const REVIEWS_QUERY = `*[_type == "review"] | order(_createdAt desc) [0...12] {
   text,
   googleReviewUrl
 }`;
+
+/** Editable in Sanity so the headline number does not go stale in code. */
+const REVIEW_COUNT_QUERY = `*[_type == "landingPage"][0]{ googleReviewsCount }`;
 
 function GoogleMark({ className = "h-5 w-5" }: { className?: string }) {
   return (
@@ -59,14 +65,29 @@ function Stars({ count }: { count: number }) {
 }
 
 export default async function ReviewsSection() {
-  const reviews = await client.fetch<Review[]>(REVIEWS_QUERY).catch(() => []);
+  const t = await getTranslations("Reviews");
+
+  const [reviews, summary] = await Promise.all([
+    client
+      .fetch<Review[]>(REVIEWS_QUERY, {}, sanityCache([SANITY_TAGS.review]))
+      .catch(() => []),
+    client
+      .fetch<{ googleReviewsCount?: number } | null>(
+        REVIEW_COUNT_QUERY,
+        {},
+        sanityCache([SANITY_TAGS.landingPage]),
+      )
+      .catch(() => null),
+  ]);
+
+  const reviewsCount = summary?.googleReviewsCount ?? 40;
 
   return (
     <section className="w-full bg-white py-16 md:py-24">
       <div className="mx-auto grid max-w-7xl gap-12 px-6 md:px-10 lg:grid-cols-[360px_1fr] lg:items-center lg:gap-16 lg:px-12">
         <div className="border border-slate-200 bg-slate-50 p-8 md:p-10">
           <p className="text-2xl font-extrabold tracking-tight text-blue-950">
-            EXCELLENT
+            {t("excellent")}
           </p>
           <div className="mt-5 flex items-center gap-1.5">
             <Star filled />
@@ -76,7 +97,7 @@ export default async function ReviewsSection() {
             <Star filled />
           </div>
           <p className="mt-5 text-base font-medium text-slate-700">
-            Based on 40+ reviews on Google
+            {t("basedOn", { count: reviewsCount })}
           </p>
           <div className="mt-6 inline-flex items-center gap-3 border border-slate-200 bg-white px-4 py-2">
             <GoogleMark className="h-6 w-6" />
@@ -109,9 +130,11 @@ export default async function ReviewsSection() {
                 </div>
                 <div className="flex items-center gap-3">
                   {imageUrl ? (
-                    <img
+                    <Image
                       src={imageUrl}
                       alt={author}
+                      width={44}
+                      height={44}
                       className="h-11 w-11 border border-slate-200 object-cover"
                     />
                   ) : (
@@ -134,7 +157,7 @@ export default async function ReviewsSection() {
                   rel="noopener noreferrer"
                   className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-blue-950 underline-offset-4 hover:underline"
                 >
-                  Read more on Google
+                  {t("readMore")}
                   <ExternalLink className="h-4 w-4" strokeWidth={2} />
                 </Link>
                 </article>

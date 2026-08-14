@@ -27,7 +27,16 @@ export const reviewType = defineType({
       name: "date",
       title: "Date",
       type: "string",
-      validation: (rule) => rule.required(),
+      description: "Formato DD/MM/AAAA, tal y como aparece en Google.",
+      placeholder: "27/08/2025",
+      validation: (rule) =>
+        rule
+          .required()
+          .regex(/^\d{2}\/\d{2}\/\d{4}$/, {
+            name: "DD/MM/AAAA",
+            invert: false,
+          })
+          .error("Usa el formato DD/MM/AAAA, con el año de 4 cifras (ej. 27/08/2025)"),
     }),
     defineField({
       name: "text",

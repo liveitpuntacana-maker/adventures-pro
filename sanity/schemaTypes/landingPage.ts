@@ -26,5 +26,14 @@ export const landingPageType = defineType({
         },
       ],
     }),
+    defineField({
+      name: "googleReviewsCount",
+      title: "Nº de reseñas en Google",
+      type: "number",
+      description:
+        "Se muestra como «Basado en más de N reseñas en Google» en la home. Actualizalo cuando crezca el número real en tu ficha de Google.",
+      initialValue: 40,
+      validation: (rule) => rule.min(1).integer(),
+    }),
   ],
 });

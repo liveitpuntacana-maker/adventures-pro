@@ -206,5 +206,11 @@
     "breadcrumbBlog": "Blog",
     "breadcrumbDestinations": "Destinos",
     "faqSectionTitle": "Preguntas frecuentes"
+  },
+  "Reviews": {
+    "excellent": "EXCELENTE",
+    "basedOn": "Basado en más de {count} reseñas en Google",
+    "google": "Google",
+    "readMore": "Leer más en Google"
   }
 }
