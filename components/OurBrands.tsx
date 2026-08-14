@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { Link } from "@/i18n/navigation";
 import { type AppLocale } from "@/i18n/routing";
 
 const brands = [
@@ -14,7 +15,9 @@ const brands = [
   },
   {
     src: "/images/logo_marca_3.png",
-    url: "https://adventuresfinder.com/",
+    // Our own site: resolved per locale below so the link lands on its final
+    // URL instead of bouncing through the apex-domain redirect.
+    url: "self",
     alt: "Adventures Finder",
   },
   {
@@ -57,6 +60,18 @@ export default function OurBrands({ locale }: OurBrandsProps) {
                 className={logoClassName}
               />
             );
+
+            if (brand.url === "self") {
+              return (
+                <Link
+                  key={brand.src}
+                  href="/"
+                  className="inline-flex items-center justify-center"
+                >
+                  {image}
+                </Link>
+              );
+            }
 
             if (brand.url) {
               return (
