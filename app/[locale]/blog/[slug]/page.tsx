@@ -1,13 +1,25 @@
 import Image from "next/image";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { groq } from "next-sanity";
 import { Link } from "@/i18n/navigation";
+import JsonLd from "@/components/JsonLd";
 import { client } from "@/sanity/lib/client";
 import { urlFor } from "@/sanity/lib/image";
-import type { AppLocale } from "@/i18n/routing";
+import { routing, type AppLocale } from "@/i18n/routing";
+import {
+  blogPathFromSlug,
+  buildBlogPostingJsonLd,
+  buildBreadcrumbJsonLd,
+  buildPageMetadata,
+  truncateMetaDescription,
+} from "@/lib/seo";
+import { getDefaultOgImage, sanityOgImage } from "@/lib/ogImage";
+import { REVALIDATE, SANITY_TAGS, sanityCache } from "@/lib/sanityCache";
 
-export const revalidate = 0;
+export const revalidate = 86400;
+export const dynamicParams = true;
 
 type BlogPostPageProps = {
   params: Promise<{ locale: AppLocale; slug: string }>;
@@ -18,7 +30,11 @@ type PostDoc = {
   excerpt?: string | null;
   mainImage?: { asset: unknown };
   publishedAt?: string;
+  updatedAt?: string;
   body?: string | null;
+  hasEn?: boolean;
+  hasEs?: boolean;
+  hasFr?: boolean;
 };
 
 const POST_QUERY = groq`*[_type == "post" && slug.current == $slug][0]{
@@ -26,14 +42,91 @@ const POST_QUERY = groq`*[_type == "post" && slug.current == $slug][0]{
   "excerpt": coalesce(select($locale == "fr-ca" => excerpt.frCA, excerpt[$locale]), excerpt.en, excerpt.es, excerpt.frCA),
   "body": coalesce(select($locale == "fr-ca" => body.frCA, body[$locale]), body.en, body.es, body.frCA),
   mainImage,
-  publishedAt
+  publishedAt,
+  "updatedAt": _updatedAt,
+  "hasEn": defined(title.en),
+  "hasEs": defined(title.es),
+  "hasFr": defined(title.frCA)
 }`;
+
+export async function generateStaticParams() {
+  const posts = await client.fetch<Array<{ slug: string }>>(
+    groq`*[_type == "post" && defined(slug.current)]{ "slug": slug.current }`,
+  );
+
+  // Default locale only at build time; other locales come from ISR on demand.
+  return (posts ?? []).map((post) => ({
+    locale: routing.defaultLocale,
+    slug: post.slug,
+  }));
+}
+
+async function fetchPost(locale: AppLocale, slug: string) {
+  return client
+    .fetch<PostDoc | null>(
+      POST_QUERY,
+      { slug, locale },
+      sanityCache([SANITY_TAGS.post], REVALIDATE.blog),
+    )
+    .catch(() => null);
+}
+
+/**
+ * Locales this post is genuinely translated into.
+ *
+ * Posts arrive from the Soro feed in one language; claiming a translation that
+ * doesn't exist would make Google treat the three locale URLs as duplicates.
+ */
+function translatedLocales(post: PostDoc): AppLocale[] {
+  const locales: AppLocale[] = [];
+  if (post.hasEn) locales.push("en");
+  if (post.hasEs) locales.push("es");
+  if (post.hasFr) locales.push("fr-ca");
+  return locales.length > 0 ? locales : ["en"];
+}
+
+export async function generateMetadata({
+  params,
+}: BlogPostPageProps): Promise<Metadata> {
+  const { locale, slug } = await params;
+  const post = await fetchPost(locale, slug);
+
+  if (!post?.title?.trim()) return {};
+
+  const t = await getTranslations({ locale, namespace: "Seo" });
+  const title = post.title.trim();
+  const available = translatedLocales(post);
+
+  const description = truncateMetaDescription(
+    post.excerpt?.trim() ||
+      post.body?.trim().replace(/\s+/g, " ") ||
+      t("blog.description"),
+  );
+
+  return buildPageMetadata({
+    locale,
+    pathname: blogPathFromSlug(slug),
+    title,
+    description,
+    image: sanityOgImage(post.mainImage) ?? (await getDefaultOgImage()),
+    imageAlt: title,
+    type: "article",
+    publishedTime: post.publishedAt,
+    modifiedTime: post.updatedAt,
+    availableLocales: available,
+    // Untranslated locale variants stay crawlable for readers but out of the
+    // index, so the three URLs never compete as duplicates.
+    noIndex: !available.includes(locale),
+  });
+}
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const { locale, slug } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations("Blog");
+  const tSeo = await getTranslations({ locale, namespace: "Seo" });
 
-  const post = await client.fetch<PostDoc | null>(POST_QUERY, { slug, locale }).catch(() => null);
+  const post = await fetchPost(locale, slug);
 
   if (!post || !post.title?.trim()) {
     notFound();
@@ -50,11 +143,10 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     : null;
 
   const dateLabel = post.publishedAt
-    ? new Date(post.publishedAt).toLocaleDateString(locale === "es" ? "es" : locale === "fr-ca" ? "fr-CA" : "en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })
+    ? new Date(post.publishedAt).toLocaleDateString(
+        locale === "es" ? "es" : locale === "fr-ca" ? "fr-CA" : "en-US",
+        { year: "numeric", month: "long", day: "numeric" },
+      )
     : null;
 
   const title = post.title.trim();
@@ -64,8 +156,27 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     .map((p) => p.trim())
     .filter(Boolean);
 
+  const jsonLd = [
+    buildBlogPostingJsonLd({
+      locale,
+      pathname: blogPathFromSlug(slug),
+      title,
+      description: excerpt || bodyParagraphs[0] || null,
+      image: sanityOgImage(post.mainImage),
+      datePublished: post.publishedAt,
+      dateModified: post.updatedAt,
+      body: post.body,
+    }),
+    buildBreadcrumbJsonLd(locale, [
+      { name: tSeo("breadcrumbHome"), path: "/" },
+      { name: tSeo("breadcrumbBlog"), path: "/blog" },
+      { name: title },
+    ]),
+  ];
+
   return (
     <article className="min-h-screen bg-white text-slate-900">
+      <JsonLd data={jsonLd} />
       <div className="mx-auto max-w-2xl px-6 py-12 md:px-8 md:py-16 lg:max-w-3xl">
         <Link
           href="/blog"
@@ -89,7 +200,13 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
         <header className="mt-10">
           <h1 className="text-3xl font-semibold tracking-tight text-blue-950 md:text-4xl">{title}</h1>
-          {dateLabel ? <p className="mt-3 text-sm text-slate-500">{dateLabel}</p> : null}
+          {post.publishedAt ? (
+            <p className="mt-3 text-sm text-slate-500">
+              <time dateTime={new Date(post.publishedAt).toISOString()}>
+                {dateLabel}
+              </time>
+            </p>
+          ) : null}
         </header>
 
         {excerpt ? (

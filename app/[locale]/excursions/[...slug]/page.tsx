@@ -1,13 +1,13 @@
 import { groq } from "next-sanity";
 import { hasLocale } from "next-intl";
 import type { Metadata } from "next";
-import TourDetailPage from "@/app/tours/[slug]/page";
+import TourDetailPage from "@/components/tour/TourDetail";
 import { client } from "@/sanity/lib/client";
 import { routing, type AppLocale } from "@/i18n/routing";
 import { slugFromParams, slugToStaticParams } from "@/lib/tourSlug";
 import { buildTourMetadata } from "@/lib/tourSeo";
 
-export const revalidate = 0;
+export const revalidate = 3600;
 export const dynamicParams = true;
 
 type LocalizedTourDetailPageProps = {
@@ -21,12 +21,13 @@ export async function generateStaticParams() {
     }`,
   );
 
-  return routing.locales.flatMap((locale) =>
-    tours?.map((tour) => ({
-      locale,
-      slug: slugToStaticParams(tour.slug),
-    })) || [],
-  );
+  // Only the default locale is prerendered at build time. The other locales
+  // are generated on first request and then cached by ISR, which keeps the
+  // build from firing three requests per tour against the Sanity API.
+  return (tours ?? []).map((tour) => ({
+    locale: routing.defaultLocale,
+    slug: slugToStaticParams(tour.slug),
+  }));
 }
 
 export async function generateMetadata({

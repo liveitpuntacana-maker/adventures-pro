@@ -1,14 +1,21 @@
 import Image from "next/image";
-import { getTranslations } from "next-intl/server";
+import type { Metadata } from "next";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { groq } from "next-sanity";
 import TrackedWhatsAppLink from "@/components/meta/TrackedWhatsAppLink";
+import JsonLd from "@/components/JsonLd";
 import { Link } from "@/i18n/navigation";
 import { client } from "@/sanity/lib/client";
 import { urlFor } from "@/sanity/lib/image";
+import type { AppLocale } from "@/i18n/routing";
+import { buildBreadcrumbJsonLd, buildPageMetadata } from "@/lib/seo";
+import { getDefaultOgImage, sanityOgImage } from "@/lib/ogImage";
 import {
   ADVENTURES_WHATSAPP_PHONE,
   getUniversalWhatsAppUrl,
 } from "@/lib/utils/whatsapp";
+
+export const revalidate = 86400;
 
 const TRANSFERS_WHATSAPP_URL = getUniversalWhatsAppUrl(
   ADVENTURES_WHATSAPP_PHONE,
@@ -16,8 +23,30 @@ const TRANSFERS_WHATSAPP_URL = getUniversalWhatsAppUrl(
 );
 
 type TransfersPageProps = {
-  params: Promise<{ locale: "en" | "es" | "fr-ca" }>;
+  params: Promise<{ locale: AppLocale }>;
 };
+
+export async function generateMetadata({
+  params,
+}: TransfersPageProps): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "Seo" });
+
+  const page = await client
+    .fetch<{ heroImage?: unknown } | null>(
+      groq`*[_type == "transferPage"][0]{ heroImage }`,
+    )
+    .catch(() => null);
+
+  return buildPageMetadata({
+    locale,
+    pathname: "/transfers",
+    title: t("transfers.title"),
+    description: t("transfers.description"),
+    image: sanityOgImage(page?.heroImage) ?? (await getDefaultOgImage()),
+    imageAlt: t("transfers.title"),
+  });
+}
 
 type TransferPageData = {
   heroImage?: unknown;
@@ -25,15 +54,20 @@ type TransferPageData = {
   heroSubtitle?: string | null;
 };
 
+// No cross-locale fallback: without Sanity copy for the active locale we use
+// the translated message instead of showing an English headline on /es or
+// /fr-ca, which is what was happening before.
 const TRANSFER_PAGE_QUERY = groq`*[_type == "transferPage"][0]{
   heroImage,
-  "heroTitle": coalesce(select($locale == "fr-ca" => heroTitle.frCA, heroTitle[$locale]), heroTitle.en, heroTitle),
-  "heroSubtitle": coalesce(select($locale == "fr-ca" => heroSubtitle.frCA, heroSubtitle[$locale]), heroSubtitle.en, heroSubtitle)
+  "heroTitle": select($locale == "fr-ca" => heroTitle.frCA, heroTitle[$locale]),
+  "heroSubtitle": select($locale == "fr-ca" => heroSubtitle.frCA, heroSubtitle[$locale])
 }`;
 
 export default async function TransfersPage({ params }: TransfersPageProps) {
   const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations("Transfers");
+  const tSeo = await getTranslations({ locale, namespace: "Seo" });
 
   const transferPage = await client
     .fetch<TransferPageData | null>(TRANSFER_PAGE_QUERY, { locale })
@@ -53,6 +87,12 @@ export default async function TransfersPage({ params }: TransfersPageProps) {
 
   return (
     <div className="min-h-screen bg-white text-slate-800">
+      <JsonLd
+        data={buildBreadcrumbJsonLd(locale, [
+          { name: tSeo("breadcrumbHome"), path: "/" },
+          { name: tSeo("transfers.title") },
+        ])}
+      />
       <section className="relative overflow-hidden bg-[#0a192f] px-6 py-20 md:px-10 md:py-28 lg:px-12">
         {heroImageUrl ? (
           <Image

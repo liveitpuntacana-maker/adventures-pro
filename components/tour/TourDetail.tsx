@@ -10,6 +10,7 @@ import {
   Timer,
   Users,
 } from "lucide-react";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { client } from "@/sanity/lib/client";
 import { urlFor } from "@/sanity/lib/image";
@@ -24,7 +25,13 @@ import {
 } from "@/lib/tourRating";
 import { categoryExcursionPath } from "@/lib/categoryPath";
 import { slugLookupVariants, tourExcursionPath } from "@/lib/tourSlug";
-import { buildTourProductJsonLd, localizedUrl } from "@/lib/seo";
+import {
+  buildBreadcrumbJsonLd,
+  buildTourProductJsonLd,
+  localizedUrl,
+} from "@/lib/seo";
+import JsonLd from "@/components/JsonLd";
+import { SANITY_TAGS, sanityCache } from "@/lib/sanityCache";
 import { routing, type AppLocale } from "@/i18n/routing";
 
 type TourPageProps = {
@@ -244,7 +251,7 @@ export default async function TourDetailPage({ params }: TourPageProps) {
   const tour = await client.fetch<TourData | null>(
     TOUR_QUERY,
     { slugCandidates, locale: activeLocale },
-    { cache: "no-store" },
+    sanityCache([SANITY_TAGS.tour]),
   );
 
   if (!tour?.slug) {
@@ -305,16 +312,22 @@ export default async function TourDetailPage({ params }: TourPageProps) {
     url: pageUrl,
     price: Number.isFinite(adultLeadPriceValue) ? adultLeadPriceValue : null,
     priceCurrency: currency,
+    // Only the reviews actually rendered on this page are marked up, and
+    // buildTourProductJsonLd drops the rating entirely below its threshold.
+    rating: tour.rating,
+    reviewsCount,
+    reviews: showReviewsSection ? reviews : null,
   });
+
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd(activeLocale, [
+    { name: "Home", path: "/" },
+    { name: categoryTitle, path: categoryExcursionPath(categorySlug) },
+    { name: tour.title },
+  ]);
 
   return (
     <div className="bg-slate-50 text-slate-900">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(tourJsonLd),
-        }}
-      />
+      <JsonLd data={[tourJsonLd, breadcrumbJsonLd]} />
       <TourViewContent
         slug={tour.slug}
         title={tour.title}
@@ -382,12 +395,19 @@ export default async function TourDetailPage({ params }: TourPageProps) {
           <div className="md:hidden">
             <div className="flex snap-x snap-mandatory overflow-x-auto">
               {(gallery ?? []).map((image, index) => (
-                <img
+                <div
                   key={image._key}
-                  src={urlFor(image).width(1200).height(900).fit("crop").url()}
-                  alt={`${tour.title} image ${index + 1}`}
-                  className="h-[260px] w-full flex-shrink-0 snap-center object-cover"
-                />
+                  className="relative h-[260px] w-full flex-shrink-0 snap-center"
+                >
+                  <Image
+                    src={urlFor(image).width(1200).height(900).fit("crop").url()}
+                    alt={`${tour.title} — ${index + 1}`}
+                    fill
+                    className="object-cover"
+                    sizes="100vw"
+                    priority={index === 0}
+                  />
+                </div>
               ))}
             </div>
             <div className="mt-3 flex items-center justify-center gap-2">
@@ -402,12 +422,16 @@ export default async function TourDetailPage({ params }: TourPageProps) {
           <div className="hidden h-[350px] w-full md:block">
             <div className="grid h-full w-full gap-4 px-6 md:grid-cols-3 md:px-10 lg:px-12">
               {(gallery ?? []).map((image, index) => (
-                <img
-                  key={image._key}
-                  src={urlFor(image).width(1600).height(1000).fit("crop").url()}
-                  alt={`${tour.title} image ${index + 1}`}
-                  className="h-full w-full rounded-none object-cover"
-                />
+                <div key={image._key} className="relative h-full w-full">
+                  <Image
+                    src={urlFor(image).width(1600).height(1000).fit("crop").url()}
+                    alt={`${tour.title} — ${index + 1}`}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                    priority={index === 0}
+                  />
+                </div>
               ))}
             </div>
           </div>
@@ -431,12 +455,16 @@ export default async function TourDetailPage({ params }: TourPageProps) {
               </div>
               <div className="grid gap-4 md:grid-cols-2">
                 {(galleryLightbox ?? []).map((image, index) => (
-                  <img
-                    key={image._key}
-                    src={urlFor(image).width(2000).height(1400).fit("crop").url()}
-                    alt={`${tour.title} gallery ${index + 1}`}
-                    className="h-64 w-full object-cover md:h-80"
-                  />
+                  <div key={image._key} className="relative h-64 w-full md:h-80">
+                    <Image
+                      src={urlFor(image).width(2000).height(1400).fit("crop").url()}
+                      alt={`${tour.title} — ${index + 1}`}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      loading="lazy"
+                    />
+                  </div>
                 ))}
               </div>
             </div>

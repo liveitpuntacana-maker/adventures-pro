@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Clock3 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
@@ -43,14 +44,17 @@ type CatalogCategory = {
 export default function ExcursionesCatalog({
   tours,
   categories,
-  initialCategory = "all",
 }: {
   tours: ExcursionTour[];
   categories: CatalogCategory[];
-  initialCategory?: string;
 }) {
   const tFilters = useTranslations("TourFilters");
-  const [activeCategory, setActiveCategory] = useState<string>(initialCategory);
+  // Read ?category= here rather than on the server so the page itself can be
+  // prerendered; the filtering below is client-side either way.
+  const searchParams = useSearchParams();
+  const [activeCategory, setActiveCategory] = useState<string>(
+    searchParams.get("category") || "all",
+  );
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
   const [priceRange, setPriceRange] = useState<PriceRange>("all");
 

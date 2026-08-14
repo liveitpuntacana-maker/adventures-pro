@@ -153,5 +153,58 @@
     "suvChevyImageAlt": "SUV VIP de traslado al aeropuerto",
     "outroText": "Experimenta la máxima comodidad y confiabilidad con nuestros servicios de traslado al aeropuerto en Punta Cana. ¡Reserva tu viaje hoy y comienza tu viaje con el pie derecho!",
     "ctaButton": "Contáctanos"
+  },
+  "Seo": {
+    "defaultTitle": "Tours y Excursiones en Punta Cana",
+    "home": {
+      "title": "Tours y Excursiones en Punta Cana",
+      "description": "Reserva tours, excursiones y traslados al aeropuerto en Punta Cana directamente con una DMC local. Isla Saona, catamaranes, buggies y salidas privadas con guías certificados."
+    },
+    "excursions": {
+      "title": "Todas las Excursiones en Punta Cana",
+      "description": "Todas las excursiones que operamos en Punta Cana y República Dominicana: paseos en barco, buggies, días de isla, tours culturales e itinerarios de varios días, con recogida en el hotel."
+    },
+    "transfers": {
+      "title": "Traslados al Aeropuerto de Punta Cana",
+      "description": "Traslados privados al aeropuerto de Punta Cana, desde viajeros solos hasta grupos grandes. SUV VIP y vans, seguimiento de vuelos y precios cerrados a cualquier destino del país."
+    },
+    "about": {
+      "title": "Quiénes Somos",
+      "description": "Adventures Finder es una DMC de Punta Cana que opera tours, excursiones y traslados con equipo local propio. Conoce a las personas detrás de los viajes."
+    },
+    "contact": {
+      "title": "Contacto",
+      "description": "Pregúntanos lo que quieras sobre tours, excursiones o traslados al aeropuerto en Punta Cana. Te respondemos por correo o WhatsApp, en español, inglés o francés."
+    },
+    "blog": {
+      "title": "Guía de Viaje de Punta Cana",
+      "description": "Guías prácticas de República Dominicana: cuándo viajar, qué playas merecen el trayecto, cómo moverte y qué conviene reservar antes de aterrizar."
+    },
+    "faqs": {
+      "title": "Preguntas Frecuentes Sobre Nuestros Tours",
+      "description": "Cómo funciona la reserva, qué incluye, puntos de recogida, cancelación, límites de edad y pago. Las dudas que más nos plantean antes de reservar un tour en Punta Cana."
+    },
+    "terms": {
+      "title": "Términos y Condiciones",
+      "description": "Términos y condiciones para reservar tours, excursiones y traslados con Adventures Finder en República Dominicana."
+    },
+    "cancellation": {
+      "title": "Política de Cancelación",
+      "description": "Nuestra política de cancelación y cambio de fecha para tours y excursiones en Punta Cana: plazos, reembolsos y qué pasa con mal tiempo."
+    },
+    "category": {
+      "title": "{name} en Punta Cana",
+      "description": "{name} en Punta Cana y República Dominicana, con recogida en el hotel, guías locales certificados y reserva directa. Compara precios, duración y qué incluye cada tour."
+    },
+    "destination": {
+      "title": "Tours y Excursiones en {name}",
+      "description": "Excursiones a {name} desde Punta Cana, con transporte de ida y vuelta y guías locales. Compara opciones, precios y duración antes de reservar."
+    },
+    "tourFallbackDescription": "{name}: reserva esta experiencia de Punta Cana directamente con Adventures Finder, con recogida en el hotel y guías locales certificados.",
+    "breadcrumbHome": "Inicio",
+    "breadcrumbExcursions": "Excursiones",
+    "breadcrumbBlog": "Blog",
+    "breadcrumbDestinations": "Destinos",
+    "faqSectionTitle": "Preguntas frecuentes"
   }
 }

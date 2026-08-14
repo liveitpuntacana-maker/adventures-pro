@@ -3,11 +3,16 @@ import type { Metadata } from "next";
 import { client } from "@/sanity/lib/client";
 import { urlFor } from "@/sanity/lib/image";
 import type { AppLocale } from "@/i18n/routing";
+import { getTranslations } from "next-intl/server";
 import { buildPageMetadata, truncateMetaDescription } from "@/lib/seo";
+import { getDefaultOgImage } from "@/lib/ogImage";
+import { SANITY_TAGS, sanityCache } from "@/lib/sanityCache";
 import { slugLookupVariants, tourExcursionPath } from "@/lib/tourSlug";
 
 export type TourSeoData = {
   title?: string | null;
+  seoTitle?: string | null;
+  seoDescription?: string | null;
   slug?: string | null;
   description?: string | null;
   currency?: string | null;
@@ -17,6 +22,11 @@ export type TourSeoData = {
 
 export const tourSeoQuery = groq`*[_type == "tour" && slug.current in $slugCandidates][0]{
   "title": coalesce(select($locale == "fr-ca" => title.frCA, title[$locale]), title.en, title.es, title.frCA),
+  "seoTitle": coalesce(select($locale == "fr-ca" => seoTitle.frCA, seoTitle[$locale]), seoTitle.en),
+  "seoDescription": coalesce(
+    select($locale == "fr-ca" => seoDescription.frCA, seoDescription[$locale]),
+    seoDescription.en
+  ),
   "slug": slug.current,
   "description": coalesce(
     select($locale == "fr-ca" => infoTour.frCA, infoTour[$locale]),
@@ -49,7 +59,7 @@ export async function fetchTourSeoData(
         slugCandidates: slugLookupVariants(slug),
         locale,
       },
-      { cache: "no-store" },
+      sanityCache([SANITY_TAGS.tour]),
     )
     .catch(() => null);
 }
@@ -68,18 +78,18 @@ export async function buildTourMetadata({
     return buildPageMetadata({ locale, pathname });
   }
 
-  const title = tour.title.trim();
-  const rawDescription = (tour.description ?? "")
+  const t = await getTranslations({ locale, namespace: "Seo" });
+  // An editor-set seoTitle/seoDescription in Sanity wins over the tour copy.
+  const title = tour.seoTitle?.trim() || tour.title.trim();
+  const rawDescription = (tour.seoDescription?.trim() || tour.description || "")
     .split(/\r?\n/g)
     .map((line) => line.trim())
     .filter(Boolean)
     .join(" ");
-  const description = rawDescription
-    ? truncateMetaDescription(rawDescription)
-    : truncateMetaDescription(
-        `${title} — book this Punta Cana experience with Adventures Finder Pro.`,
-      );
-  const image = tourImageUrl(tour.mainImage);
+  const description = truncateMetaDescription(
+    rawDescription || t("tourFallbackDescription", { name: title }),
+  );
+  const image = tourImageUrl(tour.mainImage) ?? (await getDefaultOgImage());
 
   return buildPageMetadata({
     locale,
@@ -87,6 +97,7 @@ export async function buildTourMetadata({
     title,
     description,
     image,
+    imageAlt: title,
     type: "website",
   });
 }

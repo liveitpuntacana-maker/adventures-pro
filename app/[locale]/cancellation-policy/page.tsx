@@ -1,9 +1,34 @@
+import type { Metadata } from "next";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import type { AppLocale } from "@/i18n/routing";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const revalidate = 86400;
+
 type CancellationPolicyPageProps = {
-  params: Promise<{ locale: "en" | "es" | "fr-ca" }>;
+  params: Promise<{ locale: AppLocale }>;
 };
 
+export async function generateMetadata({
+  params,
+}: CancellationPolicyPageProps): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "Seo" });
+
+  return buildPageMetadata({
+    locale,
+    pathname: "/cancellation-policy",
+    title: t("cancellation.title"),
+    description: t("cancellation.description"),
+    // English-only legal text; see the note in terms-and-conditions.
+    availableLocales: ["en"],
+    noIndex: locale !== "en",
+  });
+}
+
 export default async function CancellationPolicyPage({ params }: CancellationPolicyPageProps) {
-  await params;
+  const { locale } = await params;
+  setRequestLocale(locale);
 
   return (
     <div className="min-h-screen bg-white text-slate-900">

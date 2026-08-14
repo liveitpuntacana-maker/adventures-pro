@@ -1,9 +1,36 @@
+import type { Metadata } from "next";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import type { AppLocale } from "@/i18n/routing";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const revalidate = 86400;
+
 type TermsPageProps = {
-  params: Promise<{ locale: "en" | "es" | "fr-ca" }>;
+  params: Promise<{ locale: AppLocale }>;
 };
 
+export async function generateMetadata({
+  params,
+}: TermsPageProps): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "Seo" });
+
+  return buildPageMetadata({
+    locale,
+    pathname: "/terms-and-conditions",
+    title: t("terms.title"),
+    description: t("terms.description"),
+    // The legal text itself is only available in English. Declaring Spanish
+    // and French versions of an English document would create duplicates, so
+    // the other locales stay readable but out of the index until translated.
+    availableLocales: ["en"],
+    noIndex: locale !== "en",
+  });
+}
+
 export default async function TermsAndConditionsPage({ params }: TermsPageProps) {
-  await params;
+  const { locale } = await params;
+  setRequestLocale(locale);
 
   return (
     <div className="min-h-screen bg-white text-slate-900">

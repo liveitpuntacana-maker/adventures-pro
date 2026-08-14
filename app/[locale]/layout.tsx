@@ -1,15 +1,35 @@
 import { NextIntlClientProvider, hasLocale } from "next-intl";
-import { getMessages, setRequestLocale } from "next-intl/server";
-import { headers } from "next/headers";
+import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
+import { Geist, Geist_Mono } from "next/font/google";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
+import MetaPixel from "@/components/meta/MetaPixel";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import JsonLd from "@/components/JsonLd";
 import SiteWideAIChatLazy from "@/components/chat/SiteWideAIChatLazy";
 import { routing, type AppLocale } from "@/i18n/routing";
-import { buildPageMetadata, buildTravelAgencyJsonLd } from "@/lib/seo";
+import {
+  buildTravelAgencyJsonLd,
+  buildWebSiteJsonLd,
+  htmlLangForLocale,
+  SITE_URL,
+} from "@/lib/seo";
 import { client } from "@/sanity/lib/client";
 import { navCategoriesQuery, type NavCategory } from "@/lib/sanityCategories";
+import { SANITY_TAGS, sanityCache } from "@/lib/sanityCache";
+import "../globals.css";
+
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
 
 type LocaleLayoutProps = {
   children: React.ReactNode;
@@ -20,6 +40,11 @@ export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
 
+/**
+ * Site-wide defaults only. Canonical and hreflang live on each page, built from
+ * that page's own params — reading them from a request header here would force
+ * every route to render dynamically.
+ */
 export async function generateMetadata({
   params,
 }: {
@@ -31,13 +56,21 @@ export async function generateMetadata({
     return {};
   }
 
-  const headersList = await headers();
-  const pathname = headersList.get("x-pathname") ?? "/";
+  const t = await getTranslations({ locale, namespace: "Seo" });
 
-  return buildPageMetadata({
-    locale: locale as AppLocale,
-    pathname,
-  });
+  return {
+    metadataBase: new URL(SITE_URL),
+    title: {
+      default: t("defaultTitle"),
+      template: "%s | Adventures Finder",
+    },
+    description: t("home.description"),
+    icons: {
+      icon: [{ url: "/images/icon.png", type: "image/png", sizes: "512x512" }],
+      shortcut: "/images/icon.png",
+      apple: [{ url: "/images/icon.png", type: "image/png", sizes: "512x512" }],
+    },
+  };
 }
 
 export default async function LocaleLayout({
@@ -51,24 +84,37 @@ export default async function LocaleLayout({
   }
 
   setRequestLocale(locale);
+
   const messages = await getMessages();
   const categories = await client
-    .fetch<NavCategory[]>(navCategoriesQuery, { locale })
+    .fetch<NavCategory[]>(
+      navCategoriesQuery,
+      { locale },
+      sanityCache([SANITY_TAGS.category]),
+    )
     .catch(() => []);
-  const travelAgencyJsonLd = buildTravelAgencyJsonLd();
 
   return (
-    <NextIntlClientProvider messages={messages}>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(travelAgencyJsonLd),
-        }}
-      />
-      <Navbar categories={categories} />
-      {children}
-      <Footer />
-      <SiteWideAIChatLazy locale={locale as AppLocale} />
-    </NextIntlClientProvider>
+    <html
+      lang={htmlLangForLocale(locale)}
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+    >
+      <body className="min-h-full flex flex-col">
+        <GoogleAnalytics />
+        <MetaPixel />
+        <JsonLd
+          data={[
+            buildTravelAgencyJsonLd(),
+            buildWebSiteJsonLd(locale as AppLocale),
+          ]}
+        />
+        <NextIntlClientProvider messages={messages}>
+          <Navbar categories={categories} />
+          {children}
+          <Footer />
+          <SiteWideAIChatLazy locale={locale as AppLocale} />
+        </NextIntlClientProvider>
+      </body>
+    </html>
   );
 }

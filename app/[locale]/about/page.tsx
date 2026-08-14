@@ -1,12 +1,42 @@
 import Image from "next/image";
+import type { Metadata } from "next";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import TeamGrid from "@/components/TeamGrid";
+import JsonLd from "@/components/JsonLd";
 import { client } from "@/sanity/lib/client";
 import { urlFor } from "@/sanity/lib/image";
 import { groq } from "next-sanity";
+import type { AppLocale } from "@/i18n/routing";
+import { buildBreadcrumbJsonLd, buildPageMetadata } from "@/lib/seo";
+import { getDefaultOgImage, sanityOgImage } from "@/lib/ogImage";
+
+export const revalidate = 86400;
 
 type AboutPageProps = {
-  params: Promise<{ locale: "en" | "es" | "fr-ca" }>;
+  params: Promise<{ locale: AppLocale }>;
 };
+
+export async function generateMetadata({
+  params,
+}: AboutPageProps): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "Seo" });
+
+  const page = await client
+    .fetch<{ heroImage?: unknown } | null>(
+      groq`*[_type == "aboutPage"][0]{ heroImage }`,
+    )
+    .catch(() => null);
+
+  return buildPageMetadata({
+    locale,
+    pathname: "/about",
+    title: t("about.title"),
+    description: t("about.description"),
+    image: sanityOgImage(page?.heroImage) ?? (await getDefaultOgImage()),
+    imageAlt: t("about.title"),
+  });
+}
 
 type AboutPageData = {
   heroImage?: unknown;
@@ -36,6 +66,8 @@ What sets us apart is our customer service: thoughtful details, personalized att
 
 export default async function AboutPage({ params }: AboutPageProps) {
   const { locale } = await params;
+  setRequestLocale(locale);
+  const tSeo = await getTranslations({ locale, namespace: "Seo" });
 
   const about = await client.fetch<AboutPageData | null>(ABOUT_PAGE_QUERY, { locale }).catch(() => null);
 
@@ -59,6 +91,12 @@ export default async function AboutPage({ params }: AboutPageProps) {
 
   return (
     <div className="min-h-screen bg-white text-slate-900">
+      <JsonLd
+        data={buildBreadcrumbJsonLd(locale, [
+          { name: tSeo("breadcrumbHome"), path: "/" },
+          { name: tSeo("about.title") },
+        ])}
+      />
       <section className="relative overflow-hidden bg-[#0a192f] px-6 py-20 md:px-10 md:py-28 lg:px-12">
         {heroImageUrl ? (
           <Image

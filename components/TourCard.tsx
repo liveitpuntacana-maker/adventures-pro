@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Clock3 } from "lucide-react";
 import BookNowLink from "@/components/meta/BookNowLink";
 import StarRating from "@/components/StarRating";
@@ -65,11 +66,15 @@ export default function TourCard({ tour }: TourCardProps) {
     <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
       <div className="relative">
         {imageUrl ? (
-          <img
-            src={imageUrl}
-            alt={tour.title}
-            className="h-56 w-full object-cover"
-          />
+          <div className="relative h-56 w-full">
+            <Image
+              src={imageUrl}
+              alt={tour.title}
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            />
+          </div>
         ) : (
           <div className="h-56 w-full bg-slate-200" />
         )}

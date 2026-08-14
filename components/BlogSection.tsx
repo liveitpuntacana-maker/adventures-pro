@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import { groq } from "next-sanity";
 import { client } from "@/sanity/lib/client";
@@ -60,10 +61,12 @@ export default async function BlogSection({ locale }: BlogSectionProps) {
                 >
                 <div className="relative aspect-video w-full overflow-hidden bg-slate-200">
                   {imageUrl ? (
-                    <img
+                    <Image
                       src={imageUrl}
                       alt={title}
-                      className="h-full w-full object-cover"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     />
                   ) : null}
                 </div>

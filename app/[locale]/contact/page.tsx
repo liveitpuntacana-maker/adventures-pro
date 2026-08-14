@@ -1,13 +1,42 @@
 import Image from "next/image";
-import { getTranslations } from "next-intl/server";
+import type { Metadata } from "next";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { groq } from "next-sanity";
 import ContactForm from "@/components/ContactForm";
+import JsonLd from "@/components/JsonLd";
 import { client } from "@/sanity/lib/client";
 import { urlFor } from "@/sanity/lib/image";
+import type { AppLocale } from "@/i18n/routing";
+import { buildBreadcrumbJsonLd, buildPageMetadata } from "@/lib/seo";
+import { getDefaultOgImage, sanityOgImage } from "@/lib/ogImage";
+
+export const revalidate = 86400;
 
 type ContactPageProps = {
-  params: Promise<{ locale: "en" | "es" | "fr-ca" }>;
+  params: Promise<{ locale: AppLocale }>;
 };
+
+export async function generateMetadata({
+  params,
+}: ContactPageProps): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "Seo" });
+
+  const page = await client
+    .fetch<{ heroImage?: unknown } | null>(
+      groq`*[_type == "contactPage"][0]{ heroImage }`,
+    )
+    .catch(() => null);
+
+  return buildPageMetadata({
+    locale,
+    pathname: "/contact",
+    title: t("contact.title"),
+    description: t("contact.description"),
+    image: sanityOgImage(page?.heroImage) ?? (await getDefaultOgImage()),
+    imageAlt: t("contact.title"),
+  });
+}
 
 type ContactPageData = {
   heroImage?: unknown;
@@ -15,15 +44,20 @@ type ContactPageData = {
   heroSubtitle?: string | null;
 };
 
+// No cross-locale fallback on purpose: when Sanity has no copy for the active
+// locale we fall through to the translated message rather than serving English
+// text under a /es or /fr-ca URL.
 const CONTACT_PAGE_QUERY = groq`*[_type == "contactPage"][0]{
   heroImage,
-  "heroTitle": coalesce(select($locale == "fr-ca" => heroTitle.frCA, heroTitle[$locale]), heroTitle.en, heroTitle),
-  "heroSubtitle": coalesce(select($locale == "fr-ca" => heroSubtitle.frCA, heroSubtitle[$locale]), heroSubtitle.en, heroSubtitle)
+  "heroTitle": select($locale == "fr-ca" => heroTitle.frCA, heroTitle[$locale]),
+  "heroSubtitle": select($locale == "fr-ca" => heroSubtitle.frCA, heroSubtitle[$locale])
 }`;
 
 export default async function ContactPage({ params }: ContactPageProps) {
   const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations("Contact");
+  const tSeo = await getTranslations({ locale, namespace: "Seo" });
 
   const contactPage = await client
     .fetch<ContactPageData | null>(CONTACT_PAGE_QUERY, { locale })
@@ -43,6 +77,12 @@ export default async function ContactPage({ params }: ContactPageProps) {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
+      <JsonLd
+        data={buildBreadcrumbJsonLd(locale, [
+          { name: tSeo("breadcrumbHome"), path: "/" },
+          { name: tSeo("contact.title") },
+        ])}
+      />
       <section className="relative overflow-hidden bg-[#0a192f] px-6 py-20 md:px-10 md:py-28 lg:px-12">
         {heroImageUrl ? (
           <Image

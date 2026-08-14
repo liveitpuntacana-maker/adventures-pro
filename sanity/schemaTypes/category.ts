@@ -40,6 +40,13 @@ export const categoryType = defineType({
       type: "image",
       options: { hotspot: true },
     }),
+    defineField({
+      name: "seoIntro",
+      title: "SEO intro text",
+      type: "localizedText",
+      description:
+        "Texto introductorio de la pagina de categoria (150-300 palabras). Si se deja vacio se usa el texto por defecto de lib/content/listingIntro.ts. Los primeros 160 caracteres se usan como meta descripcion.",
+    }),
   ],
   preview: {
     select: {

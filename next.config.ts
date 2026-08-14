@@ -38,16 +38,6 @@ const wordpressRedirects: Array<{ source: string; destination: string; permanent
     permanent: true,
   },
   {
-    source: "/supermarkets-in-punta-cana",
-    destination: "/en/blog/supermarkets-in-punta-cana",
-    permanent: true,
-  },
-  {
-    source: "/supermarkets-in-punta-cana/",
-    destination: "/en/blog/supermarkets-in-punta-cana",
-    permanent: true,
-  },
-  {
     source: "/transfers",
     destination: "/en/transfers",
     permanent: true,
@@ -68,16 +58,6 @@ const wordpressRedirects: Array<{ source: string; destination: string; permanent
     permanent: true,
   },
   {
-    source: "/the-history-of-punta-cana",
-    destination: "/en/blog/the-history-of-punta-cana",
-    permanent: true,
-  },
-  {
-    source: "/the-history-of-punta-cana/",
-    destination: "/en/blog/the-history-of-punta-cana",
-    permanent: true,
-  },
-  {
     source: "/land-tours",
     destination: "/en/excursions/categoria/land-tours",
     permanent: true,
@@ -95,26 +75,6 @@ const wordpressRedirects: Array<{ source: string; destination: string; permanent
   {
     source: "/punta-cana-neighborhoods-explained-where-to-stay-rent-or-relocate/",
     destination: "/en/blog/punta-cana-neighborhoods-explained-where-to-stay-rent-or-relocate",
-    permanent: true,
-  },
-  {
-    source: "/top-best-beaches-in-dominican-republic",
-    destination: "/en/blog/top-best-beaches-in-dominican-republic",
-    permanent: true,
-  },
-  {
-    source: "/top-best-beaches-in-dominican-republic/",
-    destination: "/en/blog/top-best-beaches-in-dominican-republic",
-    permanent: true,
-  },
-  {
-    source: "/shopping-center-in-punta-cana",
-    destination: "/en/blog/shopping-center-in-punta-cana",
-    permanent: true,
-  },
-  {
-    source: "/shopping-center-in-punta-cana/",
-    destination: "/en/blog/shopping-center-in-punta-cana",
     permanent: true,
   },
   {
@@ -213,16 +173,18 @@ const reservedRootSlugs = [
   "apple-touch-icon\\.png",
   "ads\\.txt",
   "\\.well-known",
+  // URLs retiradas: el middleware les responde 410 Gone. Deben quedar excluidas
+  // del catch-all o este las redirigiria a /en/excursions/<slug>, que es un 404.
+  "supermarkets-in-punta-cana",
+  "the-history-of-punta-cana",
+  "top-best-beaches-in-dominican-republic",
+  "shopping-center-in-punta-cana",
   // sources ya cubiertos por wordpressRedirects (sin slash)
   "when-not-to-visit-punta-cana-costly-mistakes-tourists-make-and-the-best-months-instead",
   "sea-turtles-in-the-dominican-republic-when-where-and-how-to-see-them-responsibly",
-  "supermarkets-in-punta-cana",
   "who-we-are",
-  "the-history-of-punta-cana",
   "land-tours",
   "punta-cana-neighborhoods-explained-where-to-stay-rent-or-relocate",
-  "top-best-beaches-in-dominican-republic",
-  "shopping-center-in-punta-cana",
   "private-tours",
   "water-tours",
   "multidays-tours",
@@ -250,6 +212,78 @@ const legacyTourRedirects: Array<{
   {
     source: `/:slug${legacyTourSlugPattern}/`,
     destination: "/en/excursions/:slug",
+    permanent: true,
+  },
+];
+
+/**
+ * Locale-less versions of the site's own pages.
+ *
+ * next-intl answers these with a 307 (temporary). Google follows a 307 but
+ * only a 301/308 transfers ranking signals cleanly, so the permanent ones are
+ * declared here and never reach the proxy.
+ */
+const localePrefixRedirects: Array<{
+  source: string;
+  destination: string;
+  permanent: true;
+}> = [
+  "/about",
+  "/contact",
+  "/excursions",
+  "/blog",
+  "/faqs",
+  "/terms-and-conditions",
+  "/cancellation-policy",
+].map((pathname) => ({
+  source: pathname,
+  destination: `/en${pathname}`,
+  permanent: true as const,
+}));
+
+/**
+ * Category slugs that used to live at /excursions/<slug> before the
+ * /excursions/categoria/<slug> structure existed.
+ */
+const categorySlugs = [
+  "water-tours",
+  "land-tours",
+  "combo-tours",
+  "private-tours",
+  "golf-tours",
+  "packages",
+  "multidays-tours",
+].join("|");
+
+/**
+ * Old internal URL shapes that no longer resolve.
+ *
+ * /tours/<slug> and /excursions/<category> used to be real pages; after the
+ * move to /[locale]/excursions/... they were left redirecting into 404s.
+ */
+const legacyStructureRedirects: Array<{
+  source: string;
+  destination: string;
+  permanent: true;
+}> = [
+  {
+    source: `/:locale(en|es|fr-ca)/excursions/:category(${categorySlugs})`,
+    destination: "/:locale/excursions/categoria/:category",
+    permanent: true,
+  },
+  {
+    source: `/excursions/:category(${categorySlugs})`,
+    destination: "/en/excursions/categoria/:category",
+    permanent: true,
+  },
+  {
+    source: "/:locale(en|es|fr-ca)/tours/:slug*",
+    destination: "/:locale/excursions/:slug*",
+    permanent: true,
+  },
+  {
+    source: "/tours/:slug*",
+    destination: "/en/excursions/:slug*",
     permanent: true,
   },
 ];
@@ -316,8 +350,12 @@ const nextConfig: NextConfig = {
     return [
       ...faviconRedirects,
       ...wordpressRedirects,
-      ...legacyTourRedirects,
+      ...localePrefixRedirects,
+      // Structure fixes run before the root catch-all so /tours/<slug> is not
+      // swallowed by it.
+      ...legacyStructureRedirects,
       ...slugMigrationRedirects,
+      ...legacyTourRedirects,
     ];
   },
 };

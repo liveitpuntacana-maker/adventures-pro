@@ -1,12 +1,28 @@
 import { groq } from "next-sanity";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import CategoryPageHero from "@/components/CategoryPageHero";
 import CategorySearch, { type CategoryTour } from "@/components/CategorySearch";
+import ListingSeoContent from "@/components/ListingSeoContent";
+import JsonLd from "@/components/JsonLd";
 import { client } from "@/sanity/lib/client";
 import { routing, type AppLocale } from "@/i18n/routing";
 import { tourRatingProjection } from "@/lib/tourRating";
+import { categoryExcursionPath } from "@/lib/categoryPath";
+import { tourExcursionPath } from "@/lib/tourSlug";
+import { getCategoryIntro } from "@/lib/content/listingIntro";
+import { sanityOgImage, getDefaultOgImage } from "@/lib/ogImage";
+import { SANITY_TAGS, sanityCache } from "@/lib/sanityCache";
+import {
+  buildBreadcrumbJsonLd,
+  buildFaqJsonLd,
+  buildItemListJsonLd,
+  buildPageMetadata,
+  toItemListEntries,
+} from "@/lib/seo";
 
-export const revalidate = 0;
+export const revalidate = 3600;
 export const dynamicParams = true;
 
 type CategoryPageProps = {
@@ -19,6 +35,7 @@ type CategoryData = {
   slug?: string;
   mainImage?: unknown;
   bannerImage?: unknown;
+  seoIntro?: string | null;
 };
 
 const categoryBySlugQuery = groq`*[_type == "category" && slug.current == $slug][0] {
@@ -26,7 +43,8 @@ const categoryBySlugQuery = groq`*[_type == "category" && slug.current == $slug]
   "title": coalesce(select($locale == "fr-ca" => title.frCA, title[$locale]), title.en, title.es, title.frCA),
   "slug": slug.current,
   mainImage,
-  bannerImage
+  bannerImage,
+  "seoIntro": select($locale == "fr-ca" => seoIntro.frCA, seoIntro[$locale])
 }`;
 
 const categoryToursQuery = groq`*[_type == "tour" && (
@@ -60,20 +78,63 @@ export async function generateStaticParams() {
     groq`*[_type == "category" && defined(slug.current)]{ "slug": slug.current }`,
   );
 
-  return routing.locales.flatMap((locale) =>
-    (categories ?? []).map((category) => ({
-      locale,
-      slug: category.slug,
-    })),
-  );
+  // Default locale only at build time; other locales come from ISR on demand.
+  return (categories ?? []).map((category) => ({
+    locale: routing.defaultLocale,
+    slug: category.slug,
+  }));
+}
+
+async function fetchCategory(locale: AppLocale, slug: string) {
+  return client
+    .fetch<CategoryData | null>(
+      categoryBySlugQuery,
+      { locale, slug },
+      sanityCache([SANITY_TAGS.category]),
+    )
+    .catch(() => null);
+}
+
+export async function generateMetadata({
+  params,
+}: CategoryPageProps): Promise<Metadata> {
+  const { locale, slug } = await params;
+  const t = await getTranslations({ locale, namespace: "Seo" });
+  const category = await fetchCategory(locale, slug);
+
+  if (!category) return {};
+
+  const name = category.title?.trim() || slug;
+  const intro = getCategoryIntro(slug, locale, name);
+  const description = category.seoIntro?.trim() || intro.intro;
+
+  return buildPageMetadata({
+    locale,
+    pathname: categoryExcursionPath(slug),
+    title: t("category.title", { name }),
+    description: description.slice(0, 160),
+    image:
+      sanityOgImage(category.bannerImage) ??
+      sanityOgImage(category.mainImage) ??
+      (await getDefaultOgImage()),
+    imageAlt: t("category.title", { name }),
+  });
 }
 
 export default async function CategoryPage({ params }: CategoryPageProps) {
   const { locale, slug } = await params;
+  setRequestLocale(locale);
+  const t = await getTranslations({ locale, namespace: "Seo" });
 
   const [category, tours] = await Promise.all([
-    client.fetch<CategoryData | null>(categoryBySlugQuery, { locale, slug }),
-    client.fetch<CategoryTour[]>(categoryToursQuery, { locale, slug }).catch(() => []),
+    fetchCategory(locale, slug),
+    client
+      .fetch<CategoryTour[]>(
+        categoryToursQuery,
+        { locale, slug },
+        sanityCache([SANITY_TAGS.tour, SANITY_TAGS.category]),
+      )
+      .catch(() => []),
   ]);
 
   if (!category) {
@@ -81,15 +142,36 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   }
 
   const title = category.title?.trim() || slug;
+  const intro = getCategoryIntro(slug, locale, title);
+  // An editor-written intro in Sanity always wins over the built-in default.
+  const content = category.seoIntro?.trim()
+    ? { ...intro, intro: category.seoIntro.trim() }
+    : intro;
+
+  const jsonLd = [
+    buildBreadcrumbJsonLd(locale, [
+      { name: t("breadcrumbHome"), path: "/" },
+      { name: t("breadcrumbExcursions"), path: "/excursions" },
+      { name: title },
+    ]),
+    buildItemListJsonLd(
+      locale,
+      t("category.title", { name: title }),
+      toItemListEntries(tours, tourExcursionPath),
+    ),
+    ...(content.faqs.length > 0 ? [buildFaqJsonLd(content.faqs)] : []),
+  ];
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
+      <JsonLd data={jsonLd} />
       <CategoryPageHero
         title={title}
         bannerImage={category.bannerImage}
         mainImage={category.mainImage}
       />
       <CategorySearch tours={tours} categorySlug={slug} />
+      <ListingSeoContent content={content} faqTitle={t("faqSectionTitle")} />
     </div>
   );
 }

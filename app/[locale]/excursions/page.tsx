@@ -1,9 +1,24 @@
+import { Suspense } from "react";
 import { groq } from "next-sanity";
+import type { Metadata } from "next";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import ExcursionesCatalog, {
   type ExcursionTour,
 } from "@/components/ExcursionesCatalog";
+import JsonLd from "@/components/JsonLd";
 import { client } from "@/sanity/lib/client";
 import { type AppLocale } from "@/i18n/routing";
+import {
+  buildBreadcrumbJsonLd,
+  buildItemListJsonLd,
+  buildPageMetadata,
+  toItemListEntries,
+} from "@/lib/seo";
+import { getDefaultOgImage } from "@/lib/ogImage";
+import { tourExcursionPath } from "@/lib/tourSlug";
+import { SANITY_TAGS, sanityCache } from "@/lib/sanityCache";
+
+export const revalidate = 3600;
 
 const excursionsQuery = groq`*[_type == "tour" && (
   !defined($category) ||
@@ -45,29 +60,67 @@ const categoriesQuery = groq`*[_type == "category"] | order(coalesce(title.en, t
 
 type PageProps = {
   params: Promise<{ locale: AppLocale }>;
-  searchParams: Promise<{ category?: string }>;
 };
 
-export default async function ExcursionesPage({
+export async function generateMetadata({
   params,
-  searchParams,
-}: PageProps) {
+}: {
+  params: Promise<{ locale: AppLocale }>;
+}): Promise<Metadata> {
   const { locale } = await params;
-  const { category } = await searchParams;
-  const activeCategory = category || "all";
+  const t = await getTranslations({ locale, namespace: "Seo" });
+
+  return buildPageMetadata({
+    locale,
+    pathname: "/excursions",
+    title: t("excursions.title"),
+    description: t("excursions.description"),
+    image: await getDefaultOgImage(),
+    imageAlt: t("excursions.title"),
+  });
+}
+
+export default async function ExcursionesPage({ params }: PageProps) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+  const t = await getTranslations({ locale, namespace: "Seo" });
+
   const [tours, categories] = await Promise.all([
-    client.fetch<ExcursionTour[]>(excursionsQuery, {
-      locale,
-      category: category || null,
-    }),
-    client.fetch<Array<{ slug: string; title: string }>>(categoriesQuery, { locale }),
+    client.fetch<ExcursionTour[]>(
+      excursionsQuery,
+      { locale, category: null },
+      sanityCache([SANITY_TAGS.tour, SANITY_TAGS.category]),
+    ),
+    client.fetch<Array<{ slug: string; title: string }>>(
+      categoriesQuery,
+      { locale },
+      sanityCache([SANITY_TAGS.category]),
+    ),
   ]);
 
+  const jsonLd = [
+    buildBreadcrumbJsonLd(locale, [
+      { name: t("breadcrumbHome"), path: "/" },
+      { name: t("excursions.title") },
+    ]),
+    buildItemListJsonLd(
+      locale,
+      t("excursions.title"),
+      toItemListEntries(tours, tourExcursionPath),
+    ),
+  ];
+
   return (
-    <ExcursionesCatalog
-      tours={tours}
-      categories={[{ slug: "all", title: "All" }, ...categories]}
-      initialCategory={activeCategory}
-    />
+    <>
+      <JsonLd data={jsonLd} />
+      {/* The catalog reads ?category= via useSearchParams, so it needs a
+          Suspense boundary for the page to stay prerenderable. */}
+      <Suspense fallback={null}>
+        <ExcursionesCatalog
+          tours={tours}
+          categories={[{ slug: "all", title: "All" }, ...categories]}
+        />
+      </Suspense>
+    </>
   );
 }

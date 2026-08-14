@@ -1,12 +1,41 @@
 import Image from "next/image";
+import type { Metadata } from "next";
 import { groq } from "next-sanity";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import JsonLd from "@/components/JsonLd";
 import { client } from "@/sanity/lib/client";
 import { urlFor } from "@/sanity/lib/image";
 import type { AppLocale } from "@/i18n/routing";
+import {
+  blogPathFromSlug,
+  buildBreadcrumbJsonLd,
+  buildItemListJsonLd,
+  buildPageMetadata,
+  toItemListEntries,
+} from "@/lib/seo";
+import { getDefaultOgImage } from "@/lib/ogImage";
+import { REVALIDATE, SANITY_TAGS, sanityCache } from "@/lib/sanityCache";
 
-export const revalidate = 0;
+export const revalidate = 86400;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: AppLocale }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "Seo" });
+
+  return buildPageMetadata({
+    locale,
+    pathname: "/blog",
+    title: t("blog.title"),
+    description: t("blog.description"),
+    image: await getDefaultOgImage(),
+    imageAlt: t("blog.title"),
+  });
+}
 
 type PostRow = {
   _id: string;
@@ -46,10 +75,30 @@ export default async function BlogIndexPage({ params }: BlogIndexPageProps) {
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("Blog");
-  const posts = await client.fetch<PostRow[]>(ALL_POSTS_QUERY, { locale }).catch(() => []);
+  const tSeo = await getTranslations({ locale, namespace: "Seo" });
+  const posts = await client
+    .fetch<PostRow[]>(
+      ALL_POSTS_QUERY,
+      { locale },
+      sanityCache([SANITY_TAGS.post], REVALIDATE.blog),
+    )
+    .catch(() => []);
+
+  const jsonLd = [
+    buildBreadcrumbJsonLd(locale, [
+      { name: tSeo("breadcrumbHome"), path: "/" },
+      { name: tSeo("breadcrumbBlog") },
+    ]),
+    buildItemListJsonLd(
+      locale,
+      tSeo("blog.title"),
+      toItemListEntries(posts, blogPathFromSlug),
+    ),
+  ];
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
+      <JsonLd data={jsonLd} />
       <main className="mx-auto max-w-7xl px-6 py-14 md:px-10 md:py-20 lg:px-12">
         <header className="mx-auto max-w-3xl text-center">
           <h1 className="text-3xl font-semibold tracking-tight text-[#0a192f] md:text-4xl">

@@ -301,6 +301,20 @@ export const tourType = defineType({
         }),
     }),
     defineField({
+      name: "seoTitle",
+      title: "SEO title (optional)",
+      type: "localizedString",
+      description:
+        "Titulo para Google, si quieres uno distinto al titulo del tour. Ideal 50-60 caracteres, incluyendo la ciudad (ej. 'Party Boat Tour in Punta Cana'). Vacio = se usa el titulo del tour.",
+    }),
+    defineField({
+      name: "seoDescription",
+      title: "SEO meta description (optional)",
+      type: "localizedText",
+      description:
+        "Meta descripcion para Google, maximo 160 caracteres. Vacio = se usan las primeras lineas de Info Tour.",
+    }),
+    defineField({
       name: "infoTour",
       title: "Info Tour",
       type: "localizedText",
