@@ -821,6 +821,9 @@ export default async function TourDetailPage({ params }: TourPageProps) {
           locale={activeLocale}
           slug={tour.slug}
           category={categorySlug}
+          price={
+            Number.isFinite(adultLeadPriceValue) ? adultLeadPriceValue : undefined
+          }
         />
       </main>
       <div className="fixed bottom-0 left-0 right-0 z-50 block border-t border-slate-200/80 bg-white/95 shadow-[0_-12px_32px_rgba(15,23,42,0.1)] backdrop-blur md:hidden">

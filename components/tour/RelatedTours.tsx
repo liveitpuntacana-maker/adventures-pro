@@ -7,6 +7,13 @@ import { tourRatingProjection } from "@/lib/tourRating";
 import { SANITY_TAGS, sanityCache } from "@/lib/sanityCache";
 import type { AppLocale } from "@/i18n/routing";
 
+function numericPrice(tour: { pricing?: Array<{ price?: number | string | null }> }): number {
+  const raw = tour.pricing?.[0]?.price;
+  if (typeof raw === "number" && Number.isFinite(raw)) return raw;
+  const parsed = Number(String(raw ?? "").replace(/[^0-9.]/g, ""));
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
 type RelatedTour = {
   _id: string;
   title: string;
@@ -40,13 +47,19 @@ const projection = `
   ${tourRatingProjection}
 `;
 
-/** Tours sharing the current tour's category. */
+/**
+ * Tours sharing the current tour's category.
+ *
+ * The whole category is fetched, not the first four: picking a fixed slice
+ * would always surface the same cheapest tours and leave the rest of the
+ * catalogue with no inbound links at all.
+ */
 const sameCategoryQuery = groq`*[
   _type == "tour" &&
   defined(slug.current) &&
   slug.current != $slug &&
   (category->slug.current == $category || $category in categories[]->slug.current)
-] | order(price asc) [0...4] { ${projection} }`;
+] | order(price asc) { ${projection} }`;
 
 /** Fallback for categories with nothing else in them. */
 const featuredFallbackQuery = groq`*[
@@ -66,10 +79,13 @@ export default async function RelatedTours({
   locale,
   slug,
   category,
+  price,
 }: {
   locale: AppLocale;
   slug: string;
   category: string;
+  /** Lead price of the current tour, used to pick comparable ones. */
+  price?: number;
 }) {
   const t = await getTranslations({ locale, namespace: "RelatedTours" });
 
@@ -80,6 +96,18 @@ export default async function RelatedTours({
       sanityCache([SANITY_TAGS.tour, SANITY_TAGS.category]),
     )
     .catch(() => []);
+
+  // Closest by price: relevant for the visitor, and it spreads inbound links
+  // across the catalogue instead of piling them on the four cheapest tours.
+  if (tours.length > 4) {
+    const reference = Number.isFinite(price) ? (price as number) : 0;
+    tours = [...tours]
+      .sort(
+        (a, b) =>
+          Math.abs(numericPrice(a) - reference) - Math.abs(numericPrice(b) - reference),
+      )
+      .slice(0, 4);
+  }
 
   if (tours.length < 2) {
     const fallback = await client
