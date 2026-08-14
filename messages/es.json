@@ -212,5 +212,9 @@
     "basedOn": "Basado en más de {count} reseñas en Google",
     "google": "Google",
     "readMore": "Leer más en Google"
+  },
+  "RelatedTours": {
+    "title": "También te puede interesar",
+    "subtitle": "Más experiencias de esta categoría"
   }
 }

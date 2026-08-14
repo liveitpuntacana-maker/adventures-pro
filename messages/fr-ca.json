@@ -214,5 +214,9 @@
     "basedOn": "Selon plus de {count} avis sur Google",
     "google": "Google",
     "readMore": "Lire la suite sur Google"
+  },
+  "RelatedTours": {
+    "title": "Vous aimerez aussi",
+    "subtitle": "D'autres expériences de cette catégorie"
   }
 }

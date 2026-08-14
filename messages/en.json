@@ -212,5 +212,9 @@
     "basedOn": "Based on {count}+ reviews on Google",
     "google": "Google",
     "readMore": "Read more on Google"
+  },
+  "RelatedTours": {
+    "title": "You might also like",
+    "subtitle": "More experiences in this category"
   }
 }

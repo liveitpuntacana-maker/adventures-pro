@@ -31,6 +31,7 @@ import {
   localizedUrl,
 } from "@/lib/seo";
 import JsonLd from "@/components/JsonLd";
+import RelatedTours from "@/components/tour/RelatedTours";
 import { SANITY_TAGS, sanityCache } from "@/lib/sanityCache";
 import { routing, type AppLocale } from "@/i18n/routing";
 
@@ -816,6 +817,11 @@ export default async function TourDetailPage({ params }: TourPageProps) {
             </div>
           </aside>
         </div>
+        <RelatedTours
+          locale={activeLocale}
+          slug={tour.slug}
+          category={categorySlug}
+        />
       </main>
       <div className="fixed bottom-0 left-0 right-0 z-50 block border-t border-slate-200/80 bg-white/95 shadow-[0_-12px_32px_rgba(15,23,42,0.1)] backdrop-blur md:hidden">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4">
