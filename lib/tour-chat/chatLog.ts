@@ -1,5 +1,4 @@
 import { getSanityWriteClient } from "@/lib/soro/sanityWriteClient";
-import { dataset, projectId } from "@/sanity/env";
 import type { AppLocale } from "@/i18n/routing";
 import type { TourChatMessage } from "@/lib/tour-chat/types";
 
@@ -54,8 +53,8 @@ export type ChatLogInput = {
  * this simple and idempotent — no patching, no partial writes. Failures are
  * swallowed: a logging problem must never cost the visitor their answer.
  */
-export async function logChatSession(input: ChatLogInput): Promise<string> {
-  if (!process.env.SANITY_WRITE_TOKEN) return "no_write_token";
+export async function logChatSession(input: ChatLogInput): Promise<void> {
+  if (!process.env.SANITY_WRITE_TOKEN) return;
 
   try {
     const now = new Date().toISOString();
@@ -77,7 +76,7 @@ export async function logChatSession(input: ChatLogInput): Promise<string> {
       { id },
     );
 
-    const written = await client.createOrReplace({
+    await client.createOrReplace({
       _id: id,
       _type: "chatSession",
       sessionId: input.sessionId,
@@ -90,10 +89,7 @@ export async function logChatSession(input: ChatLogInput): Promise<string> {
       recommendedTours: recommended.length > 0 ? recommended : undefined,
       messages: turns,
     });
-
-    return `ok project=${projectId} dataset=${dataset} id=${written?._id ?? "?"} rev=${written?._rev ?? "?"}`;
   } catch (error) {
     console.error("[chat-log] could not store session", error);
-    return `error: ${error instanceof Error ? error.message : String(error)}`;
   }
 }

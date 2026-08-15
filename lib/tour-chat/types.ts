@@ -36,8 +36,6 @@ export type SiteChatRequestBody = {
   pageTourTitle?: string;
   /** Groups the turns of one conversation together in the chat log. */
   sessionId?: string;
-  /** Awaits the log write and reports its outcome. Diagnostics only. */
-  debug?: boolean;
 };
 
 /** @deprecated Use SiteChatRequestBody */
