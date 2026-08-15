@@ -31,8 +31,14 @@ const REVIEWS_QUERY = `*[_type == "review"] | order(_createdAt desc) [0...12] {
   googleReviewUrl
 }`;
 
-/** Editable in Sanity so the headline number does not go stale in code. */
-const REVIEW_COUNT_QUERY = `*[_type == "landingPage"][0]{ googleReviewsCount }`;
+/**
+ * Every rating, so the summary reflects the whole set rather than the twelve
+ * reviews the carousel happens to show. Ratings come back raw and are bucketed
+ * in JS, which also copes with half stars like 3.5.
+ */
+const ALL_RATINGS_QUERY = `*[_type == "review" && defined(rating)].rating`;
+
+const GOOGLE_PROFILE_URL = "https://share.google/HGvwSZTd6I4BLW7Av";
 
 function GoogleMark({ className = "h-5 w-5" }: { className?: string }) {
   return (
@@ -72,20 +78,23 @@ function Stars({ count }: { count: number }) {
 export default async function ReviewsSection() {
   const t = await getTranslations("Reviews");
 
-  const [reviews, summary] = await Promise.all([
+  const [reviews, allRatings] = await Promise.all([
     client
       .fetch<Review[]>(REVIEWS_QUERY, {}, sanityCache([SANITY_TAGS.review]))
       .catch(() => []),
     client
-      .fetch<{ googleReviewsCount?: number } | null>(
-        REVIEW_COUNT_QUERY,
-        {},
-        sanityCache([SANITY_TAGS.landingPage]),
-      )
-      .catch(() => null),
+      .fetch<number[]>(ALL_RATINGS_QUERY, {}, sanityCache([SANITY_TAGS.review]))
+      .catch(() => [] as number[]),
   ]);
 
-  const reviewsCount = summary?.googleReviewsCount ?? 40;
+  const total = allRatings.length;
+  const average = total > 0 ? allRatings.reduce((sum, r) => sum + r, 0) / total : 0;
+
+  // [5,4,3,2,1] — half stars round to the nearest whole bucket.
+  const distribution = [5, 4, 3, 2, 1].map((stars) => ({
+    stars,
+    count: allRatings.filter((r) => Math.round(r) === stars).length,
+  }));
 
   // Google orders by review date; _createdAt only reflects when someone got
   // round to copying it into Sanity.
@@ -95,23 +104,61 @@ export default async function ReviewsSection() {
     <section className="w-full bg-white py-16 md:py-24">
       <div className="mx-auto grid max-w-7xl gap-12 px-6 md:px-10 lg:grid-cols-[360px_1fr] lg:items-center lg:gap-16 lg:px-12">
         <div className="border border-slate-200 bg-slate-50 p-8 md:p-10">
-          <p className="text-2xl font-extrabold tracking-tight text-blue-950">
-            {t("excellent")}
-          </p>
-          <div className="mt-5 flex items-center gap-1.5">
-            <Star filled />
-            <Star filled />
-            <Star filled />
-            <Star filled />
-            <Star filled />
+          <p className="text-sm font-semibold text-slate-700">{t("summaryTitle")}</p>
+          {total === 0 ? null : (
+          <>
+
+          <div className="mt-6 flex items-start gap-6">
+            {/* Distribution bars, widest bucket on top, exactly as Google lays
+                them out. */}
+            <div className="flex-1 space-y-1.5">
+              {distribution.map(({ stars, count }) => {
+                const percent = total > 0 ? (count / total) * 100 : 0;
+                return (
+                  <div key={stars} className="flex items-center gap-2">
+                    <span className="w-2 text-right text-xs text-slate-500 tabular-nums">
+                      {stars}
+                    </span>
+                    <span
+                      className="h-2.5 flex-1 overflow-hidden rounded-full bg-slate-200"
+                      role="img"
+                      aria-label={t("starsBreakdown", { stars, count, total })}
+                    >
+                      <span
+                        className="block h-full rounded-full bg-[#fbbc04]"
+                        style={{ width: `${percent}%` }}
+                      />
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="shrink-0 text-right">
+              <p className="text-5xl font-normal leading-none text-slate-800 tabular-nums">
+                {average.toFixed(1)}
+              </p>
+              <div className="mt-2 flex justify-end">
+                <Stars count={average} />
+              </div>
+              <p className="mt-2 text-sm text-slate-500">
+                {t("reviewsCount", { count: total })}
+              </p>
+            </div>
           </div>
-          <p className="mt-5 text-base font-medium text-slate-700">
-            {t("basedOn", { count: reviewsCount })}
-          </p>
-          <div className="mt-6 inline-flex items-center gap-3 border border-slate-200 bg-white px-4 py-2">
+
+          </>
+          )}
+
+          <a
+            href={GOOGLE_PROFILE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-7 inline-flex min-h-12 items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 py-2 transition hover:border-slate-300 hover:shadow-sm"
+          >
             <GoogleMark className="h-6 w-6" />
-            <span className="text-sm font-semibold text-slate-700">Google</span>
-          </div>
+            <span className="text-sm font-semibold text-slate-700">{t("google")}</span>
+          </a>
         </div>
 
         <div className="overflow-hidden">
