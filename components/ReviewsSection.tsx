@@ -6,7 +6,7 @@ import { client } from "@/sanity/lib/client";
 import { urlFor } from "@/sanity/lib/image";
 import { SANITY_TAGS, sanityCache } from "@/lib/sanityCache";
 import {
-  byNewestReviewDate,
+  byCommentThenDate,
   parseReviewDate,
   relativeDateParts,
 } from "@/lib/reviewDate";
@@ -21,7 +21,7 @@ type Review = {
   googleReviewUrl?: string;
 };
 
-const REVIEWS_QUERY = `*[_type == "review"] | order(_createdAt desc) [0...12] {
+const REVIEWS_QUERY = `*[_type == "review"] {
   _id,
   author,
   photo,
@@ -96,9 +96,7 @@ export default async function ReviewsSection() {
     count: allRatings.filter((r) => Math.round(r) === stars).length,
   }));
 
-  // Google orders by review date; _createdAt only reflects when someone got
-  // round to copying it into Sanity.
-  const orderedReviews = [...reviews].sort(byNewestReviewDate);
+  const orderedReviews = [...reviews].sort(byCommentThenDate);
 
   return (
     <section className="w-full bg-white py-16 md:py-24">

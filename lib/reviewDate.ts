@@ -52,3 +52,21 @@ export function byNewestReviewDate(
   if (!dateB) return -1;
   return dateB.getTime() - dateA.getTime();
 }
+
+/**
+ * Carousel order: reviews with something written first, newest within each
+ * group, star-only ones after.
+ *
+ * Sorting purely by date buries the reviews worth reading behind recent
+ * ratings that carry no text — those render as an all-but-empty card. They
+ * still count towards the summary; they just stop leading the carousel.
+ */
+export function byCommentThenDate(
+  a: { date?: string | null; text?: string | null },
+  b: { date?: string | null; text?: string | null },
+): number {
+  const aHasText = Boolean(a.text?.trim());
+  const bHasText = Boolean(b.text?.trim());
+  if (aHasText !== bHasText) return aHasText ? -1 : 1;
+  return byNewestReviewDate(a, b);
+}
