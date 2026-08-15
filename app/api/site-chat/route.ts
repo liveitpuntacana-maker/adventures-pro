@@ -12,7 +12,7 @@ import { getChatKnowledge } from "@/lib/sanity/queries/chatKnowledge";
 import { logChatSession } from "@/lib/tour-chat/chatLog";
 
 export const runtime = "nodejs";
-export const maxDuration = 15;
+export const maxDuration = 30;
 
 const MAX_MESSAGES = 20;
 const MAX_CONTENT_CHARS = 2000;
@@ -172,7 +172,7 @@ export async function POST(request: Request) {
         // after() runs once the reply is on its way, so storing the transcript
         // never adds latency for the visitor.
         if (sessionId) {
-          after(() =>
+          const log = () =>
             logChatSession({
               sessionId,
               locale,
@@ -180,8 +180,16 @@ export async function POST(request: Request) {
               reply,
               currentPath,
               pageTourTitle,
-            }),
-          );
+            });
+
+          // debug awaits the write so the outcome can be inspected; normal
+          // traffic defers it so logging never adds latency.
+          if (body.debug === true) {
+            const logResult = await log();
+            return NextResponse.json({ ok: true, reply, model, logResult });
+          }
+
+          after(log);
         }
 
         const success: TourChatResponse = { ok: true, reply, model };

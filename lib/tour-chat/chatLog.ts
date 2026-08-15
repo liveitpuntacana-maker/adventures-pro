@@ -53,8 +53,8 @@ export type ChatLogInput = {
  * this simple and idempotent — no patching, no partial writes. Failures are
  * swallowed: a logging problem must never cost the visitor their answer.
  */
-export async function logChatSession(input: ChatLogInput): Promise<void> {
-  if (!process.env.SANITY_WRITE_TOKEN) return;
+export async function logChatSession(input: ChatLogInput): Promise<string> {
+  if (!process.env.SANITY_WRITE_TOKEN) return "no_write_token";
 
   try {
     const now = new Date().toISOString();
@@ -89,7 +89,10 @@ export async function logChatSession(input: ChatLogInput): Promise<void> {
       recommendedTours: recommended.length > 0 ? recommended : undefined,
       messages: turns,
     });
+
+    return "ok";
   } catch (error) {
     console.error("[chat-log] could not store session", error);
+    return `error: ${error instanceof Error ? error.message : String(error)}`;
   }
 }
