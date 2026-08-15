@@ -1,4 +1,5 @@
 import { getSanityWriteClient } from "@/lib/soro/sanityWriteClient";
+import { dataset, projectId } from "@/sanity/env";
 import type { AppLocale } from "@/i18n/routing";
 import type { TourChatMessage } from "@/lib/tour-chat/types";
 
@@ -76,7 +77,7 @@ export async function logChatSession(input: ChatLogInput): Promise<string> {
       { id },
     );
 
-    await client.createOrReplace({
+    const written = await client.createOrReplace({
       _id: id,
       _type: "chatSession",
       sessionId: input.sessionId,
@@ -90,7 +91,7 @@ export async function logChatSession(input: ChatLogInput): Promise<string> {
       messages: turns,
     });
 
-    return "ok";
+    return `ok project=${projectId} dataset=${dataset} id=${written?._id ?? "?"} rev=${written?._rev ?? "?"}`;
   } catch (error) {
     console.error("[chat-log] could not store session", error);
     return `error: ${error instanceof Error ? error.message : String(error)}`;
