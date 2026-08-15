@@ -108,7 +108,7 @@ export default function CategorySearch({
           <button
             type="button"
             onClick={handleResetFilters}
-            className="mt-4 inline-flex h-11 items-center justify-center rounded-xl border border-blue-800 bg-white px-6 text-sm font-semibold text-blue-800 transition hover:bg-blue-50"
+            className="mt-4 inline-flex min-h-12 items-center justify-center rounded-xl border border-blue-800 bg-white px-6 text-sm font-semibold text-blue-800 transition hover:bg-blue-50"
           >
             {tFilters("resetFilters")}
           </button>

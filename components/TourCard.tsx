@@ -65,19 +65,23 @@ export default function TourCard({ tour }: TourCardProps) {
   return (
     <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
       <div className="relative">
-        {imageUrl ? (
-          <div className="relative h-56 w-full">
-            <Image
-              src={imageUrl}
-              alt={tour.title}
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            />
-          </div>
-        ) : (
-          <div className="h-56 w-full bg-slate-200" />
-        )}
+        {/* The photo is the biggest tap target on the card; on mobile people
+            reach for it before any button. */}
+        <Link href={detailsHref} aria-label={tour.title} className="block">
+          {imageUrl ? (
+            <div className="relative h-56 w-full">
+              <Image
+                src={imageUrl}
+                alt={tour.title}
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              />
+            </div>
+          ) : (
+            <div className="h-56 w-full bg-slate-200" />
+          )}
+        </Link>
         {tour.highlightBadge ? (
           <span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-slate-900">
             {tour.highlightBadge}
@@ -98,7 +102,9 @@ export default function TourCard({ tour }: TourCardProps) {
           ) : null}
         </div>
         <h3 className="text-xl font-semibold leading-tight text-slate-900">
-          {tour.title}
+          <Link href={detailsHref} className="transition hover:text-orange-600">
+            {tour.title}
+          </Link>
         </h3>
         <p className="text-lg font-semibold text-blue-950">
           {computedPrice}
@@ -117,13 +123,13 @@ export default function TourCard({ tour }: TourCardProps) {
             contentName={tour.title}
             value={Number.isFinite(firstPriceValue) ? firstPriceValue : undefined}
             currency={tour.currency || "USD"}
-            className="inline-flex h-11 flex-1 items-center justify-center rounded-xl bg-orange-500 px-4 text-sm font-semibold text-white transition hover:bg-orange-600"
+            className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl bg-orange-500 px-4 text-sm font-semibold text-white transition hover:bg-orange-600"
           >
             Book Now
           </BookNowLink>
           <Link
             href={detailsHref}
-            className="inline-flex h-11 flex-1 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 transition hover:bg-slate-50"
+            className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 transition hover:bg-slate-50"
           >
             More Info
           </Link>

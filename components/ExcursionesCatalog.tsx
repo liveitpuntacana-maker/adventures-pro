@@ -130,7 +130,7 @@ export default function ExcursionesCatalog({
             <button
               type="button"
               onClick={handleResetFilters}
-              className="mt-4 inline-flex h-11 items-center justify-center rounded-xl border border-blue-800 bg-white px-6 text-sm font-semibold text-blue-800 transition hover:bg-blue-50"
+              className="mt-4 inline-flex min-h-12 items-center justify-center rounded-xl border border-blue-800 bg-white px-6 text-sm font-semibold text-blue-800 transition hover:bg-blue-50"
             >
               {tFilters("resetFilters")}
             </button>
@@ -153,25 +153,38 @@ export default function ExcursionesCatalog({
                   className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
                 >
                   <div className="relative">
-                    {tour.mainImage ? (
-                      <Image
-                        src={urlFor(tour.mainImage).width(1200).height(800).fit("crop").url()}
-                        alt={title}
-                        width={1200}
-                        height={800}
-                        className="h-56 w-full object-cover"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1400px) 50vw, 25vw"
-                      />
-                    ) : (
-                      <div className="h-56 w-full bg-slate-200" />
-                    )}
+                    <Link
+                      href={tourExcursionPath(slug)}
+                      aria-label={title}
+                      className="block"
+                    >
+                      {tour.mainImage ? (
+                        <Image
+                          src={urlFor(tour.mainImage).width(1200).height(800).fit("crop").url()}
+                          alt={title}
+                          width={1200}
+                          height={800}
+                          className="h-56 w-full object-cover"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1400px) 50vw, 25vw"
+                        />
+                      ) : (
+                        <div className="h-56 w-full bg-slate-200" />
+                      )}
+                    </Link>
                   </div>
                   <div className="space-y-4 p-5">
                     <div className="inline-flex items-center gap-2 text-sm text-slate-600">
                       <Clock3 className="h-4 w-4" />
                       <span>{tour.duration || "Duration on request"}</span>
                     </div>
-                    <h2 className="text-xl font-semibold leading-tight text-slate-900">{title}</h2>
+                    <h2 className="text-xl font-semibold leading-tight text-slate-900">
+                      <Link
+                        href={tourExcursionPath(slug)}
+                        className="transition hover:text-orange-600"
+                      >
+                        {title}
+                      </Link>
+                    </h2>
                     <p className="text-sm text-slate-600">
                       {tour.category?.title || tour.category?.slug || "Uncategorized"}
                     </p>
@@ -192,13 +205,13 @@ export default function ExcursionesCatalog({
                         contentName={title}
                         value={Number.isFinite(firstPricingValue) ? firstPricingValue : undefined}
                         currency={tour.currency}
-                        className="inline-flex h-11 flex-1 items-center justify-center rounded-xl bg-orange-500 px-4 text-sm font-semibold text-white transition hover:bg-orange-600"
+                        className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl bg-orange-500 px-4 text-sm font-semibold text-white transition hover:bg-orange-600"
                       >
                         Book Now
                       </BookNowLink>
                       <Link
                         href={tourExcursionPath(slug)}
-                        className="inline-flex h-11 flex-1 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 transition hover:bg-slate-50"
+                        className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 transition hover:bg-slate-50"
                       >
                         More Info
                       </Link>

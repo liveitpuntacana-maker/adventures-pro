@@ -51,6 +51,13 @@ export default function CategoryBanners({ categories, locale }: CategoryBannersP
               key={slug || title}
               className="group relative min-h-[280px] overflow-hidden rounded-xl shadow-md transition duration-300 hover:-translate-y-1 hover:shadow-xl md:min-h-[320px]"
             >
+              {/* The link wraps the whole banner so tapping the photo works.
+                  A stretched pseudo-element cannot be used here: the button's
+                  backdrop-blur makes it a containing block, which traps the
+                  pseudo inside the button's own box. */}
+              <Link href={href} className="absolute inset-0 z-10 block">
+                <span className="sr-only">{title}</span>
+              </Link>
               {imageUrl ? (
                 <Image
                   src={imageUrl}
@@ -63,14 +70,11 @@ export default function CategoryBanners({ categories, locale }: CategoryBannersP
                 <div className="absolute inset-0 bg-gradient-to-br from-slate-700 to-slate-900" />
               )}
               <div className="absolute inset-0 bg-black/40 transition duration-300 group-hover:bg-black/50" />
-              <div className="relative flex h-full min-h-[280px] flex-col items-center justify-center gap-5 p-8 text-center md:min-h-[320px]">
+              <div className="pointer-events-none relative flex h-full min-h-[280px] flex-col items-center justify-center gap-5 p-8 text-center md:min-h-[320px]">
                 <h3 className="text-2xl font-bold tracking-tight text-white md:text-3xl">{title}</h3>
-                <Link
-                  href={href}
-                  className="inline-flex items-center justify-center rounded-full border border-white/30 bg-white/10 px-6 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:border-white hover:bg-white hover:text-slate-900"
-                >
+                <span className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/30 bg-white/10 px-6 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition group-hover:border-white group-hover:bg-white group-hover:text-slate-900">
                   {t("exploreTours")}
-                </Link>
+                </span>
               </div>
             </article>
           );

@@ -164,25 +164,34 @@ export default function LiveDiscoveryHub({ tours }: { tours?: DiscoveryTour[] })
                 className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
               >
                 <div className="relative">
-                  {imageUrl ? (
-                    <Image
-                      src={imageUrl}
-                      alt={title}
-                      width={1200}
-                      height={800}
-                      className="h-56 w-full object-cover"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1400px) 50vw, 25vw"
-                    />
-                  ) : (
-                    <div className="h-56 w-full bg-slate-200" />
-                  )}
+                  <Link href={tourExcursionPath(slug)} aria-label={title} className="block">
+                    {imageUrl ? (
+                      <Image
+                        src={imageUrl}
+                        alt={title}
+                        width={1200}
+                        height={800}
+                        className="h-56 w-full object-cover"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1400px) 50vw, 25vw"
+                      />
+                    ) : (
+                      <div className="h-56 w-full bg-slate-200" />
+                    )}
+                  </Link>
                 </div>
                 <div className="space-y-4 p-5">
                   <div className="inline-flex items-center gap-2 text-sm text-slate-600">
                     <Clock3 className="h-4 w-4" />
                     <span>{tour.duration || "Duration on request"}</span>
                   </div>
-                  <h3 className="text-xl font-semibold leading-tight text-slate-900">{title}</h3>
+                  <h3 className="text-xl font-semibold leading-tight text-slate-900">
+                    <Link
+                      href={tourExcursionPath(slug)}
+                      className="transition hover:text-orange-600"
+                    >
+                      {title}
+                    </Link>
+                  </h3>
                   <p className="text-lg font-semibold text-blue-950">
                     From {computedPrice}
                     {priceTag ? (
@@ -196,13 +205,13 @@ export default function LiveDiscoveryHub({ tours }: { tours?: DiscoveryTour[] })
                       href={peekUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex h-11 flex-1 items-center justify-center rounded-xl bg-orange-500 px-4 text-sm font-semibold text-white transition hover:bg-orange-600"
+                      className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl bg-orange-500 px-4 text-sm font-semibold text-white transition hover:bg-orange-600"
                     >
                       Book Now
                     </a>
                     <Link
                       href={tourExcursionPath(slug)}
-                      className="inline-flex h-11 flex-1 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 transition hover:bg-slate-50"
+                      className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 transition hover:bg-slate-50"
                     >
                       More Info
                     </Link>
