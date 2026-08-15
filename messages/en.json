@@ -211,7 +211,12 @@
     "excellent": "EXCELLENT",
     "basedOn": "Based on {count}+ reviews on Google",
     "google": "Google",
-    "readMore": "Read more on Google"
+    "readMore": "Read more on Google",
+    "justNow": "today",
+    "daysAgo": "{count, plural, =1 {a day ago} other {# days ago}}",
+    "weeksAgo": "{count, plural, =1 {a week ago} other {# weeks ago}}",
+    "monthsAgo": "{count, plural, =1 {a month ago} other {# months ago}}",
+    "yearsAgo": "{count, plural, =1 {a year ago} other {# years ago}}"
   },
   "RelatedTours": {
     "title": "You might also like",

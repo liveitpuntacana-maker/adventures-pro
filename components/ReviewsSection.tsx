@@ -5,6 +5,11 @@ import { getTranslations } from "next-intl/server";
 import { client } from "@/sanity/lib/client";
 import { urlFor } from "@/sanity/lib/image";
 import { SANITY_TAGS, sanityCache } from "@/lib/sanityCache";
+import {
+  byNewestReviewDate,
+  parseReviewDate,
+  relativeDateParts,
+} from "@/lib/reviewDate";
 
 type Review = {
   _id: string;
@@ -82,6 +87,10 @@ export default async function ReviewsSection() {
 
   const reviewsCount = summary?.googleReviewsCount ?? 40;
 
+  // Google orders by review date; _createdAt only reflects when someone got
+  // round to copying it into Sanity.
+  const orderedReviews = [...reviews].sort(byNewestReviewDate);
+
   return (
     <section className="w-full bg-white py-16 md:py-24">
       <div className="mx-auto grid max-w-7xl gap-12 px-6 md:px-10 lg:grid-cols-[360px_1fr] lg:items-center lg:gap-16 lg:px-12">
@@ -107,7 +116,7 @@ export default async function ReviewsSection() {
 
         <div className="overflow-hidden">
           <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 md:gap-5">
-            {reviews.map((review) => {
+            {orderedReviews.map((review) => {
               const author = review.author ?? "Guest";
               const googleReviewUrl =
                 review.googleReviewUrl?.trim() || "https://www.google.com/maps";
@@ -142,7 +151,23 @@ export default async function ReviewsSection() {
                   )}
                   <div>
                     <p className="text-sm font-semibold text-blue-950">{author}</p>
-                    <p className="text-xs text-slate-500">{review.date ?? ""}</p>
+                    {(() => {
+                      const parsed = parseReviewDate(review.date);
+                      if (!parsed) {
+                        return (
+                          <p className="text-xs text-slate-500">{review.date ?? ""}</p>
+                        );
+                      }
+                      const { key, count } = relativeDateParts(parsed);
+                      return (
+                        <time
+                          dateTime={parsed.toISOString().slice(0, 10)}
+                          className="text-xs text-slate-500"
+                        >
+                          {t(key, { count })}
+                        </time>
+                      );
+                    })()}
                   </div>
                 </div>
                 <div className="mt-4 text-lg">

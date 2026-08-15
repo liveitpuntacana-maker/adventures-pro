@@ -213,7 +213,12 @@
     "excellent": "EXCELLENT",
     "basedOn": "Selon plus de {count} avis sur Google",
     "google": "Google",
-    "readMore": "Lire la suite sur Google"
+    "readMore": "Lire la suite sur Google",
+    "justNow": "aujourd’hui",
+    "daysAgo": "{count, plural, =1 {il y a un jour} other {il y a # jours}}",
+    "weeksAgo": "{count, plural, =1 {il y a une semaine} other {il y a # semaines}}",
+    "monthsAgo": "{count, plural, =1 {il y a un mois} other {il y a # mois}}",
+    "yearsAgo": "{count, plural, =1 {il y a un an} other {il y a # ans}}"
   },
   "RelatedTours": {
     "title": "Vous aimerez aussi",
