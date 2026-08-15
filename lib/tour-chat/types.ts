@@ -34,6 +34,8 @@ export type SiteChatRequestBody = {
   currentPath?: string;
   pageTourSlug?: string;
   pageTourTitle?: string;
+  /** Groups the turns of one conversation together in the chat log. */
+  sessionId?: string;
 };
 
 /** @deprecated Use SiteChatRequestBody */

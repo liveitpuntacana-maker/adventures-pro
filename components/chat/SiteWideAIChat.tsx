@@ -100,12 +100,34 @@ function pageTourSlugFromPath(pathname: string): string | null {
   return decodeURIComponent(match[1]).replace(/^\/+|\/+$/g, "");
 }
 
+/**
+ * Stable id for this conversation, so every turn is logged into the same
+ * record instead of a new one. Lives in sessionStorage: it disappears when the
+ * tab closes and is never used to identify the visitor across visits.
+ */
+function getChatSessionId(): string {
+  const KEY = "af-chat-session";
+  try {
+    const existing = window.sessionStorage.getItem(KEY);
+    if (existing) return existing;
+    const id =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    window.sessionStorage.setItem(KEY, id);
+    return id;
+  } catch {
+    return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  }
+}
+
 async function fetchSiteChat(
   payload: {
     messages: TourChatMessage[];
     locale: AppLocale;
     currentPath: string;
     pageTourSlug?: string | null;
+    sessionId: string;
   },
   signal: AbortSignal,
 ): Promise<TourChatResponse> {
@@ -225,6 +247,7 @@ export default function SiteWideAIChat({ locale }: SiteWideAIChatProps) {
             locale,
             currentPath,
             pageTourSlug,
+            sessionId: getChatSessionId(),
           },
           controller.signal,
         );

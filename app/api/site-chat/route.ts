@@ -1,5 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { routing, type AppLocale } from "@/i18n/routing";
 import { geminiModelFallbackChain, resolveGeminiModel } from "@/lib/tour-chat/geminiConfig";
 import { buildSiteChatSystemPrompt } from "@/lib/tour-chat/systemPrompt";
@@ -9,6 +9,7 @@ import type {
   TourChatResponse,
 } from "@/lib/tour-chat/types";
 import { getChatKnowledge } from "@/lib/sanity/queries/chatKnowledge";
+import { logChatSession } from "@/lib/tour-chat/chatLog";
 
 export const runtime = "nodejs";
 export const maxDuration = 15;
@@ -147,6 +148,7 @@ export async function POST(request: Request) {
     const currentPath = sanitizeOptionalString(body.currentPath, MAX_PATH_CHARS);
     const pageTourSlug = sanitizeOptionalString(body.pageTourSlug, 160);
     const pageTourTitle = sanitizeOptionalString(body.pageTourTitle, 200);
+    const sessionId = sanitizeOptionalString(body.sessionId, 64);
 
     if (!locale || !messages) {
       return errorResponse("invalid_payload", 400);
@@ -166,6 +168,22 @@ export async function POST(request: Request) {
     for (const model of models) {
       try {
         const reply = await generateWithTimeout(ai, model, systemInstruction, messages);
+
+        // after() runs once the reply is on its way, so storing the transcript
+        // never adds latency for the visitor.
+        if (sessionId) {
+          after(() =>
+            logChatSession({
+              sessionId,
+              locale,
+              messages,
+              reply,
+              currentPath,
+              pageTourTitle,
+            }),
+          );
+        }
+
         const success: TourChatResponse = { ok: true, reply, model };
         return NextResponse.json(success);
       } catch (error) {
