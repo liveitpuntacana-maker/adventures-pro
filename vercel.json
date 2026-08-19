@@ -1,10 +1,6 @@
 {
   "crons": [
     {
-      "path": "/api/cron/sync-soro",
-      "schedule": "0 12 * * *"
-    },
-    {
       "path": "/api/cron/prune-chat-logs",
       "schedule": "0 4 * * *"
     }

@@ -6,8 +6,26 @@ import { slugifyPostTitle, uniqueSlugCandidate } from "@/lib/soro/slug";
 import { translatePostFields } from "@/lib/soro/translate";
 import { dataset, projectId } from "@/sanity/env";
 
-/** Max new articles to create per cron invocation (permanent: 1 per run). */
+/**
+ * Ceiling on articles created per invocation.
+ *
+ * The real limiter is TIME_BUDGET_MS below; this is just a guard so a single
+ * run can never monopolise the function slot. It sits well above the feed's
+ * publishing rate (one article every ~2 days) so a backlog drains in days.
+ */
 export const MAX_ARTICLES_PER_RUN = 1;
+
+/**
+ * When to stop starting new articles, measured from the top of the run.
+ *
+ * Must stay under the route's maxDuration. One article costs roughly 45s,
+ * almost all of it sequential MyMemory calls, so the guard is what stops a run
+ * being killed halfway through and leaving a half-written document behind.
+ */
+const TIME_BUDGET_MS = 45_000;
+
+/** Rough cost of one article, used to decide whether another one still fits. */
+const ESTIMATED_ARTICLE_MS = 50_000;
 
 export type SoroSyncResult = {
   fetched: number;
@@ -22,15 +40,21 @@ export type SoroSyncResult = {
   createdIds: string[];
 };
 
-async function postExistsByGuid(
+/**
+ * Every sourceGuid already imported, in one query.
+ *
+ * This used to be one query per feed item. That made the check cost grow with
+ * the feed: at ~50 items it took about 10s, at 101 it took 20s, and once the
+ * whole run crossed the function timeout nothing was ever created again — the
+ * sync stopped silently in April 2026 with no failing article to point at.
+ */
+async function fetchImportedGuids(
   client: ReturnType<typeof getSanityWriteClient>,
-  sourceGuid: string,
-): Promise<boolean> {
-  const existing = await client.fetch<string | null>(
-    `*[_type == "post" && sourceGuid == $sourceGuid][0]._id`,
-    { sourceGuid },
+): Promise<Set<string>> {
+  const guids = await client.fetch<Array<string | null>>(
+    `*[_type == "post" && defined(sourceGuid)].sourceGuid`,
   );
-  return Boolean(existing);
+  return new Set((guids ?? []).filter((guid): guid is string => Boolean(guid)));
 }
 
 async function resolveUniqueSlug(
@@ -156,45 +180,46 @@ export async function syncSoroFeedToSanity(): Promise<SoroSyncResult> {
   console.log(
     `[soro-sync] starting sync (MAX_ARTICLES_PER_RUN=${MAX_ARTICLES_PER_RUN}) projectId=${projectId} dataset=${dataset}`,
   );
+  const startedAt = Date.now();
   const client = getSanityWriteClient();
   const items = sortOldestFirst(await fetchSoroRssItems());
   result.fetched = items.length;
   console.log(`[soro-sync] fetched ${items.length} RSS items (oldest-first)`);
 
-  const pendingItems: SoroRssItem[] = [];
-
-  for (const item of items) {
-    try {
-      const exists = await postExistsByGuid(client, item.guid);
-      if (exists) {
-        result.skippedExisting += 1;
-        console.log(`[soro-sync] skip existing guid=${item.guid}`);
-        continue;
-      }
-      pendingItems.push(item);
-    } catch (error) {
-      const labeled = formatStepError("existence check failed", error);
-      result.failed += 1;
-      result.errors.push({
-        guid: item.guid,
-        title: item.title,
-        message: labeled.message,
-      });
-      console.error(
-        `[soro-sync] ${labeled.message} guid=${item.guid}`,
-      );
-    }
+  let imported: Set<string>;
+  try {
+    const t0 = Date.now();
+    imported = await fetchImportedGuids(client);
+    console.log(
+      `[soro-sync] step=existing ok known=${imported.size} durationMs=${Date.now() - t0}`,
+    );
+  } catch (error) {
+    throw formatStepError("existence check failed", error);
   }
+
+  const pendingItems = items.filter((item) => {
+    if (!imported.has(item.guid)) return true;
+    result.skippedExisting += 1;
+    return false;
+  });
 
   result.pendingNew = pendingItems.length;
   const batch = pendingItems.slice(0, MAX_ARTICLES_PER_RUN);
-  result.remainingPending = Math.max(0, pendingItems.length - batch.length);
 
   console.log(
-    `[soro-sync] pending new=${result.pendingNew}; processing this run=${batch.length}; leaving for future runs=${result.remainingPending}`,
+    `[soro-sync] pending new=${result.pendingNew}; up to ${batch.length} this run`,
   );
 
   for (const item of batch) {
+    const elapsed = Date.now() - startedAt;
+    if (result.processedThisRun > 0 && elapsed + ESTIMATED_ARTICLE_MS > TIME_BUDGET_MS) {
+      // Better to leave it for tomorrow than to be killed mid-article.
+      console.log(
+        `[soro-sync] time budget reached after ${elapsed}ms; stopping before guid=${item.guid}`,
+      );
+      break;
+    }
+
     result.processedThisRun += 1;
     try {
       const { slug, id } = await createPostFromItem(client, item);
@@ -215,6 +240,8 @@ export async function syncSoroFeedToSanity(): Promise<SoroSyncResult> {
       );
     }
   }
+
+  result.remainingPending = Math.max(0, result.pendingNew - result.created);
 
   console.log(
     `[soro-sync] done fetched=${result.fetched} created=${result.created} skipped=${result.skippedExisting} failed=${result.failed} remainingPending=${result.remainingPending} createdIds=${JSON.stringify(result.createdIds)}`,
