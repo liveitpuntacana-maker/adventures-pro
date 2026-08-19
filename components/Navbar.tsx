@@ -113,6 +113,14 @@ export default function Navbar({ categories = [] }: NavbarProps) {
           <Link href="/blog" className={`transition ${linkClass(pathname === "/blog" || pathname.startsWith("/blog/"))}`}>
             {t("blog")}
           </Link>
+          <a
+            href="https://www.afdmctravel.com/en/agency-registration"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`transition ${linkClass(false)}`}
+          >
+            {t("agencyRegistration")}
+          </a>
           <Link href="/contact" className={`transition ${linkClass(pathname === "/contact" || pathname.startsWith("/contact/"))}`}>
             {t("contact")}
           </Link>
@@ -204,6 +212,15 @@ export default function Navbar({ categories = [] }: NavbarProps) {
             >
               {t("blog")}
             </Link>
+            <a
+              href="https://www.afdmctravel.com/en/agency-registration"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`rounded-lg px-2 py-2 transition ${mobileLinkClass(false)}`}
+              onClick={() => setOpen(false)}
+            >
+              {t("agencyRegistration")}
+            </a>
             <Link
               href="/contact"
               className={`rounded-lg px-2 py-2 transition ${mobileLinkClass(pathname === "/contact" || pathname.startsWith("/contact/"))}`}
