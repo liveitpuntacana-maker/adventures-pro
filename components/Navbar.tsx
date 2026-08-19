@@ -36,10 +36,14 @@ export default function Navbar({ categories = [] }: NavbarProps) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // whitespace-nowrap: sin el, flex encoge los enlaces y parte "Who We Are" o
+  // "Agency Registration" en dos lineas en cuanto la barra va justa de ancho.
   const linkClass = (isActive: boolean) =>
-    isActive
-      ? "text-[#0a192f] underline underline-offset-8"
-      : "text-slate-700 hover:text-[#0a192f]";
+    `whitespace-nowrap ${
+      isActive
+        ? "text-[#0a192f] underline underline-offset-8"
+        : "text-slate-700 hover:text-[#0a192f]"
+    }`;
 
   const mobileLinkClass = (isActive: boolean) =>
     isActive
@@ -49,16 +53,21 @@ export default function Navbar({ categories = [] }: NavbarProps) {
   return (
     <header className="sticky top-0 z-50 w-full bg-white">
       <div className="mx-auto flex h-24 w-full max-w-7xl items-center justify-between px-4 md:px-10 lg:px-12">
-        <Link href="/" className="inline-flex w-[250px] items-center">
+        <Link href="/" className="inline-flex w-[250px] shrink-0 items-center">
           <Image
             src="/images/logo-v3.png"
             alt="Adventures Finder"
             width={250}
             height={83}
-            className="h-[83px] w-auto"
+            className="h-[83px] w-auto shrink-0"
           />
         </Link>
-        <nav className="hidden items-center gap-6 text-sm font-medium text-slate-800 md:flex">
+        <nav
+          // Con el logo a su ancho real (250px) el menu completo mide ~950px en
+          // frances, el idioma mas largo. Por debajo de xl no cabe sin desbordar
+          // la pagina, asi que ahi manda la hamburguesa.
+          className="hidden items-center gap-6 text-sm font-medium text-slate-800 xl:flex"
+        >
           <Link href="/" className={`transition ${linkClass(pathname === "/")}`}>
             {t("home")}
           </Link>
@@ -121,15 +130,12 @@ export default function Navbar({ categories = [] }: NavbarProps) {
           >
             {t("agencyRegistration")}
           </a>
-          <Link href="/contact" className={`transition ${linkClass(pathname === "/contact" || pathname.startsWith("/contact/"))}`}>
-            {t("contact")}
-          </Link>
-          <div className="hidden items-center gap-2 md:flex">
+          <div className="hidden items-center gap-2 xl:flex">
             <WeatherWidget compact locale={currentLocale} />
           </div>
           <LanguageSwitcher />
         </nav>
-        <div className="flex items-center gap-2 md:hidden">
+        <div className="flex items-center gap-2 xl:hidden">
           <LanguageSwitcher compact />
           <button
             type="button"
@@ -142,7 +148,7 @@ export default function Navbar({ categories = [] }: NavbarProps) {
         </div>
       </div>
       {open ? (
-        <div className="border-t border-slate-200 bg-white px-4 py-4 md:hidden">
+        <div className="border-t border-slate-200 bg-white px-4 py-4 xl:hidden">
           <nav className="flex flex-col gap-3 text-sm font-medium text-slate-800">
             <Link
               href="/"
@@ -221,13 +227,6 @@ export default function Navbar({ categories = [] }: NavbarProps) {
             >
               {t("agencyRegistration")}
             </a>
-            <Link
-              href="/contact"
-              className={`rounded-lg px-2 py-2 transition ${mobileLinkClass(pathname === "/contact" || pathname.startsWith("/contact/"))}`}
-              onClick={() => setOpen(false)}
-            >
-              {t("contact")}
-            </Link>
           </nav>
         </div>
       ) : null}

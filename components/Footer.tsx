@@ -46,6 +46,9 @@ export default function Footer() {
             <Link href="/faqs" className="transition hover:text-white">
               {t("faq")}
             </Link>
+            <Link href="/contact" className="transition hover:text-white">
+              {t("contactUs")}
+            </Link>
           </div>
           <div className="mt-4 flex justify-center md:hidden">
             <WeatherWidget compact locale={currentLocale} />
@@ -54,7 +57,9 @@ export default function Footer() {
 
         <div>
           <h3 className="text-sm font-semibold uppercase tracking-[0.14em] text-white">
-            {t("contactUs")}
+            <Link href="/contact" className="transition hover:text-slate-300">
+              {t("contactUs")}
+            </Link>
           </h3>
           <div className="mt-4 space-y-3 text-sm leading-relaxed">
             <p>Plaza Cueva Taina, Local #B2, Av. Estados Unidos - Bavaro, Dominican Republic</p>
