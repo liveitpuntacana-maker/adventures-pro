@@ -466,6 +466,11 @@ const legacyCategoryPathRedirects: Array<{
 
 const nextConfig: NextConfig = {
   images: {
+    // Sanity y Unsplash sirven ya la imagen recortada y en webp; pasarla ademas
+    // por el optimizador de Vercel agoto la cuota de imagenes remotas y todo
+    // /_next/image empezo a responder 402. Ver lib/imageLoader.ts.
+    loader: "custom",
+    loaderFile: "./lib/imageLoader.ts",
     remotePatterns: [
       {
         protocol: "https",
