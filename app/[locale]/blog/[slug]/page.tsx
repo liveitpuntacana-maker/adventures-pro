@@ -15,6 +15,11 @@ import {
   buildPageMetadata,
   truncateMetaDescription,
 } from "@/lib/seo";
+import BlogRelatedTours from "@/components/blog/BlogRelatedTours";
+import { postSeoOverride } from "@/lib/content/postSeo";
+import { linkifyBody, type BodyLink } from "@/lib/content/linkifyBody";
+import { conceptPhrases, postLinks } from "@/lib/content/postTourLinks";
+import { tourExcursionPath } from "@/lib/tourSlug";
 import { getDefaultOgImage, sanityOgImage } from "@/lib/ogImage";
 import { REVALIDATE, SANITY_TAGS, sanityCache } from "@/lib/sanityCache";
 
@@ -27,6 +32,8 @@ type BlogPostPageProps = {
 
 type PostDoc = {
   title?: string | null;
+  seoTitle?: string | null;
+  seoDescription?: string | null;
   excerpt?: string | null;
   mainImage?: { asset: unknown };
   publishedAt?: string;
@@ -39,6 +46,8 @@ type PostDoc = {
 
 const POST_QUERY = groq`*[_type == "post" && slug.current == $slug][0]{
   "title": coalesce(select($locale == "fr-ca" => title.frCA, title[$locale]), title.en, title.es, title.frCA),
+  "seoTitle": select($locale == "fr-ca" => seoTitle.frCA, seoTitle[$locale]),
+  "seoDescription": select($locale == "fr-ca" => seoDescription.frCA, seoDescription[$locale]),
   "excerpt": coalesce(select($locale == "fr-ca" => excerpt.frCA, excerpt[$locale]), excerpt.en, excerpt.es, excerpt.frCA),
   "body": coalesce(select($locale == "fr-ca" => body.frCA, body[$locale]), body.en, body.es, body.frCA),
   mainImage,
@@ -97,8 +106,15 @@ export async function generateMetadata({
   const title = post.title.trim();
   const available = translatedLocales(post);
 
+  // The SERP title answers the query; the H1 below stays as the editor wrote
+  // it. Sanity beats the seeded override, which beats the article headline.
+  const override = postSeoOverride(slug, locale);
+  const seoTitle = post.seoTitle?.trim() || override?.title || title;
+
   const description = truncateMetaDescription(
-    post.excerpt?.trim() ||
+    post.seoDescription?.trim() ||
+      override?.description ||
+      post.excerpt?.trim() ||
       post.body?.trim().replace(/\s+/g, " ") ||
       t("blog.description"),
   );
@@ -106,7 +122,7 @@ export async function generateMetadata({
   return buildPageMetadata({
     locale,
     pathname: blogPathFromSlug(slug),
-    title,
+    title: seoTitle,
     description,
     image: sanityOgImage(post.mainImage) ?? (await getDefaultOgImage()),
     imageAlt: title,
@@ -155,6 +171,19 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     .split(/\n\n+/)
     .map((p) => p.trim())
     .filter(Boolean);
+
+  // Curated catalogue links for this article: the ones carrying a concept are
+  // woven into the prose, all of them feed the grid at the foot of the page.
+  const links = postLinks(slug);
+  const bodyLinks: BodyLink[] = links.flatMap((link) => {
+    if (!link.concept) return [];
+    const phrases = conceptPhrases(link.concept, locale);
+    if (phrases.length === 0) return [];
+    const href = link.tour ? tourExcursionPath(link.tour) : link.listing;
+    return href ? [{ phrases, href }] : [];
+  });
+  const paragraphs = linkifyBody(bodyParagraphs, bodyLinks);
+  const relatedTourSlugs = links.flatMap((link) => (link.tour ? [link.tour] : []));
 
   const jsonLd = [
     buildBlogPostingJsonLd({
@@ -215,13 +244,27 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
         {bodyParagraphs.length > 0 ? (
           <div className="mt-12 max-w-none space-y-5 border-t border-slate-100 pt-12 text-[15px] leading-relaxed text-slate-700 md:text-base">
-            {bodyParagraphs.map((paragraph, index) => (
+            {paragraphs.map((segments, index) => (
               <p key={index} className="whitespace-pre-wrap">
-                {paragraph}
+                {segments.map((segment, segmentIndex) =>
+                  segment.href ? (
+                    <Link
+                      key={segmentIndex}
+                      href={segment.href}
+                      className="font-medium text-blue-900 underline decoration-blue-900/30 underline-offset-2 transition hover:decoration-blue-900"
+                    >
+                      {segment.text}
+                    </Link>
+                  ) : (
+                    segment.text
+                  ),
+                )}
               </p>
             ))}
           </div>
         ) : null}
+
+        <BlogRelatedTours locale={locale} slugs={relatedTourSlugs} />
 
         <div className="mt-12 flex justify-center border-t border-slate-100 pt-12">
           <Link

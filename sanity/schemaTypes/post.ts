@@ -44,6 +44,20 @@ export const postType = defineType({
       type: "localizedText",
     }),
     defineField({
+      name: "seoTitle",
+      title: "SEO title",
+      type: "localizedString",
+      description:
+        "Titulo que se muestra en Google, si debe diferir del titular del articulo. Maximo 60 caracteres: por encima de ahi Google lo corta. Vacio = se usa el titulo del articulo.",
+    }),
+    defineField({
+      name: "seoDescription",
+      title: "SEO description",
+      type: "localizedText",
+      description:
+        "Descripcion que se muestra en Google. Maximo 160 caracteres. Vacio = se usa el extracto.",
+    }),
+    defineField({
       name: "sourceGuid",
       title: "Source GUID (RSS)",
       type: "string",

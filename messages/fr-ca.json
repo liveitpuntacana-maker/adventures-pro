@@ -7,6 +7,7 @@
     "transfers": "Navettes",
     "about": "Qui Nous Sommes",
     "blog": "Blog",
+    "agencyRegistration": "Inscription des Agences",
     "contact": "Contact"
   },
   "Footer": {
@@ -225,5 +226,9 @@
   "RelatedTours": {
     "title": "Vous aimerez aussi",
     "subtitle": "D'autres expériences de cette catégorie"
+  },
+  "BlogRelatedTours": {
+    "title": "Réservez ce que vous venez de lire",
+    "subtitle": "Les excursions de ce guide, opérées par notre équipe à Punta Cana."
   }
 }

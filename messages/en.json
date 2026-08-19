@@ -7,6 +7,7 @@
     "transfers": "Transfers",
     "about": "Who We Are",
     "blog": "Blog",
+    "agencyRegistration": "Agency Registration",
     "contact": "Contact"
   },
   "Footer": {
@@ -223,5 +224,9 @@
   "RelatedTours": {
     "title": "You might also like",
     "subtitle": "More experiences in this category"
+  },
+  "BlogRelatedTours": {
+    "title": "Book what you just read about",
+    "subtitle": "The tours from this guide, run by our own team in Punta Cana."
   }
 }

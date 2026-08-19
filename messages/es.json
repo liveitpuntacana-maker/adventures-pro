@@ -7,6 +7,7 @@
     "transfers": "Traslados",
     "about": "Quiénes Somos",
     "blog": "Blog",
+    "agencyRegistration": "Registro de Agencias",
     "contact": "Contacto"
   },
   "Footer": {
@@ -223,5 +224,9 @@
   "RelatedTours": {
     "title": "También te puede interesar",
     "subtitle": "Más experiencias de esta categoría"
+  },
+  "BlogRelatedTours": {
+    "title": "Reserva lo que acabas de leer",
+    "subtitle": "Los tours de esta guía, operados por nuestro propio equipo en Punta Cana."
   }
 }
