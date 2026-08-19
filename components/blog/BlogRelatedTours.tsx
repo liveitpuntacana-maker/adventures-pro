@@ -54,7 +54,7 @@ export default async function BlogRelatedTours({
   slugs,
 }: {
   locale: AppLocale;
-  /** Curated tour slugs, in the order they should appear. */
+  /** Curated tour slugs, in the order they should appear. Only the first three render. */
   slugs: readonly string[];
 }) {
   if (slugs.length === 0) return null;
@@ -74,7 +74,7 @@ export default async function BlogRelatedTours({
   const ordered = slugs
     .map((slug) => tours.find((tour) => tour.slug === slug))
     .filter((tour): tour is BlogTour => Boolean(tour))
-    .slice(0, 4);
+    .slice(0, 3);
 
   if (ordered.length === 0) return null;
 
@@ -85,7 +85,9 @@ export default async function BlogRelatedTours({
       </h2>
       <p className="mt-2 text-sm text-slate-600 md:text-base">{t("subtitle")}</p>
 
-      <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2">
+      {/* Tres en fila solo desde lg: a 768px cada tarjeta caeria a ~214px y el
+          titulo del tour se partiria en cuatro lineas. */}
+      <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
         {ordered.map((tour) => (
           <TourCard
             key={tour._id}

@@ -206,7 +206,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   return (
     <article className="min-h-screen bg-white text-slate-900">
       <JsonLd data={jsonLd} />
-      <div className="mx-auto max-w-2xl px-6 py-12 md:px-8 md:py-16 lg:max-w-3xl">
+      <div className="mx-auto max-w-2xl px-6 pt-12 md:px-8 md:pt-16 lg:max-w-3xl">
         <Link
           href="/blog"
           className="text-sm font-medium text-slate-500 transition hover:text-blue-950"
@@ -264,6 +264,11 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           </div>
         ) : null}
 
+      </div>
+
+      {/* Mas ancho que la columna de lectura: dentro de ella tres tarjetas
+          quedarian a ~220px y el titulo de cada tour se partiria en tres lineas. */}
+      <div className="mx-auto max-w-5xl px-6 pb-12 md:px-8 md:pb-16">
         <BlogRelatedTours locale={locale} slugs={relatedTourSlugs} />
 
         <div className="mt-12 flex justify-center border-t border-slate-100 pt-12">
