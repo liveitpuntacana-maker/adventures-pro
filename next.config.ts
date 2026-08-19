@@ -142,6 +142,43 @@ const wordpressRedirects: Array<{ source: string; destination: string; permanent
     destination: "/en",
     permanent: true,
   },
+  // Slugs de WordPress que el catch-all mandaba a /en/excursions/<slug>, donde
+  // no existen: unos eran articulos y otros cambiaron de slug al migrar.
+  // Confirmados con Search Console (28d, agosto 2026).
+  ...[
+    [
+      "/punta-cana-helicopter-tour-scenic-flights-over-bavaro-cap-cana",
+      "/en/excursions/helicopter-tour-punta-cana-bavaro-cap-cana",
+    ],
+    [
+      "/catalina-island-snorkeling-tour-punta-cana",
+      "/en/excursions/catalina-island-snorkeling-punta-cana",
+    ],
+    ["/private-infinity-catamaran", "/en/excursions/private-infinity-catamaran-punta-cana"],
+    ["/dolphin-experience-punta-cana", "/en/excursions/swim-with-dolphins-explorer"],
+    // El combo Saona + buggy ya no se vende; el tour de Saona es lo mas cercano.
+    ["/saona-island-buggy-combo", "/en/excursions/saona-island-classic-tour"],
+    ["/golfnshots", "/en/excursions/golf-n-shots-punta-cana-interactive-golf-experience"],
+    // Articulos del blog, no tours: acababan en /en/excursions/<slug> y morian.
+    [
+      "/how-much-a-real-day-in-punta-cana-actually-costs-2025-breakdown",
+      "/en/blog/how-much-a-real-day-in-punta-cana-actually-costs",
+    ],
+    [
+      "/the-best-excursions-in-punta-cana-ranked-by-experience-not-price",
+      "/en/blog/the-best-excursions-in-punta-cana-ranked-by-experience-not-price",
+    ],
+    [
+      "/what-you-should-know-before-booking-excursions-in-punta-cana",
+      "/en/blog/what-you-should-know-before-booking-excursions-in-punta-cana",
+    ],
+    ["/some-of-the-best-resorts-in-punta-cana", "/en/blog/best-all-inclusive-resorts-punta-cana-deals"],
+    ["/vlog", "/en/blog"],
+    ["/category/blog", "/en/blog"],
+  ].flatMap(([source, destination]) => [
+    { source, destination, permanent: true as const },
+    { source: `${source}/`, destination, permanent: true as const },
+  ]),
 ];
 
 const reservedRootSlugs = [
@@ -191,6 +228,20 @@ const reservedRootSlugs = [
   "power-cruise-catamaran-snorkeling",
   "faqs-tours",
   "about-our-vlog",
+  "punta-cana-helicopter-tour-scenic-flights-over-bavaro-cap-cana",
+  "catalina-island-snorkeling-tour-punta-cana",
+  "private-infinity-catamaran",
+  "dolphin-experience-punta-cana",
+  "saona-island-buggy-combo",
+  "golfnshots",
+  "how-much-a-real-day-in-punta-cana-actually-costs-2025-breakdown",
+  "the-best-excursions-in-punta-cana-ranked-by-experience-not-price",
+  "what-you-should-know-before-booking-excursions-in-punta-cana",
+  "some-of-the-best-resorts-in-punta-cana",
+  "vlog",
+  // Retiradas sin equivalente: el proxy les responde 410.
+  "best-restaurants-in-punta-cana",
+  "explore-the-secrets-of-punta-cana-unforgettable-adventures-await-you",
 ].join("|");
 
 // Exact-match negative lookahead: (?!(?:a|b)$) excludes only the full segment "a" or "b",
@@ -288,45 +339,127 @@ const legacyStructureRedirects: Array<{
   },
 ];
 
+/**
+ * Slugs que cambiaron en Sanity despues de que Google ya los tuviera indexados.
+ *
+ * Se declaran por locale porque las variantes /es y /fr-ca tambien estaban
+ * indexadas y devolvian 404: Search Console (28d, agosto 2026) registraba 168
+ * impresiones en /es/blog/9-best-golf-courses-in-punta-cana y 108 en
+ * /es/excursions/golf-n-shots-punta-cana, ambas muertas.
+ */
 const slugMigrationRedirects: Array<{
+  source: string;
+  destination: string;
+  permanent: true;
+}> = (
+  [
+    // section, slug antiguo, slug nuevo
+    ["excursions", "deep-sea-fishing-private", "private-deep-sea-fishing-punta-cana"],
+    ["excursions", "full-day-tour-in-samana-serenity", "samana-full-day-tour-punta-cana"],
+    ["excursions", "party-boat", "party-boat-tour-in-punta-cana"],
+    ["excursions", "panaca-horse-show-punta-cana", "panaca-world-show-punta-cana"],
+    ["excursions", "macao-beach-buggy-adventure", "macao-beach-buggy-punta-cana"],
+    ["excursions", "golf-n-shots-punta-cana", "golf-n-shots-punta-cana-interactive-golf-experience"],
+    ["excursions", "domitai-park-punta-cana", "domitai-park-punta-cana-adventures"],
+    ["excursions", "iberostar-golf-bavaro-punta-cana", "iberostar-golf-club-bavaro"],
+    // El documento se recreo en Sanity y quedo con sufijo -2.
+    ["blog", "9-best-golf-courses-in-punta-cana", "9-best-golf-courses-in-punta-cana-2"],
+  ] as const
+).map(([section, from, to]) => ({
+  source: `/:locale(en|es|fr-ca)/${section}/${from}`,
+  destination: `/:locale/${section}/${to}`,
+  permanent: true as const,
+}));
+
+/**
+ * Articulos que se publicaron como tour y viven en el blog (o al reves).
+ * Cambian de seccion, asi que no encajan en slugMigrationRedirects.
+ */
+/**
+ * Articles retired when the blog was consolidated (agosto 2026).
+ *
+ * Twenty-two URLs across six themes were competing for the same queries and
+ * producing four clicks between them; Google had to pick one of four transfer
+ * pages and picked none. Each cluster keeps the article with the most
+ * impressions and the rest redirect into it, so the little authority they hold
+ * lands somewhere instead of being thrown away with a 410.
+ *
+ * The redirects must ship before the documents are deleted in Sanity, or the
+ * URLs answer 404 in between.
+ */
+const consolidatedPostRedirects: Array<{
+  source: string;
+  destination: string;
+  permanent: true;
+}> = (
+  [
+  ["do-i-need-airport-transfer-for-my-trip", "vip-transportation-punta-cana-what-to-expect"],
+  ["punta-cana-airport-transfers-done-right", "vip-transportation-punta-cana-what-to-expect"],
+  ["dominican-republic-resort-transfer-review", "vip-transportation-punta-cana-what-to-expect"],
+  ["private-vs-shared-tours-in-punta-cana-what-s-really-worth-it", "group-tours-vs-private-tours-which-fits"],
+  ["private-punta-cana-tours-worth-booking", "group-tours-vs-private-tours-which-fits"],
+  ["luxury-tours-punta-cana-that-feel-worth-it", "group-tours-vs-private-tours-which-fits"],
+  ["private-excursions-punta-cana-worth-booking", "group-tours-vs-private-tours-which-fits"],
+  ["the-best-excursions-in-punta-cana-ranked-by-experience-not-price", "10-best-tours-in-punta-cana-worth-booking"],
+  ["how-to-book-dominican-excursions-right", "10-best-tours-in-punta-cana-worth-booking"],
+  ["what-you-should-know-before-booking-excursions-in-punta-cana", "10-best-tours-in-punta-cana-worth-booking"],
+  ["what-to-do-in-punta-cana-11-best-ideas", "10-best-tours-in-punta-cana-worth-booking"],
+  ["punta-cana-excursion-planning-guide", "10-best-tours-in-punta-cana-worth-booking"],
+  ["how-adventures-finder-simplifies-your-trip", "resort-booking-vs-travel-planner-which-fits"],
+  ["custom-punta-cana-vacation-packages-that-fit", "resort-booking-vs-travel-planner-which-fits"],
+  ["how-to-choose-a-punta-cana-dmc", "resort-booking-vs-travel-planner-which-fits"],
+  ["punta-cana-catamaran-cruise-what-to-expect", "are-catamaran-tours-worth-it-the-honest-answer"],
+  ["catamaran-cruise-vs-speedboat-excursion", "are-catamaran-tours-worth-it-the-honest-answer"],
+  ["luxury-travel-trends-punta-cana-guests-want", "punta-cana-travel-trends-2026-to-watch"],
+  ["punta-cana-corporate-retreat-planning-tips", "punta-cana-travel-trends-2026-to-watch"],
+  ] as const
+).map(([from, to]) => ({
+  source: `/:locale(en|es|fr-ca)/blog/${from}`,
+  destination: `/:locale/blog/${to}`,
+  permanent: true as const,
+}));
+
+const sectionMigrationRedirects: Array<{
   source: string;
   destination: string;
   permanent: true;
 }> = [
   {
-    source: "/en/excursions/deep-sea-fishing-private",
-    destination: "/en/excursions/private-deep-sea-fishing-punta-cana",
-    permanent: true,
-  },
-  {
-    source: "/en/excursions/full-day-tour-in-samana-serenity",
-    destination: "/en/excursions/samana-full-day-tour-punta-cana",
-    permanent: true,
-  },
-  {
-    source: "/en/excursions/party-boat",
-    destination: "/en/excursions/party-boat-tour-in-punta-cana",
-    permanent: true,
-  },
-  {
-    source: "/en/excursions/panaca-horse-show-punta-cana",
-    destination: "/en/excursions/panaca-world-show-punta-cana",
-    permanent: true,
-  },
-  {
-    source: "/en/excursions/macao-beach-buggy-adventure",
-    destination: "/en/excursions/macao-beach-buggy-punta-cana",
-    permanent: true,
-  },
-  {
-    source: "/en/excursions/samana-beyond-instagram-the-side-of-paradise-most-tourists-never-see",
-    destination: "/en/blog/samana-beyond-instagram-the-side-of-paradise-most-tourists-never-see",
-    permanent: true,
-  },
-  {
-    source: "/en/excursions/sea-turtles",
+    source:
+      "/:locale(en|es|fr-ca)/excursions/samana-beyond-instagram-the-side-of-paradise-most-tourists-never-see",
     destination:
-      "/en/blog/sea-turtles-in-the-dominican-republic-when-where-and-how-to-see-them-responsibly",
+      "/:locale/blog/samana-beyond-instagram-the-side-of-paradise-most-tourists-never-see",
+    permanent: true,
+  },
+  {
+    source: "/:locale(en|es|fr-ca)/excursions/sea-turtles",
+    destination:
+      "/:locale/blog/sea-turtles-in-the-dominican-republic-when-where-and-how-to-see-them-responsibly",
+    permanent: true,
+  },
+];
+
+/**
+ * URLs de WordPress con la categoria en la ruta: /water-tours/<slug>.
+ *
+ * next-intl les mete el prefijo de idioma y acaban en /en/water-tours/<slug>,
+ * que es un 404. La primera regla resuelve el caso con mas trafico perdido
+ * (355 impresiones/28d en posicion 9.5) porque ademas cambio de slug; la
+ * generica cubre el resto de la familia.
+ */
+const legacyCategoryPathRedirects: Array<{
+  source: string;
+  destination: string;
+  permanent: true;
+}> = [
+  ...["", "/"].map((trailing) => ({
+    source: `/water-tours/deep-sea-half-day-shared-fishing-charter${trailing}`,
+    destination: "/en/excursions/deep-sea-fishing-share",
+    permanent: true as const,
+  })),
+  {
+    source: `/:category(${categorySlugs})/:slug([a-z0-9]+(?:-[a-z0-9]+)*)`,
+    destination: "/en/excursions/:slug",
     permanent: true,
   },
 ];
@@ -354,7 +487,13 @@ const nextConfig: NextConfig = {
       // Structure fixes run before the root catch-all so /tours/<slug> is not
       // swallowed by it.
       ...legacyStructureRedirects,
+      // Las migraciones de slug van antes de legacyCategoryPathRedirects: si no,
+      // la regla generica /water-tours/:slug se llevaria los slugs renombrados
+      // a /en/excursions/<slug antiguo>, que ya no existe.
       ...slugMigrationRedirects,
+      ...sectionMigrationRedirects,
+      ...consolidatedPostRedirects,
+      ...legacyCategoryPathRedirects,
       ...legacyTourRedirects,
     ];
   },

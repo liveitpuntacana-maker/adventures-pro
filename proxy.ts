@@ -17,6 +17,10 @@ const GONE_PATHS = new Set([
   "/the-history-of-punta-cana",
   "/top-best-beaches-in-dominican-republic",
   "/shopping-center-in-punta-cana",
+  // Sin equivalente en el sitio actual. Redirigirlas a una pagina no
+  // relacionada seria un soft 404, que Google trata peor que un 410 limpio.
+  "/best-restaurants-in-punta-cana",
+  "/explore-the-secrets-of-punta-cana-unforgettable-adventures-await-you",
 ]);
 
 function normalizeForGoneCheck(pathname: string): string {
