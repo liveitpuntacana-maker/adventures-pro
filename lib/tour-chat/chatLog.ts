@@ -66,6 +66,13 @@ export async function logChatSession(input: ChatLogInput): Promise<void> {
         content: redactContactDetails(message.content).slice(0, MAX_STORED_CONTENT),
       }));
 
+    // La transcripcion existe para poder leer la conversacion de corrido en el
+    // Studio: el array de mensajes se pinta como filas plegadas y habria que
+    // abrirlas una a una.
+    const transcript = turns
+      .map((turn) => `${turn.role === "user" ? "Cliente" : "Asistente"}: ${turn.content}`)
+      .join("\n\n");
+
     const recommended = extractRecommendedTours(input.reply);
 
     const client = getSanityWriteClient();
@@ -80,6 +87,7 @@ export async function logChatSession(input: ChatLogInput): Promise<void> {
       _id: id,
       _type: "chatSession",
       sessionId: input.sessionId,
+      transcript,
       locale: input.locale,
       startedAt: existing?.startedAt ?? now,
       lastMessageAt: now,

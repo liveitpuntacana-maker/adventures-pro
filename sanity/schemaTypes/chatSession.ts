@@ -14,6 +14,14 @@ export const chatSessionType = defineType({
   readOnly: true,
   fields: [
     defineField({
+      name: "transcript",
+      title: "Conversación completa",
+      type: "text",
+      rows: 20,
+      description:
+        "La conversación entera, para leerla de corrido. Se genera sola desde los mensajes.",
+    }),
+    defineField({
       name: "sessionId",
       title: "ID de sesión",
       type: "string",
@@ -58,8 +66,9 @@ export const chatSessionType = defineType({
     }),
     defineField({
       name: "messages",
-      title: "Conversación",
+      title: "Mensajes por separado",
       type: "array",
+      description: "El mismo hilo, turno a turno. Normalmente basta con la transcripción de arriba.",
       of: [
         defineArrayMember({
           type: "object",
