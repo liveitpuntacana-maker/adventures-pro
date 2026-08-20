@@ -127,7 +127,7 @@ export default function LanguageSwitcher({ compact = false }: LanguageSwitcherPr
   };
 
   const triggerClass = compact
-    ? "h-9 min-w-[150px] grid-cols-[auto_1fr_auto] gap-2 px-3 text-sm"
+    ? "h-9 min-w-[128px] grid-cols-[auto_1fr_auto] gap-2 px-3 text-sm"
     : "h-10 min-w-[168px] grid-cols-[auto_1fr_auto] gap-2.5 px-3.5 text-sm";
 
   const rowClass = compact ? "px-3 py-2 text-sm" : "px-3.5 py-2.5 text-sm";

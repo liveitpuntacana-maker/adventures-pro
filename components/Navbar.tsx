@@ -52,14 +52,14 @@ export default function Navbar({ categories = [] }: NavbarProps) {
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white">
-      <div className="mx-auto flex h-24 w-full max-w-7xl items-center justify-between px-4 md:px-10 lg:px-12">
-        <Link href="/" className="inline-flex w-[250px] shrink-0 items-center">
+      <div className="mx-auto flex h-20 w-full max-w-7xl items-center justify-between px-4 md:px-10 lg:px-12 xl:h-24">
+        <Link href="/" className="inline-flex shrink-0 items-center">
           <Image
             src="/images/logo-v3.png"
             alt="Adventures Finder"
             width={250}
             height={83}
-            className="h-[83px] w-auto shrink-0"
+            className="h-12 w-auto shrink-0 sm:h-14 xl:h-[83px]"
           />
         </Link>
         <nav
