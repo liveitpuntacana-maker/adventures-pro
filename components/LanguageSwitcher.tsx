@@ -126,8 +126,11 @@ export default function LanguageSwitcher({ compact = false }: LanguageSwitcherPr
     setOpen(false);
   };
 
+  // En movil solo caben bandera y flecha: con la palabra, el boton pide 124px y
+  // la cabecera se pasa de los 360 de un telefono estrecho. El nombre del idioma
+  // vuelve desde sm, y el aria-label cubre el hueco para lectores de pantalla.
   const triggerClass = compact
-    ? "h-9 min-w-[128px] grid-cols-[auto_1fr_auto] gap-2 px-3 text-sm"
+    ? "h-9 grid-cols-[auto_auto] gap-1.5 px-2.5 text-sm sm:min-w-[108px] sm:grid-cols-[auto_1fr_auto]"
     : "h-10 min-w-[168px] grid-cols-[auto_1fr_auto] gap-2.5 px-3.5 text-sm";
 
   const rowClass = compact ? "px-3 py-2 text-sm" : "px-3.5 py-2.5 text-sm";
@@ -143,7 +146,11 @@ export default function LanguageSwitcher({ compact = false }: LanguageSwitcherPr
         className={`grid items-center rounded-full border border-slate-200 bg-white font-medium text-slate-900 shadow-sm outline-none transition hover:border-slate-300 focus-visible:border-cyan-500 focus-visible:ring-2 focus-visible:ring-cyan-500/20 ${triggerClass}`}
       >
         {current.flag}
-        <span className="truncate text-center">{current.label}</span>
+        <span
+          className={`truncate text-center ${compact ? "hidden sm:block" : ""}`}
+        >
+          {current.label}
+        </span>
         <ChevronDown
           className={`h-4 w-4 shrink-0 text-slate-500 transition-transform ${open ? "rotate-180" : ""}`}
           strokeWidth={2}

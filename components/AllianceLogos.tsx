@@ -19,6 +19,20 @@ export default function AllianceLogos() {
           />
         </a>
         <a
+          href="https://www.instagram.com/opetur"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center justify-center"
+        >
+          <Image
+            src="/alliances/opetur.png"
+            alt="OPETUR - Asociacion de Tour Operadores Receptivos de la Republica Dominicana"
+            width={520}
+            height={178}
+            className="h-16 w-auto object-contain grayscale opacity-70 transition-all hover:grayscale-0 hover:opacity-100"
+          />
+        </a>
+        <a
           href="https://wellnesstourismassociation.org/"
           target="_blank"
           rel="noopener noreferrer"
