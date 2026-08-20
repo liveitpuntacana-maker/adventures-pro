@@ -522,17 +522,27 @@ export function buildTourProductJsonLd({
 /*  Sitemap                                                                    */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * One sitemap entry per locale, each carrying the full set of alternates.
+ *
+ * This used to emit a single English URL with the other two languages hanging
+ * off it as alternates. Google discovered them, but its own guidance is that
+ * every language version gets its own <url> element: the alternates describe
+ * the group, they do not substitute for listing the page. With the Spanish and
+ * French versions taking 6% and 1% of impressions despite being fully
+ * translated, there is no reason to leave them implicit.
+ */
 export function buildSitemapEntry(
   pathname: string,
   lastModified?: string | Date,
-): MetadataRoute.Sitemap[number] {
-  return {
-    url: localizedUrl("en", pathname),
+): MetadataRoute.Sitemap {
+  const languages = buildLanguageAlternates(pathname);
+
+  return routing.locales.map((locale) => ({
+    url: localizedUrl(locale, pathname),
     ...(lastModified ? { lastModified: new Date(lastModified) } : {}),
-    alternates: {
-      languages: buildLanguageAlternates(pathname),
-    },
-  };
+    alternates: { languages },
+  }));
 }
 
 export function categoryPathFromSlug(slug: string): string {

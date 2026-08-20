@@ -19,6 +19,14 @@ type MetaEventRequestBody = {
 };
 
 export async function POST(request: NextRequest) {
+  // The server-side half of Meta tracking is optional: the browser pixel works
+  // on its own. Without a token there is nothing to send, and answering 500 on
+  // every page view put an error in every visitor's console and filled the
+  // logs. 204 says "nothing to do here" without pretending it succeeded.
+  if (!process.env.META_CONVERSIONS_API_TOKEN) {
+    return new NextResponse(null, { status: 204 });
+  }
+
   let body: MetaEventRequestBody;
 
   try {

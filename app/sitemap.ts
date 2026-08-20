@@ -75,28 +75,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Static pages carry no lastmod: a timestamp that changes on every crawl
   // teaches Google to ignore the field entirely.
-  const staticEntries = STATIC_PATHS.map((pathname) => buildSitemapEntry(pathname));
+  const staticEntries = STATIC_PATHS.flatMap((pathname) => buildSitemapEntry(pathname));
 
   const categoryEntries = categories
     .filter((category) => shouldIndexListing(category.tourCount))
-    .map((category) =>
+    .flatMap((category) =>
       buildSitemapEntry(categoryPathFromSlug(category.slug), category._updatedAt),
     );
 
   const destinationEntries = destinations
     .filter((destination) => shouldIndexListing(destination.tourCount))
-    .map((destination) =>
+    .flatMap((destination) =>
       buildSitemapEntry(
         destinationPathFromSlug(destination.slug),
         destination._updatedAt,
       ),
     );
 
-  const tourEntries = tours.map((tour) =>
+  const tourEntries = tours.flatMap((tour) =>
     buildSitemapEntry(tourPathFromSlug(tour.slug), tour._updatedAt),
   );
 
-  const postEntries = posts.map((post) =>
+  const postEntries = posts.flatMap((post) =>
     buildSitemapEntry(
       blogPathFromSlug(post.slug),
       post._updatedAt ?? post.publishedAt,
