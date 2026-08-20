@@ -8,22 +8,44 @@ export const CHAT_LOG_RETENTION_DAYS = 90;
 const MAX_STORED_CONTENT = 4000;
 
 /**
- * Strips contact details a visitor may have typed.
+ * Passes the Luhn checksum, which is what a real card number does and a phone
+ * number almost never does by accident.
+ */
+function looksLikeCardNumber(digits: string): boolean {
+  if (digits.length < 13 || digits.length > 19) return false;
+
+  let sum = 0;
+  let double = false;
+
+  for (let i = digits.length - 1; i >= 0; i -= 1) {
+    let value = Number(digits[i]);
+    if (double) {
+      value *= 2;
+      if (value > 9) value -= 9;
+    }
+    sum += value;
+    double = !double;
+  }
+
+  return sum % 10 === 0;
+}
+
+/**
+ * Removes payment card numbers, and nothing else.
  *
- * The assistant only answers questions, but nothing stops someone from writing
- * "call me at +1 809...". Redacting on the way in means the log never holds
- * contact data in the first place.
+ * Names, phones and emails are the point of the conversation: someone writing
+ * "call me at +1 809..." is a lead, and the team needs it. Card numbers are the
+ * opposite -- nobody should be typing one into a tour chat, but if they do it
+ * must not end up archived in two mailboxes and in the CMS.
+ *
+ * The Luhn check is what separates the two: a card number satisfies it by
+ * construction, a phone number essentially never does.
  */
 export function redactContactDetails(text: string): string {
-  return text
-    .replace(/[\w.+-]+@[\w-]+\.[\w.-]+/g, "[email]")
-    // Digit count decides, not shape: a plain pattern match also swallows
-    // dates like 2026-03-15, and the date is exactly the useful part of
-    // "I want Saona on March 15".
-    .replace(/\(?\+?\d[\d\s().+-]{6,}\d/g, (match) => {
-      const digits = match.replace(/\D/g, "");
-      return digits.length >= 9 && digits.length <= 15 ? "[teléfono]" : match;
-    });
+  return text.replace(/\d[\d\s.-]{11,}\d/g, (match) => {
+    const digits = match.replace(/\D/g, "");
+    return looksLikeCardNumber(digits) ? "[número de tarjeta]" : match;
+  });
 }
 
 /** Tour slugs the assistant linked to, so we can see what it recommended. */

@@ -1,6 +1,10 @@
 {
   "crons": [
     {
+      "path": "/api/cron/notify-chats",
+      "schedule": "*/10 * * * *"
+    },
+    {
       "path": "/api/cron/prune-chat-logs",
       "schedule": "0 4 * * *"
     }

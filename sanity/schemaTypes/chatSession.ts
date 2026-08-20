@@ -52,6 +52,13 @@ export const chatSessionType = defineType({
       type: "string",
     }),
     defineField({
+      name: "notifiedAt",
+      title: "Avisado a reservas",
+      type: "datetime",
+      description:
+        "Cuando se envio el correo con esta conversacion. Si esta vacio, aun no se ha enviado.",
+    }),
+    defineField({
       name: "messageCount",
       title: "Nº de mensajes",
       type: "number",
