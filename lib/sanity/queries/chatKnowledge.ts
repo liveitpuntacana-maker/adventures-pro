@@ -3,7 +3,6 @@ import { client } from "@/sanity/lib/client";
 import { routing, type AppLocale } from "@/i18n/routing";
 
 const HIGHLIGHT_MAX = 150;
-const TOUR_LIMIT = 60;
 const REVALIDATE_SECONDS = 3600;
 
 export type ChatKnowledgeTour = {
@@ -35,14 +34,21 @@ export type ChatKnowledge = {
 };
 
 /**
- * Compact catalog for the sales concierge.
- * Excludes blog posts. Projects only conversion-critical fields.
+ * The whole catalogue for the sales concierge.
+ *
+ * This used to stop at the sixty cheapest, which quietly hid the twenty most
+ * valuable products: the private charters, the yacht, the multi-day packages.
+ * Asked for a yacht, the assistant answered that there was none. Eighty titles
+ * with a price and one line of blurb cost very little context and the ones that
+ * were missing are the ones worth selling.
+ *
+ * Blog posts stay out on purpose: the assistant sells, it does not narrate.
  */
 export const CHAT_TOURS_QUERY = defineQuery(/* groq */ `
   *[_type == "tour" && defined(slug.current)]
   | order(
       coalesce(pricing[0].price, mainTour->pricing[0].price, 999999) asc
-    )[0...60]{
+    ){
     "title": coalesce(
       select($locale == "fr-ca" => title.frCA, title[$locale]),
       title.en,
@@ -174,6 +180,36 @@ type RawChatTour = {
   highlightSource?: string | null;
 };
 
+type RawKnowledgeBase = {
+  faqs?: Array<{ question?: string; answer?: string }>;
+  cancellationPolicy?: string;
+  pickupPolicy?: string;
+};
+
+/**
+ * FAQs and policies as an editor maintains them.
+ *
+ * Falls back to the values written in this file when the document does not
+ * exist or a field is left empty, so the assistant is never left without an
+ * answer about refunds or pickup while someone fills the form in.
+ */
+const KNOWLEDGE_BASE_QUERY = defineQuery(/* groq */ `
+  *[_type == "chatKnowledgeBase"][0]{
+    "faqs": faqs[]{
+      "question": coalesce(select($locale == "fr-ca" => question.frCA, question[$locale]), question.en, question.es),
+      "answer": coalesce(select($locale == "fr-ca" => answer.frCA, answer[$locale]), answer.en, answer.es)
+    },
+    "cancellationPolicy": coalesce(
+      select($locale == "fr-ca" => cancellationPolicy.frCA, cancellationPolicy[$locale]),
+      cancellationPolicy.en, cancellationPolicy.es
+    ),
+    "pickupPolicy": coalesce(
+      select($locale == "fr-ca" => pickupPolicy.frCA, pickupPolicy[$locale]),
+      pickupPolicy.en, pickupPolicy.es
+    )
+  }
+`);
+
 /**
  * Server-side chat knowledge with Next.js Data Cache (1 hour).
  * Blog content is intentionally excluded.
@@ -181,22 +217,31 @@ type RawChatTour = {
 export async function getChatKnowledge(locale: string): Promise<ChatKnowledge> {
   const activeLocale = normalizeLocale(locale);
 
-  const rawTours = await client.fetch<RawChatTour[]>(
-    CHAT_TOURS_QUERY,
-    { locale: activeLocale },
-    {
-      next: {
-        revalidate: REVALIDATE_SECONDS,
-        tags: ["chat-knowledge", "tour"],
-      },
-    },
-  );
+  const [rawTours, base] = await Promise.all([
+    client.fetch<RawChatTour[]>(
+      CHAT_TOURS_QUERY,
+      { locale: activeLocale },
+      { next: { revalidate: REVALIDATE_SECONDS, tags: ["chat-knowledge", "tour"] } },
+    ),
+    client
+      .fetch<RawKnowledgeBase | null>(
+        KNOWLEDGE_BASE_QUERY,
+        { locale: activeLocale },
+        { next: { revalidate: REVALIDATE_SECONDS, tags: ["chat-knowledge"] } },
+      )
+      .catch(() => null),
+  ]);
+
+  const editedFaqs = (base?.faqs ?? [])
+    .filter((faq) => faq?.question?.trim() && faq?.answer?.trim())
+    .map((faq) => ({ question: faq.question!.trim(), answer: faq.answer!.trim() }));
+
+  const fallback = officialPolicies();
 
   const tours: ChatKnowledgeTour[] = (rawTours ?? [])
     .filter((tour): tour is RawChatTour & { title: string; slug: string } =>
       Boolean(tour?.title?.trim() && tour?.slug?.trim()),
     )
-    .slice(0, TOUR_LIMIT)
     .map((tour) => ({
       title: tour.title.trim(),
       slug: tour.slug.replace(/^\/+|\/+$/g, ""),
@@ -213,8 +258,11 @@ export async function getChatKnowledge(locale: string): Promise<ChatKnowledge> {
   return {
     locale: activeLocale,
     tours,
-    faqs: officialFaqs(),
-    policies: officialPolicies(),
+    faqs: editedFaqs.length > 0 ? editedFaqs : officialFaqs(),
+    policies: {
+      cancellation: base?.cancellationPolicy?.trim() || fallback.cancellation,
+      pickup: base?.pickupPolicy?.trim() || fallback.pickup,
+    },
     tourPathPrefix: "/excursions",
     transfersPath: "/transfers",
   };

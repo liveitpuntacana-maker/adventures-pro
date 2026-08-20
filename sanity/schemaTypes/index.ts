@@ -16,6 +16,7 @@ import { transferVehicleType } from "./transferVehicle";
 import { transferRouteType } from "./transferRoute";
 import { transferHotelType } from "./transferHotel";
 import { chatSessionType } from "./chatSession";
+import { chatKnowledgeBaseType } from "./chatKnowledgeBase";
 
 export const schema: { types: SchemaTypeDefinition[] } = {
   types: [
@@ -36,5 +37,6 @@ export const schema: { types: SchemaTypeDefinition[] } = {
     transferRouteType,
     transferHotelType,
     chatSessionType,
+    chatKnowledgeBaseType,
   ],
 };
