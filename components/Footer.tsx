@@ -153,6 +153,17 @@ export default function Footer() {
         <p className="text-center text-sm text-gray-400">
           {t("copyright")}
         </p>
+        <p className="mt-1.5 text-center text-xs text-gray-500">
+          {t("builtBy")}{" "}
+          <a
+            href="https://www.afdigitalsolutions.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-gray-400 underline decoration-gray-600 underline-offset-2 transition hover:text-white hover:decoration-gray-300"
+          >
+            AF Digital Solutions
+          </a>
+        </p>
       </div>
     </footer>
   );

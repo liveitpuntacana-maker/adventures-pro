@@ -1,14 +1,17 @@
 /**
- * Blog posts retired in the August 2026 consolidation, and what replaced them.
+ * Blog posts deleted in the August 2026 consolidation, and what replaced them.
  *
  * Six themes had several articles competing for the same queries and earning
- * four clicks between them. One survivor per theme keeps its URL; the rest
- * redirect into it.
+ * four clicks between them. The editor kept the survivor of each theme plus
+ * seven others that were worth saving; only the slugs below were actually
+ * deleted from Sanity.
+ *
+ * A slug belongs here only once its document is gone. Redirecting a post that
+ * still exists makes it unreachable — the content is there and nothing can
+ * link to it — so the two states must stay in step.
  *
  * Shared by next.config.ts, which turns these into 308s, and the sitemap,
- * which must leave them out: the documents still exist in Sanity until an
- * editor deletes them, so without this the sitemap advertises URLs that
- * redirect — 19 of them, times three locales.
+ * which leaves them out.
  */
 export const RETIRED_POST_REDIRECTS: ReadonlyArray<readonly [from: string, to: string]> = [
   ["do-i-need-airport-transfer-for-my-trip", "vip-transportation-punta-cana-what-to-expect"],
@@ -20,16 +23,9 @@ export const RETIRED_POST_REDIRECTS: ReadonlyArray<readonly [from: string, to: s
   ["private-excursions-punta-cana-worth-booking", "group-tours-vs-private-tours-which-fits"],
   ["the-best-excursions-in-punta-cana-ranked-by-experience-not-price", "10-best-tours-in-punta-cana-worth-booking"],
   ["how-to-book-dominican-excursions-right", "10-best-tours-in-punta-cana-worth-booking"],
-  ["what-you-should-know-before-booking-excursions-in-punta-cana", "10-best-tours-in-punta-cana-worth-booking"],
   ["what-to-do-in-punta-cana-11-best-ideas", "10-best-tours-in-punta-cana-worth-booking"],
-  ["punta-cana-excursion-planning-guide", "10-best-tours-in-punta-cana-worth-booking"],
-  ["how-adventures-finder-simplifies-your-trip", "resort-booking-vs-travel-planner-which-fits"],
   ["custom-punta-cana-vacation-packages-that-fit", "resort-booking-vs-travel-planner-which-fits"],
-  ["how-to-choose-a-punta-cana-dmc", "resort-booking-vs-travel-planner-which-fits"],
   ["punta-cana-catamaran-cruise-what-to-expect", "are-catamaran-tours-worth-it-the-honest-answer"],
-  ["catamaran-cruise-vs-speedboat-excursion", "are-catamaran-tours-worth-it-the-honest-answer"],
-  ["luxury-travel-trends-punta-cana-guests-want", "punta-cana-travel-trends-2026-to-watch"],
-  ["punta-cana-corporate-retreat-planning-tips", "punta-cana-travel-trends-2026-to-watch"],
 ];
 
 /** Slugs that no longer resolve and must stay out of the sitemap. */
