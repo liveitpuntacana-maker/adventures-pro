@@ -10,6 +10,7 @@ import {
   shouldIndexListing,
   tourPathFromSlug,
 } from "@/lib/seo";
+import { RETIRED_POST_SLUGS } from "@/lib/content/retiredPosts";
 import { SANITY_TAGS, sanityCache } from "@/lib/sanityCache";
 
 export const revalidate = 3600;
@@ -96,7 +97,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     buildSitemapEntry(tourPathFromSlug(tour.slug), tour._updatedAt),
   );
 
-  const postEntries = posts.flatMap((post) =>
+  // Los retirados siguen existiendo en Sanity hasta que un editor los borre,
+  // pero ya redirigen: publicarlos seria anunciar URLs 3XX en el sitemap.
+  const postEntries = posts
+    .filter((post) => !RETIRED_POST_SLUGS.has(post.slug))
+    .flatMap((post) =>
     buildSitemapEntry(
       blogPathFromSlug(post.slug),
       post._updatedAt ?? post.publishedAt,
