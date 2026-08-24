@@ -17,6 +17,8 @@ export type TourSeoData = {
   description?: string | null;
   currency?: string | null;
   price?: number | string | null;
+  duration?: string | null;
+  availability?: string | null;
   mainImage?: { asset?: unknown } | null;
 };
 
@@ -36,6 +38,14 @@ export const tourSeoQuery = groq`*[_type == "tour" && slug.current in $slugCandi
   ),
   "currency": coalesce(currency, mainTour->currency, "USD"),
   "price": coalesce(pricing[0].price, mainTour->pricing[0].price),
+  "duration": coalesce(
+    select($locale == "fr-ca" => duration.frCA, duration[$locale]),
+    mainTour->duration[$locale], duration.en, mainTour->duration.en
+  ),
+  "availability": coalesce(
+    select($locale == "fr-ca" => availability.frCA, availability[$locale]),
+    mainTour->availability[$locale], availability.en, mainTour->availability.en
+  ),
   "mainImage": coalesce(listingImage, mainTour->listingImage)
 }`;
 
@@ -86,9 +96,30 @@ export async function buildTourMetadata({
     .map((line) => line.trim())
     .filter(Boolean)
     .join(" ");
-  const description = truncateMetaDescription(
-    rawDescription || t("tourFallbackDescription", { name: title }),
-  );
+  // What a buyer scans for in a search result: the price, how long it takes and
+  // when it runs. The tour copy is written to be read on the page, so it opens
+  // with scene setting — good there, wasted in a snippet Google cuts at 160
+  // characters. Fourteen tour pages were sitting on the first page of Google
+  // with 768 impressions a month between them and not one click.
+  //
+  // Nothing is invented: each fact disappears when its field is empty, and an
+  // seoDescription written by an editor still replaces the whole thing.
+  const currency = (tour.currency || "USD").trim();
+  const price = Number(tour.price ?? 0);
+  const facts = [
+    Number.isFinite(price) && price > 0
+      ? t("tourFactPrice", { currency, price: String(Math.round(price)) })
+      : null,
+    tour.duration?.trim() || null,
+    tour.availability?.trim() || null,
+  ].filter(Boolean);
+  const lead = facts.length > 0 ? `${facts.join(" · ")}. ` : "";
+
+  const description = tour.seoDescription?.trim()
+    ? truncateMetaDescription(rawDescription)
+    : truncateMetaDescription(
+        lead + (rawDescription || t("tourFallbackDescription", { name: title })),
+      );
   const image = tourImageUrl(tour.mainImage) ?? (await getDefaultOgImage());
 
   return buildPageMetadata({

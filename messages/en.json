@@ -207,7 +207,8 @@
     "breadcrumbExcursions": "Excursions",
     "breadcrumbBlog": "Blog",
     "breadcrumbDestinations": "Destinations",
-    "faqSectionTitle": "Frequently asked questions"
+    "faqSectionTitle": "Frequently asked questions",
+    "tourFactPrice": "From {currency} {price}"
   },
   "Reviews": {
     "google": "Google",
