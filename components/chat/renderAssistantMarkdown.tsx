@@ -1,13 +1,40 @@
 import type { ReactNode } from "react";
 
+/** Domains the assistant is allowed to send a visitor to. */
+const ALLOWED_HOSTS = [
+  "www.adventuresfinder.com",
+  "adventuresfinder.com",
+  "www.afdmctravel.com",
+  "afdmctravel.com",
+  "api.whatsapp.com",
+  "wa.me",
+];
+
+/**
+ * Only our own pages and WhatsApp.
+ *
+ * The href comes from the model, and the model reads whatever the visitor
+ * typed. Anyone who talks it into emitting a link would otherwise get a
+ * clickable link to their site, rendered on our domain, under our branding —
+ * a phishing page with our reputation behind it. An allowlist is the only
+ * version of this check that cannot be talked around.
+ *
+ * Two shapes that look internal but are not: "//evil.com", which browsers read
+ * as a full URL, and "/\evil.com", which some normalise the same way.
+ */
 function isSafeHref(href: string): boolean {
-  return (
-    href.startsWith("/") ||
-    href.startsWith("https://api.whatsapp.com/") ||
-    href.startsWith("https://wa.me/") ||
-    href.startsWith("https://") ||
-    href.startsWith("http://")
-  );
+  const value = href.trim();
+
+  if (value.startsWith("//") || value.startsWith("/\\")) return false;
+  if (value.startsWith("/")) return true;
+
+  try {
+    const url = new URL(value);
+    if (url.protocol !== "https:" && url.protocol !== "http:") return false;
+    return ALLOWED_HOSTS.includes(url.hostname.toLowerCase());
+  } catch {
+    return false;
+  }
 }
 
 type TourLinkProps = {
@@ -17,7 +44,11 @@ type TourLinkProps = {
 };
 
 function TourLink({ href, label, onLinkClick }: TourLinkProps) {
-  const safeHref = isSafeHref(href) ? href : "#";
+  // A rejected link becomes plain text: a dead "#" would still look clickable
+  // and tell the visitor to try it.
+  if (!isSafeHref(href)) return <>{label}</>;
+
+  const safeHref = href.trim();
   const external = safeHref.startsWith("http");
   return (
     <a
@@ -25,9 +56,7 @@ function TourLink({ href, label, onLinkClick }: TourLinkProps) {
       className="font-bold text-orange-600 underline underline-offset-2 hover:text-orange-700"
       target={external ? "_blank" : undefined}
       rel={external ? "noopener noreferrer" : undefined}
-      onClick={() => {
-        if (safeHref !== "#") onLinkClick?.(safeHref);
-      }}
+      onClick={() => onLinkClick?.(safeHref)}
     >
       {label}
     </a>
