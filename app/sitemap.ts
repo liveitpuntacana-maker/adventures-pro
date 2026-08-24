@@ -15,6 +15,15 @@ import { SANITY_TAGS, sanityCache } from "@/lib/sanityCache";
 
 export const revalidate = 3600;
 
+/**
+ * Legal pages that exist in English only.
+ *
+ * They answer noindex in the other two locales until someone translates them,
+ * so the sitemap must not offer those URLs. Keep in step with the
+ * `availableLocales` each page declares.
+ */
+const ENGLISH_ONLY_PATHS = new Set(["/terms-and-conditions", "/cancellation-policy"]);
+
 // tourCount mirrors the noindex rule on the listing pages: a sitemap that
 // submits noindexed URLs shows up as an error in Search Console.
 const categoriesQuery = groq`*[_type == "category" && defined(slug.current)]{
@@ -76,7 +85,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Static pages carry no lastmod: a timestamp that changes on every crawl
   // teaches Google to ignore the field entirely.
-  const staticEntries = STATIC_PATHS.flatMap((pathname) => buildSitemapEntry(pathname));
+  const staticEntries = STATIC_PATHS.flatMap((pathname) =>
+    buildSitemapEntry(pathname, undefined, ENGLISH_ONLY_PATHS.has(pathname) ? ["en"] : undefined),
+  );
 
   const categoryEntries = categories
     .filter((category) => shouldIndexListing(category.tourCount))

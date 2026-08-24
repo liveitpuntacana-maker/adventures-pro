@@ -535,10 +535,20 @@ export function buildTourProductJsonLd({
 export function buildSitemapEntry(
   pathname: string,
   lastModified?: string | Date,
+  availableLocales?: readonly AppLocale[],
 ): MetadataRoute.Sitemap {
-  const languages = buildLanguageAlternates(pathname);
+  // Only the locales the page actually exists in. Terms and the cancellation
+  // policy are English-only and answer noindex elsewhere; listing those in the
+  // sitemap submits a URL while telling Google to ignore it, which Search
+  // Console reports as an error.
+  const locales =
+    availableLocales && availableLocales.length > 0
+      ? routing.locales.filter((locale) => availableLocales.includes(locale))
+      : routing.locales;
 
-  return routing.locales.map((locale) => ({
+  const languages = buildLanguageAlternates(pathname, availableLocales);
+
+  return locales.map((locale) => ({
     url: localizedUrl(locale, pathname),
     ...(lastModified ? { lastModified: new Date(lastModified) } : {}),
     alternates: { languages },
