@@ -463,6 +463,43 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  /**
+   * Baseline security headers.
+   *
+   * No Content-Security-Policy here on purpose: the site pulls images from
+   * Sanity, scripts from Google Analytics and Meta, and talks to Gemini, so a
+   * policy written blind would break the page before it protected it. That one
+   * needs its own pass with the browser open.
+   */
+  async headers() {
+    const baseline = [
+      // Stop the page being framed and passed off as someone else's site.
+      { key: "X-Frame-Options", value: "SAMEORIGIN" },
+      // A .jpg that is really a script stays a .jpg.
+      { key: "X-Content-Type-Options", value: "nosniff" },
+      // Other sites see only our origin, never the full path the visitor came from.
+      { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+      // Nothing here needs a camera, a microphone or the visitor's location.
+      {
+        key: "Permissions-Policy",
+        value: "camera=(), microphone=(), geolocation=(), payment=()",
+      },
+    ];
+
+    return [
+      {
+        // Everything except the widgets, which exist to be embedded elsewhere:
+        // X-Frame-Options on those would break the sites that host them.
+        source: "/((?!widget).*)",
+        headers: baseline,
+      },
+      {
+        source: "/widget/:path*",
+        headers: baseline.filter((header) => header.key !== "X-Frame-Options"),
+      },
+    ];
+  },
+
   async redirects() {
     return [
       ...faviconRedirects,
