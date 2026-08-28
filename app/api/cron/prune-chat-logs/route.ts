@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getSanityWriteClient } from "@/lib/soro/sanityWriteClient";
 import { CHAT_LOG_RETENTION_DAYS } from "@/lib/tour-chat/chatLog";
+import { isAuthorizedCronRequest } from "@/lib/cronAuth";
 
 export const runtime = "nodejs";
 
@@ -12,12 +13,8 @@ export const runtime = "nodejs";
  * just accumulated risk.
  */
 export async function GET(request: NextRequest) {
-  const secret = process.env.CRON_SECRET;
-  if (secret) {
-    const auth = request.headers.get("authorization");
-    if (auth !== `Bearer ${secret}`) {
-      return NextResponse.json({ ok: false }, { status: 401 });
-    }
+  if (!isAuthorizedCronRequest(request, "prune-chat-logs")) {
+    return NextResponse.json({ ok: false }, { status: 401 });
   }
 
   const cutoff = new Date();

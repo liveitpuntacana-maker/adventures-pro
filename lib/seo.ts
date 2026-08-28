@@ -19,6 +19,22 @@ function toIsoDay(date: Date): string {
   return `${date.getFullYear()}-${month}-${day}`;
 }
 
+/**
+ * Full ISO timestamp, or null if the value is not a date.
+ *
+ * `new Date(x).toISOString()` throws RangeError on anything it cannot parse,
+ * and a throw inside a Server Component takes the whole page down — during the
+ * build, and worse, during background regeneration, where the failure is
+ * silent and the page stays frozen on its last good copy. Sanity's `datetime`
+ * fields are well-formed when written through the Studio, but documents can
+ * also arrive through the API, where schema validation does not run.
+ */
+export function toIsoDateTime(value?: string | number | Date | null): string | null {
+  if (value == null) return null;
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
 export const SITE_URL = "https://www.adventuresfinder.com";
 export const SITE_NAME = "Adventures Finder Pro";
 export const SITE_LOGO_URL = `${SITE_URL}/images/icon.png`;
@@ -419,10 +435,12 @@ export function buildBlogPostingJsonLd({
 
   if (description) data.description = description;
   if (image) data.image = [image];
-  if (datePublished) data.datePublished = new Date(datePublished).toISOString();
-  data.dateModified = new Date(
-    dateModified || datePublished || Date.now(),
-  ).toISOString();
+  const published = toIsoDateTime(datePublished);
+  if (published) data.datePublished = published;
+  // Falls through published -> now, so an unreadable date costs the property
+  // rather than the page.
+  data.dateModified =
+    toIsoDateTime(dateModified) ?? published ?? new Date().toISOString();
 
   if (body) {
     const words = body.trim().split(/\s+/).filter(Boolean).length;

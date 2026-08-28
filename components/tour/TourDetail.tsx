@@ -184,19 +184,42 @@ const parsePriceValue = (value?: number | string | null) => {
   return Number.isFinite(parsed) ? parsed : Number.NaN;
 };
 
+/**
+ * The "from" price: what one paying adult actually pays.
+ *
+ * Two rules matter, and both come from real rows in the CMS.
+ *
+ * Free rows are skipped. Several tours advertise infants and young children at
+ * 0 on purpose, and that is worth showing on the page — but it is not what the
+ * tour costs. Hard Rock Golf lists "Child (Under 12) (Must be accompanied by a
+ * full paying adult)" at 0, and a substring search for "adult" matched that
+ * label, so a 195 green fee was being advertised as 0.
+ *
+ * The label must *begin* with "adult". Montaña Redonda prices "4 Pax" at 580
+ * and "Extra Adults" at 75; the extra-person surcharge is not the lead price
+ * either. Anything else falls back to the first row that costs money, which is
+ * how the catalogue cards read it too.
+ */
 const pickAdultLeadPricing = (
   rows?: TourData["pricing"] | null,
 ): NonNullable<TourData["pricing"]>[number] | null => {
   if (!rows?.length) return null;
-  const upper = (s: string) => s.trim().toUpperCase();
-  const exact = rows.find((r) => {
-    const u = upper(r.label);
-    return u === "ADULTS" || u === "ADULT";
+
+  const paid = rows.filter((r) => {
+    const value = parsePriceValue(r.price);
+    return Number.isFinite(value) && value > 0;
   });
+  if (paid.length === 0) return null;
+
+  const label = (s?: string | null) => (s ?? "").trim().toUpperCase();
+
+  const exact = paid.find((r) => label(r.label) === "ADULTS" || label(r.label) === "ADULT");
   if (exact) return exact;
-  const partial = rows.find((r) => r.label.toLowerCase().includes("adult"));
-  // Fallback: first pricing row (same pattern as catalog cards).
-  return partial ?? rows[0] ?? null;
+
+  const leading = paid.find((r) => /^ADULTS?\b/.test(label(r.label)));
+  if (leading) return leading;
+
+  return paid[0];
 };
 
 const splitLines = (value?: string | null) =>
@@ -276,10 +299,11 @@ export default async function TourDetailPage({ params }: TourPageProps) {
   const adultLeadPricing = pickAdultLeadPricing(pricing);
   const adultLeadPriceValue = (() => {
     const preferred = parsePriceValue(adultLeadPricing?.price);
-    if (Number.isFinite(preferred)) return preferred;
+    if (Number.isFinite(preferred) && preferred > 0) return preferred;
+    // Same rule as the picker: a free children's row is not a "from" price.
     for (const row of pricing) {
       const value = parsePriceValue(row.price);
-      if (Number.isFinite(value)) return value;
+      if (Number.isFinite(value) && value > 0) return value;
     }
     return Number.NaN;
   })();

@@ -4,6 +4,7 @@ import BookNowLink from "@/components/meta/BookNowLink";
 import StarRating from "@/components/StarRating";
 import { urlFor } from "@/sanity/lib/image";
 import { Link } from "@/i18n/navigation";
+import { firstPaidPrice } from "@/lib/tourFilters";
 import { formatTourPrice } from "@/lib/tourPrice";
 import { hasTourRating } from "@/lib/tourRating";
 import { tourExcursionPath } from "@/lib/tourSlug";
@@ -25,26 +26,9 @@ type TourCardProps = {
   };
 };
 
-const parseNumericPrice = (value?: string | number | null) => {
-  if (value == null) return Number.NaN;
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-  if (typeof value !== "string") return Number.NaN;
-  const trimmed = value.trim();
-  if (!trimmed) return Number.NaN;
-  const cleaned = trimmed.replace(/[^\d.,-]/g, "");
-  if (!cleaned) return Number.NaN;
-  let normalized = cleaned;
-  if (cleaned.includes(",") && cleaned.includes(".")) {
-    normalized = cleaned.replace(/,/g, "");
-  } else if (cleaned.includes(",") && !cleaned.includes(".")) {
-    normalized = /,\d{1,2}$/.test(cleaned) ? cleaned.replace(",", ".") : cleaned.replace(/,/g, "");
-  }
-  const parsed = Number(normalized);
-  return Number.isFinite(parsed) ? parsed : Number.NaN;
-};
 
 export default function TourCard({ tour }: TourCardProps) {
-  const firstPriceValue = parseNumericPrice(tour.pricing?.[0]?.price);
+  const firstPriceValue = firstPaidPrice(tour.pricing);
   const computedPrice = Number.isFinite(firstPriceValue)
     ? `From ${formatTourPrice(tour.currency || "USD", firstPriceValue)}`
     : tour.fromPriceLabel || "Consultar precio";

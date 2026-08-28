@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { syncSoroFeedToSanity } from "@/lib/soro/sync";
+import { isAuthorizedCronRequest } from "@/lib/cronAuth";
 
 export const runtime = "nodejs";
 /**
@@ -14,24 +15,8 @@ export const runtime = "nodejs";
 export const maxDuration = 60;
 export const dynamic = "force-dynamic";
 
-function isAuthorized(request: NextRequest): boolean {
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret) {
-    console.error("[soro-sync] CRON_SECRET is not configured");
-    return false;
-  }
-
-  const authHeader = request.headers.get("authorization");
-  if (authHeader === `Bearer ${cronSecret}`) {
-    return true;
-  }
-
-  const headerSecret = request.headers.get("x-cron-secret");
-  return headerSecret === cronSecret;
-}
-
 export async function GET(request: NextRequest) {
-  if (!isAuthorized(request)) {
+  if (!isAuthorizedCronRequest(request, "soro-sync")) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

@@ -10,6 +10,7 @@ import type {
 } from "@/lib/tour-chat/types";
 import { getChatKnowledge } from "@/lib/sanity/queries/chatKnowledge";
 import { logChatSession } from "@/lib/tour-chat/chatLog";
+import { clientIp, rateLimit } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -19,6 +20,9 @@ const MAX_CONTENT_CHARS = 2000;
 const MAX_PATH_CHARS = 300;
 const GEMINI_TIMEOUT_MS = 12_000;
 const MAX_OUTPUT_TOKENS = 2048;
+
+/** Generous for a person typing, far below what a script would send. */
+const CHAT_REQUESTS_PER_MINUTE = 10;
 
 function isAppLocale(value: unknown): value is AppLocale {
   return typeof value === "string" && routing.locales.includes(value as AppLocale);
@@ -133,6 +137,22 @@ async function generateWithTimeout(
 
 export async function POST(request: Request) {
   try {
+    // Every accepted call is a paid Gemini call, and nothing upstream limits
+    // how many arrive. A visitor writes a message every few seconds at most;
+    // anything past this rate is a script, and it gets the WhatsApp fallback
+    // the client already knows how to show.
+    const limit = rateLimit({
+      key: `site-chat:${clientIp(request)}`,
+      limit: CHAT_REQUESTS_PER_MINUTE,
+      windowMs: 60_000,
+    });
+
+    if (!limit.ok) {
+      const response = errorResponse("unavailable", 429);
+      response.headers.set("Retry-After", String(limit.retryAfter));
+      return response;
+    }
+
     const apiKey =
       process.env.GEMINI_API_KEY ||
       process.env.GOOGLE_API_KEY ||
@@ -169,8 +189,6 @@ export async function POST(request: Request) {
       try {
         const reply = await generateWithTimeout(ai, model, systemInstruction, messages);
 
-        // after() runs once the reply is on its way, so storing the transcript
-        // never adds latency for the visitor.
         // after() runs once the reply is on its way, so storing the
         // transcript never adds latency for the visitor.
         if (sessionId) {

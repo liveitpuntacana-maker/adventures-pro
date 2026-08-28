@@ -37,7 +37,9 @@ export const tourSeoQuery = groq`*[_type == "tour" && slug.current in $slugCandi
     infoTour.frCA
   ),
   "currency": coalesce(currency, mainTour->currency, "USD"),
-  "price": coalesce(pricing[0].price, mainTour->pricing[0].price),
+  // First row that costs money: a free infants row would advertise "From USD 0"
+  // in the search result. Same rule as the card and the booking widget.
+  "price": coalesce(pricing[price > 0][0].price, mainTour->pricing[price > 0][0].price),
   "duration": coalesce(
     select($locale == "fr-ca" => duration.frCA, duration[$locale]),
     mainTour->duration[$locale], duration.en, mainTour->duration.en

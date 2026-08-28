@@ -13,6 +13,7 @@ import {
   buildBlogPostingJsonLd,
   buildBreadcrumbJsonLd,
   buildPageMetadata,
+  toIsoDateTime,
   truncateMetaDescription,
 } from "@/lib/seo";
 import BlogRelatedTours from "@/components/blog/BlogRelatedTours";
@@ -158,8 +159,11 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       })()
     : null;
 
-  const dateLabel = post.publishedAt
-    ? new Date(post.publishedAt).toLocaleDateString(
+  // A date that cannot be read is dropped rather than printed: toLocaleDateString
+  // does not throw on an invalid date, it renders the words "Invalid Date".
+  const publishedIso = toIsoDateTime(post.publishedAt);
+  const dateLabel = publishedIso
+    ? new Date(publishedIso).toLocaleDateString(
         locale === "es" ? "es" : locale === "fr-ca" ? "fr-CA" : "en-US",
         { year: "numeric", month: "long", day: "numeric" },
       )
@@ -229,11 +233,9 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
         <header className="mt-10">
           <h1 className="text-3xl font-semibold tracking-tight text-blue-950 md:text-4xl">{title}</h1>
-          {post.publishedAt ? (
+          {publishedIso ? (
             <p className="mt-3 text-sm text-slate-500">
-              <time dateTime={new Date(post.publishedAt).toISOString()}>
-                {dateLabel}
-              </time>
+              <time dateTime={publishedIso}>{dateLabel}</time>
             </p>
           ) : null}
         </header>

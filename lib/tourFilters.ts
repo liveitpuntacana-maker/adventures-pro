@@ -24,12 +24,30 @@ export function parseNumericPrice(value?: string | number | null): number {
   return Number.isFinite(parsed) ? parsed : Number.NaN;
 }
 
+/**
+ * First row that costs money.
+ *
+ * Eight tours advertise infants or young children at 0 on purpose, and that
+ * belongs on the page — but it is not what the tour costs. Reading row zero
+ * blindly turns those into "From USD 0" on the card and sorts them to the top
+ * of a cheapest-first list.
+ */
+export function firstPaidPrice(
+  rows?: Array<{ price?: number | string | null }> | null,
+): number {
+  for (const row of rows ?? []) {
+    const value = parseNumericPrice(row?.price);
+    if (Number.isFinite(value) && value > 0) return value;
+  }
+  return Number.NaN;
+}
+
 export function getTourNumericPrice(tour: TourWithPrice): number {
   if (tour.price != null) {
     const parsed = parseNumericPrice(tour.price);
-    if (Number.isFinite(parsed)) return parsed;
+    if (Number.isFinite(parsed) && parsed > 0) return parsed;
   }
-  return parseNumericPrice(tour.pricing?.[0]?.price);
+  return firstPaidPrice(tour.pricing);
 }
 
 export function matchesPriceRange(price: number, range: PriceRange): boolean {

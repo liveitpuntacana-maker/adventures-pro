@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getSanityWriteClient } from "@/lib/soro/sanityWriteClient";
+import { isAuthorizedCronRequest } from "@/lib/cronAuth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -94,12 +95,8 @@ function buildHtml(session: ChatSession): string {
  * per conversation no matter how many times the job runs.
  */
 export async function GET(request: NextRequest) {
-  const secret = process.env.CRON_SECRET;
-  if (secret) {
-    const auth = request.headers.get("authorization");
-    if (auth !== `Bearer ${secret}`) {
-      return NextResponse.json({ ok: false }, { status: 401 });
-    }
+  if (!isAuthorizedCronRequest(request, "notify-chats")) {
+    return NextResponse.json({ ok: false }, { status: 401 });
   }
 
   const apiKey = process.env.RESEND_API_KEY;

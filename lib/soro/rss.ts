@@ -1,4 +1,5 @@
 import Parser from "rss-parser";
+import { toIsoDateTime } from "@/lib/seo";
 import { SORO_RSS_URL } from "@/lib/soro/constants";
 
 export type SoroRssItem = {
@@ -154,7 +155,13 @@ export async function fetchSoroRssItems(): Promise<SoroRssItem[]> {
       content.split(/\n\n+/)[0]?.slice(0, 280) ||
       "";
 
-    const publishedAt = raw.isoDate || raw.pubDate || new Date().toISOString();
+    // An external feed can send anything in a date field, and one bad item used
+    // to abort the whole import: the throw happened before any item was
+    // returned, so a single malformed entry blocked the rest of the batch.
+    const publishedAt =
+      toIsoDateTime(raw.isoDate) ??
+      toIsoDateTime(raw.pubDate) ??
+      new Date().toISOString();
     const imageUrl = mediaUrl(raw) || firstImageFromHtml(html);
 
     items.push({
@@ -162,7 +169,7 @@ export async function fetchSoroRssItems(): Promise<SoroRssItem[]> {
       title,
       content,
       excerpt,
-      publishedAt: new Date(publishedAt).toISOString(),
+      publishedAt,
       imageUrl,
       link: raw.link,
     });

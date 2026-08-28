@@ -4,6 +4,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import TeamGrid from "@/components/TeamGrid";
 import JsonLd from "@/components/JsonLd";
 import { client } from "@/sanity/lib/client";
+import { SANITY_TAGS, sanityCache } from "@/lib/sanityCache";
 import { urlFor } from "@/sanity/lib/image";
 import { groq } from "next-sanity";
 import type { AppLocale } from "@/i18n/routing";
@@ -25,6 +26,8 @@ export async function generateMetadata({
   const page = await client
     .fetch<{ heroImage?: unknown } | null>(
       groq`*[_type == "aboutPage"][0]{ heroImage }`,
+      {},
+      sanityCache([SANITY_TAGS.aboutPage]),
     )
     .catch(() => null);
 
@@ -69,7 +72,13 @@ export default async function AboutPage({ params }: AboutPageProps) {
   setRequestLocale(locale);
   const tSeo = await getTranslations({ locale, namespace: "Seo" });
 
-  const about = await client.fetch<AboutPageData | null>(ABOUT_PAGE_QUERY, { locale }).catch(() => null);
+  const about = await client
+    .fetch<AboutPageData | null>(
+      ABOUT_PAGE_QUERY,
+      { locale },
+      sanityCache([SANITY_TAGS.aboutPage, SANITY_TAGS.teamMember]),
+    )
+    .catch(() => null);
 
   const title = about?.whoWeAreTitle?.trim() || FALLBACK_TITLE;
   const subtitle = about?.whoWeAreSubtitle?.trim() || FALLBACK_SUBTITLE;

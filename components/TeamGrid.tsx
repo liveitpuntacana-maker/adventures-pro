@@ -2,6 +2,7 @@
 import { groq } from "next-sanity";
 
 import { client } from "@/sanity/lib/client";
+import { SANITY_TAGS, sanityCache } from "@/lib/sanityCache";
 import { urlFor } from "@/sanity/lib/image";
 import { type AppLocale } from "@/i18n/routing";
 
@@ -34,7 +35,11 @@ export default async function TeamGrid({
   teamTagline,
   sectionSubtitle,
 }: TeamGridProps) {
-  const team = await client.fetch<Member[]>(teamMembersQuery, { locale });
+  const team = await client.fetch<Member[]>(
+    teamMembersQuery,
+    { locale },
+    sanityCache([SANITY_TAGS.teamMember]),
+  );
   const heading = teamTagline?.trim() || "Our Team";
   const subtitle = sectionSubtitle?.trim() || "";
 

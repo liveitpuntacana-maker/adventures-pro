@@ -2,6 +2,7 @@ import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import { groq } from "next-sanity";
 import { client } from "@/sanity/lib/client";
+import { REVALIDATE, SANITY_TAGS, sanityCache } from "@/lib/sanityCache";
 import { urlFor } from "@/sanity/lib/image";
 import BlogSectionIntro from "@/components/BlogSectionIntro";
 import BlogSectionEmpty from "@/components/BlogSectionEmpty";
@@ -29,7 +30,13 @@ type BlogSectionProps = {
 };
 
 export default async function BlogSection({ locale }: BlogSectionProps) {
-  const posts = await client.fetch<BlogPostPreview[]>(BLOG_PREVIEW_QUERY, { locale }).catch(() => []);
+  const posts = await client
+    .fetch<BlogPostPreview[]>(
+      BLOG_PREVIEW_QUERY,
+      { locale },
+      sanityCache([SANITY_TAGS.post], REVALIDATE.blog),
+    )
+    .catch(() => []);
 
   return (
     <section className="w-full bg-slate-50 py-16 md:py-24">
