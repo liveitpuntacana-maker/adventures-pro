@@ -66,6 +66,24 @@ const CONCEPT_PHRASES: Record<string, Record<AppLocale, readonly string[]>> = {
     es: ["pesca de altura", "pesca"],
     "fr-ca": ["pêche en haute mer", "pêche"],
   },
+  // Nombres de producto, no temas. En el articulo de pesca cada uno aparece en
+  // la lista de precios, que es donde alguien esta comparando y decidiendo; el
+  // concepto generico "fishing" habria enlazado el verbo de la primera frase.
+  "fishing-shared": {
+    en: ["Deep Sea Fishing Shared"],
+    es: ["Pesca de Altura Compartida"],
+    "fr-ca": ["Pêche hauturière partagée"],
+  },
+  "fishing-private": {
+    en: ["Deep Sea Fishing Private"],
+    es: ["Pesca de Altura Privada"],
+    "fr-ca": ["Pêche hauturière privée"],
+  },
+  "fishing-inshore": {
+    en: ["Family Inshore Fishing 36ft"],
+    es: ["Pesca Costera Familiar 36 pies"],
+    "fr-ca": ["Pêche côtière familiale 36 pieds"],
+  },
   "golf": {
     en: ["golf"],
     es: ["golf"],
@@ -253,6 +271,13 @@ const POST_LINKS: Record<string, readonly PostLink[]> = {
   ],
   "dominican-republic-resort-transfer-review": [
     { listing: "/transfers", concept: "transfer" },
+  ],
+  "fishing-in-punta-cana-how-to-choose-a-charter": [
+    { tour: "deep-sea-fishing-share", concept: "fishing-shared" },
+    { tour: "private-deep-sea-fishing-punta-cana", concept: "fishing-private" },
+    { tour: "cap-cana-adventure-park-family-fishing", concept: "fishing-inshore" },
+    { tour: "private-fishing-tour-punta-cana-crystal-waters" },
+    { tour: "cap-cana-adventure-park-fly-fishing" },
   ],
   "group-tours-vs-private-tours-which-fits": [
     { tour: "private-catamaran-bavaro-coast-punta-cana", concept: "catamaran" },

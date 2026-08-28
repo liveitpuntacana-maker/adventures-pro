@@ -18,7 +18,11 @@ import {
 } from "@/lib/seo";
 import BlogRelatedTours from "@/components/blog/BlogRelatedTours";
 import { postSeoOverride } from "@/lib/content/postSeo";
-import { linkifyBody, type BodyLink } from "@/lib/content/linkifyBody";
+import {
+  bodyProseParagraphs,
+  buildBodyBlocks,
+  type BodyLink,
+} from "@/lib/content/linkifyBody";
 import { conceptPhrases, postLinks } from "@/lib/content/postTourLinks";
 import { tourExcursionPath } from "@/lib/tourSlug";
 import { getDefaultOgImage, sanityOgImage } from "@/lib/ogImage";
@@ -171,10 +175,10 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
   const title = post.title.trim();
   const excerpt = post.excerpt?.trim();
-  const bodyParagraphs = (post.body ?? "")
-    .split(/\n\n+/)
-    .map((p) => p.trim())
-    .filter(Boolean);
+  const bodyText = post.body ?? "";
+  // Headings are excluded here: an excerpt or a wordCount built from a title
+  // describes the article worse than the prose does.
+  const bodyParagraphs = bodyProseParagraphs(bodyText);
 
   // Curated catalogue links for this article: the ones carrying a concept are
   // woven into the prose, all of them feed the grid at the foot of the page.
@@ -186,7 +190,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     const href = link.tour ? tourExcursionPath(link.tour) : link.listing;
     return href ? [{ phrases, href }] : [];
   });
-  const paragraphs = linkifyBody(bodyParagraphs, bodyLinks);
+  const blocks = buildBodyBlocks(bodyText, bodyLinks);
   const relatedTourSlugs = links.flatMap((link) => (link.tour ? [link.tour] : []));
 
   const jsonLd = [
@@ -244,25 +248,51 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           <p className="mt-6 text-lg leading-relaxed text-slate-700">{excerpt}</p>
         ) : null}
 
-        {bodyParagraphs.length > 0 ? (
+        {blocks.length > 0 ? (
           <div className="mt-12 max-w-none space-y-5 border-t border-slate-100 pt-12 text-[15px] leading-relaxed text-slate-700 md:text-base">
-            {paragraphs.map((segments, index) => (
-              <p key={index} className="whitespace-pre-wrap">
-                {segments.map((segment, segmentIndex) =>
-                  segment.href ? (
-                    <Link
-                      key={segmentIndex}
-                      href={segment.href}
-                      className="font-medium text-blue-900 underline decoration-blue-900/30 underline-offset-2 transition hover:decoration-blue-900"
-                    >
-                      {segment.text}
-                    </Link>
-                  ) : (
-                    segment.text
-                  ),
-                )}
-              </p>
-            ))}
+            {blocks.map((block, index) => {
+              const content = block.segments.map((segment, segmentIndex) =>
+                segment.href ? (
+                  <Link
+                    key={segmentIndex}
+                    href={segment.href}
+                    className="font-medium text-blue-900 underline decoration-blue-900/30 underline-offset-2 transition hover:decoration-blue-900"
+                  >
+                    {segment.text}
+                  </Link>
+                ) : (
+                  segment.text
+                ),
+              );
+
+              if (block.level === 2) {
+                return (
+                  <h2
+                    key={index}
+                    className="!mt-12 scroll-mt-24 text-2xl font-semibold tracking-tight text-blue-950 md:text-3xl"
+                  >
+                    {content}
+                  </h2>
+                );
+              }
+
+              if (block.level === 3) {
+                return (
+                  <h3
+                    key={index}
+                    className="!mt-8 scroll-mt-24 text-lg font-semibold text-blue-950 md:text-xl"
+                  >
+                    {content}
+                  </h3>
+                );
+              }
+
+              return (
+                <p key={index} className="whitespace-pre-wrap">
+                  {content}
+                </p>
+              );
+            })}
           </div>
         ) : null}
 
