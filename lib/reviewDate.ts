@@ -4,20 +4,42 @@
  * something sortable and into the "a month ago" wording Google itself uses.
  */
 
-/** Parses DD/MM/YYYY. Returns null for anything else, so bad rows sort last. */
+/**
+ * Parses DD/MM/YYYY. Returns null for anything else, so bad rows sort last.
+ *
+ * Dashes are accepted alongside slashes: reviews are copied by hand from
+ * Google, GetYourGuide and Viator, and those write the same date both ways.
+ * Reading `13-08-2026` as anything other than 13 August would be worse than
+ * reading it as nothing.
+ */
 export function parseReviewDate(value?: string | null): Date | null {
   if (!value) return null;
 
-  const match = value.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  const match = value.trim().match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
   if (!match) {
-    // Older entries may predate the DD/MM/YYYY rule; fall back to Date parsing.
+    // Older entries may predate the DD/MM/YYYY rule; fall back to Date parsing,
+    // but only when a four-digit year is actually written down. Otherwise the
+    // Date constructor invents one — "Aug 13" comes back as the year 2001.
+    if (!/\d{4}/.test(value)) return null;
     const loose = new Date(value);
     return Number.isNaN(loose.getTime()) ? null : loose;
   }
 
   const [, day, month, year] = match;
   const date = new Date(Number(year), Number(month) - 1, Number(day));
-  return Number.isNaN(date.getTime()) ? null : date;
+  if (Number.isNaN(date.getTime())) return null;
+
+  // The Date constructor rolls overflow forward, so 40/13/2026 would silently
+  // become a real date in 2027. A date nobody wrote is worse than no date.
+  if (
+    date.getFullYear() !== Number(year) ||
+    date.getMonth() !== Number(month) - 1 ||
+    date.getDate() !== Number(day)
+  ) {
+    return null;
+  }
+
+  return date;
 }
 
 export type RelativeDateParts = {

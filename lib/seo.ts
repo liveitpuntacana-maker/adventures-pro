@@ -3,7 +3,21 @@ import type { MetadataRoute } from "next";
 import { routing, type AppLocale } from "@/i18n/routing";
 import { categoryExcursionPath } from "@/lib/categoryPath";
 import { destinationExcursionPath } from "@/lib/destinationPath";
+import { parseReviewDate } from "@/lib/reviewDate";
 import { tourExcursionPath } from "@/lib/tourSlug";
+
+/**
+ * YYYY-MM-DD from the date's own calendar day.
+ *
+ * `toISOString()` would convert to UTC first, which moves a date built at local
+ * midnight onto the previous day east of Greenwich — a review published on the
+ * 1st marked up as the 31st.
+ */
+function toIsoDay(date: Date): string {
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+}
 
 export const SITE_URL = "https://www.adventuresfinder.com";
 export const SITE_NAME = "Adventures Finder Pro";
@@ -495,23 +509,32 @@ export function buildTourProductJsonLd({
     );
 
     if (usableReviews.length > 0) {
-      data.review = usableReviews.slice(0, 10).map((review) => ({
-        "@type": "Review",
-        reviewRating: {
-          "@type": "Rating",
-          ratingValue: review.rating,
-          bestRating: 5,
-          worstRating: 1,
-        },
-        author: {
-          "@type": "Person",
-          name: review.author?.trim() || "Traveler",
-        },
-        ...(review.date
-          ? { datePublished: new Date(review.date).toISOString().slice(0, 10) }
-          : {}),
-        reviewBody: review.text?.trim(),
-      }));
+      data.review = usableReviews.slice(0, 10).map((review) => {
+        // Editors type these by hand while copying from Google or
+        // GetYourGuide, so the string is whatever they wrote. `new Date()`
+        // reads none of those formats: it threw on "13-08-2026" — taking the
+        // whole page render down with it — and quietly read "04-07-2026" as
+        // April. parseReviewDate knows the format the CMS asks for and returns
+        // null for anything else, so an odd date costs us the datePublished
+        // property and nothing more.
+        const parsed = parseReviewDate(review.date);
+
+        return {
+          "@type": "Review",
+          reviewRating: {
+            "@type": "Rating",
+            ratingValue: review.rating,
+            bestRating: 5,
+            worstRating: 1,
+          },
+          author: {
+            "@type": "Person",
+            name: review.author?.trim() || "Traveler",
+          },
+          ...(parsed ? { datePublished: toIsoDay(parsed) } : {}),
+          reviewBody: review.text?.trim(),
+        };
+      });
     }
   }
 

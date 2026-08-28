@@ -381,6 +381,16 @@ export const tourType = defineType({
               name: "date",
               title: "Date",
               type: "string",
+              description:
+                "Formato DD/MM/AAAA, como aparece en Google, GetYourGuide o Viator.",
+              placeholder: "13/08/2026",
+              // Sin esta regla se colaban fechas como "13-8-26" o "Aug 13": el
+              // sitio no puede leerlas y la ficha del tour se queda sin la
+              // fecha en los datos que ve Google.
+              validation: (rule) =>
+                rule
+                  .regex(/^\d{1,2}[/-]\d{1,2}[/-]\d{4}$/, { name: "DD/MM/AAAA" })
+                  .error("Usa DD/MM/AAAA con el año de 4 cifras (ej. 13/08/2026)"),
             }),
             defineField({
               name: "text",
