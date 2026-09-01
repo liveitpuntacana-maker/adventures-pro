@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { Link } from "@/i18n/navigation";
 import { client } from "@/sanity/lib/client";
 import { urlFor } from "@/sanity/lib/image";
 import Breadcrumbs from "@/components/Breadcrumbs";
@@ -24,6 +25,7 @@ import {
   type TourReview,
 } from "@/lib/tourRating";
 import { categoryExcursionPath } from "@/lib/categoryPath";
+import { destinationExcursionPath } from "@/lib/destinationPath";
 import { slugLookupVariants, tourExcursionPath } from "@/lib/tourSlug";
 import {
   buildBreadcrumbJsonLd,
@@ -61,6 +63,7 @@ type TourData = {
   title: string;
   slug: string;
   category?: string | null;
+  destination?: { slug?: string | null; title?: string | null } | null;
   currency?: string;
   pricing?: Array<{ _key: string; label: string; price?: number | string | null }> | null;
   duration?: string;
@@ -96,6 +99,10 @@ const TOUR_QUERY = `*[_type == "tour" && slug.current in $slugCandidates][0]{
     coalesce(comboDays, comboItems)[0].tour->category->slug.current,
     "multidays-tours"
   ),
+  "destination": coalesce(destination->, mainTour->destination->){
+    "slug": slug.current,
+    "title": coalesce(select($locale == "fr-ca" => title.frCA, title[$locale]), title.en, title.es, title.frCA)
+  },
   "currency": coalesce(currency, mainTour->currency, "USD"),
   "pricing": select(
     count(pricing) > 0 => pricing[]{_key, label, price},
@@ -315,6 +322,10 @@ export default async function TourDetailPage({ params }: TourPageProps) {
   const peekUrl = peekBookingUrl(tour.peekProId);
   const categorySlug = tour.category || "multidays-tours";
   const categoryTitle = formatCategoryTitle(categorySlug);
+  // El destino solo se enlaza si existe de verdad en el CMS: sin el, la ficha
+  // se queda como estaba en lugar de apuntar a una pagina que no responde.
+  const destinationSlug = tour.destination?.slug?.trim() || null;
+  const destinationTitle = tour.destination?.title?.trim() || null;
   const reviews = tour.reviews ?? [];
   const reviewsCount = tour.reviewsCount ?? reviews.length;
   const showHeroRating = reviewsCount > 0;
@@ -368,8 +379,22 @@ export default async function TourDetailPage({ params }: TourPageProps) {
           ]}
         />
         <div className="mb-8 px-1 py-2 md:mb-10">
+          {/* La zona, enlazada a su listado. Es el unico enlace contextual que
+              la ficha da hacia arriba: las paginas de destino no recibian
+              ninguno, y la de Punta Cana agrupa 76 tours. */}
           <p className="mb-3 text-sm font-medium uppercase tracking-[0.18em] text-slate-500">
             {categoryTitle}
+            {destinationSlug && destinationTitle ? (
+              <>
+                <span aria-hidden="true"> · </span>
+                <Link
+                  href={destinationExcursionPath(destinationSlug)}
+                  className="underline-offset-4 transition hover:text-slate-700 hover:underline"
+                >
+                  {destinationTitle}
+                </Link>
+              </>
+            ) : null}
           </p>
           <h1 className="text-2xl font-semibold tracking-tight md:text-5xl">
             {tour.title}

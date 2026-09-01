@@ -1,9 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { useRouter } from "@/i18n/navigation";
+import { Link } from "@/i18n/navigation";
 import { destinationExcursionPath } from "@/lib/destinationPath";
 import { type MapDestination } from "@/lib/sanityDestinations";
 
@@ -25,7 +25,6 @@ type PinnedDestination = MapDestination & { top: number; left: number };
 
 export default function InteractiveMap({ destinations = [] }: InteractiveMapProps) {
   const t = useTranslations("InteractiveMap");
-  const router = useRouter();
   const [comingSoonSlug, setComingSoonSlug] = useState<string | null>(null);
 
   const pinnedDestinations = useMemo(
@@ -49,18 +48,6 @@ export default function InteractiveMap({ destinations = [] }: InteractiveMapProp
     return () => window.clearTimeout(timer);
   }, [comingSoonSlug]);
 
-  const handlePinClick = useCallback(
-    (event: React.MouseEvent, destination: PinnedDestination) => {
-      if (destination.tourCount > 0) {
-        router.push(destinationExcursionPath(destination.slug));
-        return;
-      }
-      event.preventDefault();
-      setComingSoonSlug(destination.slug);
-    },
-    [router],
-  );
-
   return (
     <section className="w-full">
       <div className="mx-auto mb-10 max-w-3xl text-center md:mb-12">
@@ -83,17 +70,13 @@ export default function InteractiveMap({ destinations = [] }: InteractiveMapProp
           const hasTours = destination.tourCount > 0;
           const showComingSoon = comingSoonSlug === destination.slug;
 
-          return (
-            <button
-              key={destination.slug}
-              type="button"
-              onClick={(event) => handlePinClick(event, destination)}
-              className={`group absolute z-10 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1.5 transition ${
-                hasTours ? "cursor-pointer hover:scale-105" : "cursor-default"
-              }`}
-              style={{ top: `${destination.top}%`, left: `${destination.left}%` }}
-              aria-label={destination.title}
-            >
+          const pinClassName = `group absolute z-10 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1.5 transition ${
+            hasTours ? "cursor-pointer hover:scale-105" : "cursor-default"
+          }`;
+          const pinStyle = { top: `${destination.top}%`, left: `${destination.left}%` };
+
+          const pin = (
+            <>
               {showComingSoon ? (
                 <span className="pointer-events-none absolute bottom-full mb-2 whitespace-nowrap rounded-lg bg-slate-900/95 px-3 py-1.5 text-xs font-semibold text-white shadow-lg ring-1 ring-white/10 md:text-sm">
                   {t("comingSoon")}
@@ -114,6 +97,41 @@ export default function InteractiveMap({ destinations = [] }: InteractiveMapProp
               <span className="whitespace-nowrap rounded bg-black/50 px-2 py-0.5 text-xs font-semibold text-white shadow-[0_1px_4px_rgba(0,0,0,0.45)] md:text-sm">
                 {destination.title}
               </span>
+            </>
+          );
+
+          // Un destino con tours es un enlace de verdad, no un boton que navega.
+          // Era un <button onClick={router.push}>, y Google no pulsa botones: las
+          // cinco paginas de destino no recibian un solo enlace interno de todo
+          // el sitio, la de Punta Cana incluida, que agrupa 76 tours. De paso el
+          // visitante recupera lo que un enlace le debe — abrir en otra pestana,
+          // copiar la direccion, verla antes de hacer clic.
+          if (hasTours) {
+            return (
+              <Link
+                key={destination.slug}
+                href={destinationExcursionPath(destination.slug)}
+                className={pinClassName}
+                style={pinStyle}
+                aria-label={destination.title}
+              >
+                {pin}
+              </Link>
+            );
+          }
+
+          // Sin tours no hay pagina a la que ir: el aviso de "proximamente" es
+          // toda la interaccion, y un enlace prometeria algo que no existe.
+          return (
+            <button
+              key={destination.slug}
+              type="button"
+              onClick={() => setComingSoonSlug(destination.slug)}
+              className={pinClassName}
+              style={pinStyle}
+              aria-label={destination.title}
+            >
+              {pin}
             </button>
           );
         })}
