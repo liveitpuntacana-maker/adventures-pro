@@ -269,6 +269,64 @@ const legacyTourRedirects: Array<{
 ];
 
 /**
+ * Old WordPress root URLs whose slug changed on the way in, so the generic
+ * catch-all above sends them to an /en/excursions/<old-slug> that never
+ * existed and they land on a 404 instead of the tour or article they used to
+ * be.
+ *
+ * Found by testing every URL in WordPress's own sitemap against the live
+ * site: 19 of the 404s Search Console reported were exactly this — a tour or
+ * post that still exists today, just renamed, silently losing whatever
+ * ranking signal Google had attached to the old address. A genuine handful
+ * (lifestyle articles, retired packages, WordPress category archives) really
+ * have nowhere to go and are left to 404 on purpose.
+ *
+ * Runs before legacyTourRedirects, so a listed slug never reaches the
+ * catch-all.
+ */
+const legacyRootSlugRedirects: Array<{
+  source: string;
+  destination: string;
+  permanent: true;
+}> = (
+  [
+    ["excursions", "montana-redonda-horse-back-riding", "montana-redonda-punta-cana"],
+    ["excursions", "private-tour-to-higuey-and-montana-redonda", "private-tour-higuey-montana-redonda-punta-cana"],
+    ["excursions", "montana-redonda-four-wheel-adventure", "montana-redonda-four-wheel-adventure-punta-cana"],
+    ["excursions", "ultimate-buggies-monkeys", "buggy-monkeyland-combo-punta-cana"],
+    ["excursions", "zipline-monkeys-experience", "zipline-monkeyland-punta-cana"],
+    ["excursions", "coco-bongo-disco", "coco-bongo-punta-cana"],
+    ["excursions", "party-boat-punta-cana", "party-boat-tour-in-punta-cana"],
+    ["excursions", "catalina-island-altos-de-chavon", "catalina-island-and-altos-de-chavon"],
+    ["excursions", "samana-waterfall-el-limon-bacardi-island", "samana-waterfall-el-limon-bacardi-island-punta-cana"],
+    ["excursions", "power-dive-snorkeling-punta-cana", "power-diving-snorkeling-in-punta-cana"],
+    ["excursions", "punta-cana-helicopter-ride-and-golf-experience", "helicopter-golf-experience-punta-cana"],
+    ["excursions", "private-catamaran-tour-along-bavaro-coast", "private-catamaran-bavaro-coast-punta-cana"],
+    ["excursions", "private-fishing-tour-in-the-crystal-waters-of-punta-cana", "private-fishing-tour-punta-cana-crystal-waters"],
+    ["excursions", "private-luxury-yacht-experience-in-punta-cana", "private-luxury-yacht-experience-punta-cana"],
+    ["excursions", "private-express-cruise-tour-in-punta-cana", "private-express-cruise-punta-cana"],
+    ["excursions", "cap-cana-adventure-park-yacht-40", "private-charter-sea-ray-40ft"],
+    ["excursions", "4-wheels-atv-punta-cana", "atv-tour-punta-cana"],
+    ["excursions", "dominican-culture-safari", "dominican-culture-safari-punta-cana"],
+    ["blog", "living-in-punta-cana-costs-visas-healthcare-daily-life", "living-in-punta-cana-costs-visas-healthcare-and-daily-life"],
+  ] as const
+).map(([section, from, to]) => ({
+  source: `/${from}`,
+  destination: `/en/${section}/${to}`,
+  permanent: true as const,
+}));
+
+/** Old WordPress hub pages: no single tour to send them to, but a category that still exists. */
+const legacyRootCategoryRedirects: Array<{
+  source: string;
+  destination: string;
+  permanent: true;
+}> = [
+  { source: "/combo-experiences", destination: "/en/excursions/categoria/combo-tours", permanent: true },
+  { source: "/golf-in-punta-cana", destination: "/en/excursions/categoria/golf-tours", permanent: true },
+];
+
+/**
  * Locale-less versions of the site's own pages.
  *
  * next-intl answers these with a 307 (temporary). Google follows a 307 but
@@ -515,6 +573,8 @@ const nextConfig: NextConfig = {
       ...sectionMigrationRedirects,
       ...consolidatedPostRedirects,
       ...legacyCategoryPathRedirects,
+      ...legacyRootSlugRedirects,
+      ...legacyRootCategoryRedirects,
       ...legacyTourRedirects,
     ];
   },
