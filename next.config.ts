@@ -308,6 +308,7 @@ const legacyRootSlugRedirects: Array<{
     ["excursions", "cap-cana-adventure-park-yacht-40", "private-charter-sea-ray-40ft"],
     ["excursions", "4-wheels-atv-punta-cana", "atv-tour-punta-cana"],
     ["excursions", "dominican-culture-safari", "dominican-culture-safari-punta-cana"],
+    ["excursions", "wellness-retreat", "wellness-retreat-package"],
     ["blog", "living-in-punta-cana-costs-visas-healthcare-daily-life", "living-in-punta-cana-costs-visas-healthcare-and-daily-life"],
   ] as const
 ).map(([section, from, to]) => ({
@@ -423,6 +424,7 @@ const slugMigrationRedirects: Array<{
     ["excursions", "iberostar-golf-bavaro-punta-cana", "iberostar-golf-club-bavaro"],
     // El documento se recreo en Sanity y quedo con sufijo -2.
     ["blog", "9-best-golf-courses-in-punta-cana", "9-best-golf-courses-in-punta-cana-2"],
+    ["excursions", "vip-brunch-boat-tour-punta-cana", "vip-brunch-private-boat-tour-punta-cana"],
   ] as const
 ).map(([section, from, to]) => ({
   source: `/:locale(en|es|fr-ca)/${section}/${from}`,
