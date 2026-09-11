@@ -45,6 +45,8 @@ type UiCopy = {
   leadConfirmYes: string;
   leadConfirmRetype: string;
   leadAskNameAgain: string;
+  /** Closes the name/email intro without repeating the self-introduction already given. */
+  leadReadyToHelp: string;
 };
 
 function copyForLocale(locale: AppLocale): UiCopy {
@@ -77,6 +79,7 @@ function copyForLocale(locale: AppLocale): UiCopy {
         leadConfirmYes: "Sí, es mi nombre",
         leadConfirmRetype: "Escribirlo de nuevo",
         leadAskNameAgain: "Claro, adelante.",
+        leadReadyToHelp: "¡Genial, gracias! ¿Buscas un tour, un traslado o ayuda para reservar?",
       };
     case "fr-ca":
       return {
@@ -106,6 +109,7 @@ function copyForLocale(locale: AppLocale): UiCopy {
         leadConfirmYes: "Oui, c'est mon nom",
         leadConfirmRetype: "Le réécrire",
         leadAskNameAgain: "Bien sûr, allez-y.",
+        leadReadyToHelp: "Parfait, merci! Excursion, transfert ou réservation — comment puis-je vous aider?",
       };
     case "en":
     default:
@@ -134,6 +138,7 @@ function copyForLocale(locale: AppLocale): UiCopy {
         leadConfirmYes: "Yes, that's my name",
         leadConfirmRetype: "Type it again",
         leadAskNameAgain: "Sure, go ahead.",
+        leadReadyToHelp: "Great, thanks! Looking for a tour, a transfer, or help booking?",
         emailPlaceholder: "Your email",
       };
   }
@@ -384,11 +389,12 @@ export default function SiteWideAIChat({ locale }: SiteWideAIChatProps) {
       // an email forever just loses the sale. After a few honest tries, let
       // them through with the name alone rather than lock the chat.
       if (attempts >= MAX_EMAIL_ATTEMPTS) {
+        // leadEmailGiveUp already ends on "how can I help", so nothing more
+        // needs saying — an extra line here would ask the same question twice.
         setLeadTurns((prev) => [
           ...prev,
           { role: "user", content: text },
           { role: "assistant", content: copy.leadEmailGiveUp },
-          { role: "assistant", content: copy.welcome },
         ]);
         writeStoredLead({ name: leadName, email: "", askedAt: Date.now() });
         trackGAEvent("submit_chat_lead", { locale, has_name: leadName.length > 0, gave_up_on_email: true });
@@ -408,7 +414,7 @@ export default function SiteWideAIChat({ locale }: SiteWideAIChatProps) {
     setLeadTurns((prev) => [
       ...prev,
       { role: "user", content: text },
-      { role: "assistant", content: copy.welcome },
+      { role: "assistant", content: copy.leadReadyToHelp },
     ]);
     writeStoredLead({ name: leadName, email: text, askedAt: Date.now() });
     trackGAEvent("submit_chat_lead", { locale, has_name: leadName.length > 0, gave_up_on_email: false });
