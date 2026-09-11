@@ -214,7 +214,7 @@ function looksLikeAQuestionNotAName(value: string): boolean {
 }
 
 /** After this many bad emails, being right stops mattering more than not losing the visitor. */
-const MAX_EMAIL_ATTEMPTS = 3;
+const MAX_EMAIL_ATTEMPTS = 2;
 
 async function fetchSiteChat(
   payload: {
