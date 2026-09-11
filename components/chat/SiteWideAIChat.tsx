@@ -33,6 +33,12 @@ type UiCopy = {
   teaser: string;
   teaserGeneral: string;
   dismissTeaser: string;
+  /** {name} is replaced with what the visitor just typed. */
+  leadAskName: string;
+  leadAskEmail: string;
+  leadEmailRetry: string;
+  namePlaceholder: string;
+  emailPlaceholder: string;
 };
 
 function copyForLocale(locale: AppLocale): UiCopy {
@@ -54,6 +60,12 @@ function copyForLocale(locale: AppLocale): UiCopy {
         teaser: "👋 ¿Dudas sobre este tour? ¡Pregúntame!",
         teaserGeneral: "👋 ¿Buscas el tour perfecto? ¡Pregúntame!",
         dismissTeaser: "Cerrar sugerencia",
+        leadAskName:
+          "¡Hola! Soy el Asistente de Reservas de Adventures Finder 👋 Antes de empezar, ¿cómo te llamas?",
+        leadAskEmail: "¡Gracias, {name}! ¿Y tu correo, por si la conversación se corta?",
+        leadEmailRetry: "Ese correo no parece válido — ¿lo escribes de nuevo?",
+        namePlaceholder: "Tu nombre",
+        emailPlaceholder: "Tu correo",
       };
     case "fr-ca":
       return {
@@ -72,6 +84,12 @@ function copyForLocale(locale: AppLocale): UiCopy {
         teaser: "👋 Des questions sur cette excursion? Demandez-moi!",
         teaserGeneral: "👋 Besoin d'aide pour choisir? Demandez-moi!",
         dismissTeaser: "Fermer la suggestion",
+        leadAskName:
+          "Bonjour! Je suis l'Assistant de Réservation d'Adventures Finder 👋 Avant de commencer, quel est votre nom?",
+        leadAskEmail: "Merci, {name}! Et votre courriel, au cas où la conversation serait interrompue?",
+        leadEmailRetry: "Ce courriel ne semble pas valide — pouvez-vous le réécrire?",
+        namePlaceholder: "Votre nom",
+        emailPlaceholder: "Votre courriel",
       };
     case "en":
     default:
@@ -90,6 +108,12 @@ function copyForLocale(locale: AppLocale): UiCopy {
         teaser: "👋 Questions about this tour? Ask me!",
         teaserGeneral: "👋 Looking for the perfect tour? Ask me!",
         dismissTeaser: "Dismiss tip",
+        leadAskName:
+          "Hi! I'm the Adventures Finder Booking Assistant 👋 Before we start, what's your name?",
+        leadAskEmail: "Thanks, {name}! And your email, in case we get disconnected?",
+        leadEmailRetry: "That email doesn't look right — mind typing it again?",
+        namePlaceholder: "Your name",
+        emailPlaceholder: "Your email",
       };
   }
 }
@@ -121,6 +145,37 @@ function getChatSessionId(): string {
   }
 }
 
+const LEAD_STORAGE_KEY = "af-chat-lead";
+
+type StoredLead = { name: string; email: string; askedAt: number };
+
+/**
+ * Remembers that this visitor already gave their name and email this tab
+ * session. Without this, closing and reopening the widget on the same visit
+ * would ask again, which reads as the site not listening.
+ */
+function readStoredLead(): StoredLead | null {
+  try {
+    const raw = window.sessionStorage.getItem(LEAD_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as StoredLead) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeStoredLead(lead: StoredLead): void {
+  try {
+    window.sessionStorage.setItem(LEAD_STORAGE_KEY, JSON.stringify(lead));
+  } catch {
+    /* Private browsing or storage disabled: the prompt just reappears next open. */
+  }
+}
+
+/** Loose on purpose: this gates a lead field, not a signup form. */
+function looksLikeEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
 async function fetchSiteChat(
   payload: {
     messages: TourChatMessage[];
@@ -128,6 +183,8 @@ async function fetchSiteChat(
     currentPath: string;
     pageTourSlug?: string | null;
     sessionId: string;
+    visitorName?: string;
+    visitorEmail?: string;
   },
   signal: AbortSignal,
 ): Promise<TourChatResponse> {
@@ -170,7 +227,21 @@ export default function SiteWideAIChat({ locale }: SiteWideAIChatProps) {
   const listRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
+  // The name/email ask happens as two turns inside the conversation itself,
+  // not a separate form — the client wants it to read as a cordial question,
+  // not paperwork. "done" is the only step that unlocks the real assistant.
+  const [leadStep, setLeadStep] = useState<"askName" | "askEmail" | "done" | null>(null);
+  const [leadTurns, setLeadTurns] = useState<{ role: "assistant" | "user"; content: string }[]>([]);
+  const [leadName, setLeadName] = useState("");
+  const [leadEmail, setLeadEmail] = useState("");
+
   const waHref = whatsAppUrl(locale, pageTourSlug);
+  const activeInputPlaceholder =
+    leadStep === "askName"
+      ? copy.namePlaceholder
+      : leadStep === "askEmail"
+        ? copy.emailPlaceholder
+        : copy.placeholder;
 
   useEffect(() => {
     if (open || teaserDismissed) return;
@@ -182,7 +253,7 @@ export default function SiteWideAIChat({ locale }: SiteWideAIChatProps) {
     if (!open) return;
     const el = listRef.current;
     if (el) el.scrollTop = el.scrollHeight;
-  }, [open, messages, showWhatsAppFallback, isPending]);
+  }, [open, leadTurns, messages, showWhatsAppFallback, isPending]);
 
   useEffect(() => {
     return () => {
@@ -198,6 +269,67 @@ export default function SiteWideAIChat({ locale }: SiteWideAIChatProps) {
       device: getAnalyticsDevice(),
       page_path: currentPath,
     });
+
+    // Ask once per tab session. A returning visitor who already answered goes
+    // straight into the real conversation, no re-greeting.
+    if (leadStep === null) {
+      const stored = readStoredLead();
+      if (stored) {
+        setLeadName(stored.name);
+        setLeadEmail(stored.email);
+        setLeadStep("done");
+        setLeadTurns([{ role: "assistant", content: copy.welcome }]);
+      } else {
+        setLeadStep("askName");
+        setLeadTurns([{ role: "assistant", content: copy.leadAskName }]);
+      }
+    }
+  }
+
+  /** Routes what's in the input box to the name/email intro or to the real assistant. */
+  function handlePrimarySubmit() {
+    if (leadStep === "askName" || leadStep === "askEmail") {
+      handleLeadStepSubmit();
+      return;
+    }
+    handleSend();
+  }
+
+  function handleLeadStepSubmit() {
+    const text = input.trim();
+    if (!text) return;
+    setInput("");
+
+    if (leadStep === "askName") {
+      setLeadName(text);
+      setLeadTurns((prev) => [
+        ...prev,
+        { role: "user", content: text },
+        { role: "assistant", content: copy.leadAskEmail.replace("{name}", text) },
+      ]);
+      setLeadStep("askEmail");
+      return;
+    }
+
+    // leadStep === "askEmail"
+    if (!looksLikeEmail(text)) {
+      setLeadTurns((prev) => [
+        ...prev,
+        { role: "user", content: text },
+        { role: "assistant", content: copy.leadEmailRetry },
+      ]);
+      return;
+    }
+
+    setLeadEmail(text);
+    setLeadTurns((prev) => [
+      ...prev,
+      { role: "user", content: text },
+      { role: "assistant", content: copy.welcome },
+    ]);
+    writeStoredLead({ name: leadName, email: text, askedAt: Date.now() });
+    trackGAEvent("submit_chat_lead", { locale, has_name: leadName.length > 0 });
+    setLeadStep("done");
   }
 
   function dismissTeaser() {
@@ -224,7 +356,7 @@ export default function SiteWideAIChat({ locale }: SiteWideAIChatProps) {
 
   function handleSend() {
     const text = input.trim();
-    if (!text || isPending) return;
+    if (!text || isPending || leadStep !== "done") return;
 
     const nextMessages: TourChatMessage[] = [
       ...messages,
@@ -248,6 +380,8 @@ export default function SiteWideAIChat({ locale }: SiteWideAIChatProps) {
             currentPath,
             pageTourSlug,
             sessionId: getChatSessionId(),
+            visitorName: leadName || undefined,
+            visitorEmail: leadEmail || undefined,
           },
           controller.signal,
         );
@@ -333,9 +467,18 @@ export default function SiteWideAIChat({ locale }: SiteWideAIChatProps) {
           </header>
 
           <div ref={listRef} className="flex-1 space-y-3 overflow-y-auto bg-slate-50 px-3 py-3">
-            <p className="rounded-2xl rounded-tl-md bg-white px-3 py-2 text-sm leading-relaxed text-slate-700 shadow-sm">
-              {copy.welcome}
-            </p>
+            {leadTurns.map((turn, index) => (
+              <div
+                key={`lead-${index}-${turn.content.slice(0, 24)}`}
+                className={
+                  turn.role === "user"
+                    ? "ml-6 rounded-2xl rounded-tr-md bg-orange-500 px-3 py-2 text-sm leading-relaxed text-white"
+                    : "mr-6 rounded-2xl rounded-tl-md bg-white px-3 py-2 text-sm leading-relaxed text-slate-700 shadow-sm"
+                }
+              >
+                {turn.content}
+              </div>
+            ))}
 
             {messages.map((message, index) => (
               <div
@@ -380,24 +523,25 @@ export default function SiteWideAIChat({ locale }: SiteWideAIChatProps) {
             className="flex items-end gap-2 border-t border-slate-200 bg-white p-3"
             onSubmit={(event) => {
               event.preventDefault();
-              handleSend();
+              handlePrimarySubmit();
             }}
           >
             <label className="sr-only" htmlFor="site-ai-chat-input">
-              {copy.placeholder}
+              {activeInputPlaceholder}
             </label>
             <textarea
               id="site-ai-chat-input"
               rows={2}
               value={input}
               onChange={(event) => setInput(event.target.value)}
-              placeholder={copy.placeholder}
+              placeholder={activeInputPlaceholder}
+              autoComplete={leadStep === "askName" ? "name" : leadStep === "askEmail" ? "email" : "off"}
               className="max-h-24 min-h-[2.75rem] flex-1 resize-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none ring-orange-500/25 placeholder:text-slate-400 focus:ring-2"
               disabled={isPending}
               onKeyDown={(event) => {
                 if (event.key === "Enter" && !event.shiftKey) {
                   event.preventDefault();
-                  handleSend();
+                  handlePrimarySubmit();
                 }
               }}
             />

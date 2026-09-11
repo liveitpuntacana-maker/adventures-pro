@@ -36,6 +36,9 @@ export type SiteChatRequestBody = {
   pageTourTitle?: string;
   /** Groups the turns of one conversation together in the chat log. */
   sessionId?: string;
+  /** From the optional pre-chat form. The visitor may have skipped it. */
+  visitorName?: string;
+  visitorEmail?: string;
 };
 
 /** @deprecated Use SiteChatRequestBody */

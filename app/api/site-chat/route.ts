@@ -169,6 +169,8 @@ export async function POST(request: Request) {
     const pageTourSlug = sanitizeOptionalString(body.pageTourSlug, 160);
     const pageTourTitle = sanitizeOptionalString(body.pageTourTitle, 200);
     const sessionId = sanitizeOptionalString(body.sessionId, 64);
+    const visitorName = sanitizeOptionalString(body.visitorName, 120);
+    const visitorEmail = sanitizeOptionalString(body.visitorEmail, 200);
 
     if (!locale || !messages) {
       return errorResponse("invalid_payload", 400);
@@ -200,6 +202,8 @@ export async function POST(request: Request) {
               reply,
               currentPath,
               pageTourTitle,
+              visitorName,
+              visitorEmail,
             }),
           );
         }

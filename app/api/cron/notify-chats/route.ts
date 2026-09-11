@@ -29,6 +29,8 @@ type ChatSession = {
   lastMessageAt?: string;
   currentPath?: string;
   pageTourTitle?: string;
+  visitorName?: string;
+  visitorEmail?: string;
   messageCount?: number;
   recommendedTours?: string[];
 };
@@ -58,7 +60,14 @@ function buildHtml(session: ChatSession): string {
       })
     : "";
 
+  // El visitante puede omitir el formulario, asi que estas dos filas solo se
+  // muestran cuando de verdad dejo el dato.
+  const contactRows: Array<[string, string]> = [];
+  if (session.visitorName) contactRows.push(["Nombre", session.visitorName]);
+  if (session.visitorEmail) contactRows.push(["Correo", session.visitorEmail]);
+
   const meta = [
+    ...contactRows,
     ["Idioma", (session.locale ?? "").toUpperCase()],
     ["Página", session.currentPath ?? "—"],
     ["Tour de esa página", session.pageTourTitle ?? "—"],
@@ -142,7 +151,9 @@ export async function GET(request: NextRequest) {
         body: JSON.stringify({
           from,
           to: RECIPIENTS,
-          subject: `Chat IA — ${firstQuestion(session.transcript ?? "")}`,
+          subject: session.visitorName
+            ? `Chat IA — ${session.visitorName}`
+            : `Chat IA — ${firstQuestion(session.transcript ?? "")}`,
           html: buildHtml(session),
         }),
       });

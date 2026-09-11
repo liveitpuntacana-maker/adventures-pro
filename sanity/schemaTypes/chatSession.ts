@@ -52,6 +52,18 @@ export const chatSessionType = defineType({
       type: "string",
     }),
     defineField({
+      name: "visitorName",
+      title: "Nombre",
+      type: "string",
+      description: "El asistente lo pregunta antes de la primera respuesta real. Obligatorio para chatear.",
+    }),
+    defineField({
+      name: "visitorEmail",
+      title: "Correo",
+      type: "string",
+      description: "El asistente lo pregunta justo después del nombre. Obligatorio para chatear.",
+    }),
+    defineField({
       name: "notifiedAt",
       title: "Avisado a reservas",
       type: "datetime",
@@ -110,8 +122,9 @@ export const chatSessionType = defineType({
       locale: "locale",
       lastMessageAt: "lastMessageAt",
       count: "messageCount",
+      visitorName: "visitorName",
     },
-    prepare({ messages, locale, lastMessageAt, count }) {
+    prepare({ messages, locale, lastMessageAt, count, visitorName }) {
       const firstQuestion =
         (messages as Array<{ role?: string; content?: string }> | undefined)?.find(
           (turn) => turn.role === "user",
@@ -125,7 +138,7 @@ export const chatSessionType = defineType({
           })
         : "";
       return {
-        title: firstQuestion,
+        title: visitorName ? `${visitorName} — ${firstQuestion}` : firstQuestion,
         subtitle: `${date} · ${String(locale ?? "").toUpperCase()} · ${count ?? 0} mensajes`,
       };
     },

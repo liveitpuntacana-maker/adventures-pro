@@ -65,6 +65,9 @@ export type ChatLogInput = {
   reply: string;
   currentPath?: string | null;
   pageTourTitle?: string | null;
+  /** From the pre-chat form. The visitor may have skipped it. */
+  visitorName?: string | null;
+  visitorEmail?: string | null;
 };
 
 /**
@@ -91,9 +94,12 @@ export async function logChatSession(input: ChatLogInput): Promise<void> {
     // La transcripcion existe para poder leer la conversacion de corrido en el
     // Studio: el array de mensajes se pinta como filas plegadas y habria que
     // abrirlas una a una.
-    const transcript = turns
-      .map((turn) => `${turn.role === "user" ? "Cliente" : "Asistente"}: ${turn.content}`)
-      .join("\n\n");
+    const contactLine = [input.visitorName?.trim(), input.visitorEmail?.trim()]
+      .filter(Boolean)
+      .join(" · ");
+    const transcript =
+      (contactLine ? `Contacto: ${contactLine}\n\n` : "") +
+      turns.map((turn) => `${turn.role === "user" ? "Cliente" : "Asistente"}: ${turn.content}`).join("\n\n");
 
     const recommended = extractRecommendedTours(input.reply);
 
@@ -115,6 +121,8 @@ export async function logChatSession(input: ChatLogInput): Promise<void> {
       lastMessageAt: now,
       currentPath: input.currentPath ?? undefined,
       pageTourTitle: input.pageTourTitle ?? undefined,
+      visitorName: input.visitorName?.trim() || undefined,
+      visitorEmail: input.visitorEmail?.trim() || undefined,
       messageCount: turns.length,
       recommendedTours: recommended.length > 0 ? recommended : undefined,
       messages: turns,
