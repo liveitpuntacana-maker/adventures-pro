@@ -37,8 +37,14 @@ type UiCopy = {
   leadAskName: string;
   leadAskEmail: string;
   leadEmailRetry: string;
+  leadEmailGiveUp: string;
   namePlaceholder: string;
   emailPlaceholder: string;
+  /** {name} is replaced with the text the visitor typed as their name. */
+  leadConfirmName: string;
+  leadConfirmYes: string;
+  leadConfirmRetype: string;
+  leadAskNameAgain: string;
 };
 
 function copyForLocale(locale: AppLocale): UiCopy {
@@ -64,8 +70,13 @@ function copyForLocale(locale: AppLocale): UiCopy {
           "¡Hola! Soy el Asistente de Reservas de Adventures Finder 👋 Antes de empezar, ¿cómo te llamas?",
         leadAskEmail: "¡Gracias, {name}! ¿Y tu correo, por si la conversación se corta?",
         leadEmailRetry: "Ese correo no parece válido — ¿lo escribes de nuevo?",
+        leadEmailGiveUp: "Sin problema, sigamos sin correo. ¿En qué te ayudo?",
         namePlaceholder: "Tu nombre",
         emailPlaceholder: "Tu correo",
+        leadConfirmName: "¿\"{name}\" es tu nombre, o prefieres escribirlo de nuevo?",
+        leadConfirmYes: "Sí, es mi nombre",
+        leadConfirmRetype: "Escribirlo de nuevo",
+        leadAskNameAgain: "Claro, adelante.",
       };
     case "fr-ca":
       return {
@@ -88,8 +99,13 @@ function copyForLocale(locale: AppLocale): UiCopy {
           "Bonjour! Je suis l'Assistant de Réservation d'Adventures Finder 👋 Avant de commencer, quel est votre nom?",
         leadAskEmail: "Merci, {name}! Et votre courriel, au cas où la conversation serait interrompue?",
         leadEmailRetry: "Ce courriel ne semble pas valide — pouvez-vous le réécrire?",
+        leadEmailGiveUp: "Pas de problème, continuons sans courriel. Comment puis-je vous aider?",
         namePlaceholder: "Votre nom",
         emailPlaceholder: "Votre courriel",
+        leadConfirmName: "« {name} » est-il votre nom, ou préférez-vous le réécrire?",
+        leadConfirmYes: "Oui, c'est mon nom",
+        leadConfirmRetype: "Le réécrire",
+        leadAskNameAgain: "Bien sûr, allez-y.",
       };
     case "en":
     default:
@@ -112,7 +128,12 @@ function copyForLocale(locale: AppLocale): UiCopy {
           "Hi! I'm the Adventures Finder Booking Assistant 👋 Before we start, what's your name?",
         leadAskEmail: "Thanks, {name}! And your email, in case we get disconnected?",
         leadEmailRetry: "That email doesn't look right — mind typing it again?",
+        leadEmailGiveUp: "No problem, let's continue without it. How can I help?",
         namePlaceholder: "Your name",
+        leadConfirmName: "Is \"{name}\" your name, or would you rather type it again?",
+        leadConfirmYes: "Yes, that's my name",
+        leadConfirmRetype: "Type it again",
+        leadAskNameAgain: "Sure, go ahead.",
         emailPlaceholder: "Your email",
       };
   }
@@ -176,6 +197,25 @@ function looksLikeEmail(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
+/**
+ * Catches the case a real visitor hit: typing their actual question ("quiero
+ * saber los precios de saona") into the name field instead of a name. There is
+ * no strict format for a name to check against, so this only flags what a
+ * name essentially never is — a question, or a full sentence — rather than
+ * policing short or unusual names, which would misfire constantly.
+ */
+function looksLikeAQuestionNotAName(value: string): boolean {
+  if (value.includes("?") || value.includes("¿")) return true;
+  if (value.length > 45) return true;
+  // A real name is rarely more than four words (two given names, two
+  // surnames); "quiero saber los precios de saona" is six.
+  if (value.trim().split(/\s+/).length > 4) return true;
+  return false;
+}
+
+/** After this many bad emails, being right stops mattering more than not losing the visitor. */
+const MAX_EMAIL_ATTEMPTS = 3;
+
 async function fetchSiteChat(
   payload: {
     messages: TourChatMessage[];
@@ -230,10 +270,15 @@ export default function SiteWideAIChat({ locale }: SiteWideAIChatProps) {
   // The name/email ask happens as two turns inside the conversation itself,
   // not a separate form — the client wants it to read as a cordial question,
   // not paperwork. "done" is the only step that unlocks the real assistant.
-  const [leadStep, setLeadStep] = useState<"askName" | "askEmail" | "done" | null>(null);
+  const [leadStep, setLeadStep] = useState<
+    "askName" | "confirmName" | "askEmail" | "done" | null
+  >(null);
   const [leadTurns, setLeadTurns] = useState<{ role: "assistant" | "user"; content: string }[]>([]);
   const [leadName, setLeadName] = useState("");
   const [leadEmail, setLeadEmail] = useState("");
+  const [emailAttempts, setEmailAttempts] = useState(0);
+  // Held while leadStep is "confirmName": what they typed, awaiting a yes/retype answer.
+  const [pendingName, setPendingName] = useState("");
 
   const waHref = whatsAppUrl(locale, pageTourSlug);
   const activeInputPlaceholder =
@@ -295,24 +340,62 @@ export default function SiteWideAIChat({ locale }: SiteWideAIChatProps) {
     handleSend();
   }
 
+  function advanceToEmailStep(name: string) {
+    setLeadName(name);
+    setLeadTurns((prev) => [
+      ...prev,
+      { role: "assistant", content: copy.leadAskEmail.replace("{name}", name) },
+    ]);
+    setLeadStep("askEmail");
+  }
+
   function handleLeadStepSubmit() {
     const text = input.trim();
     if (!text) return;
     setInput("");
 
     if (leadStep === "askName") {
-      setLeadName(text);
-      setLeadTurns((prev) => [
-        ...prev,
-        { role: "user", content: text },
-        { role: "assistant", content: copy.leadAskEmail.replace("{name}", text) },
-      ]);
-      setLeadStep("askEmail");
+      setLeadTurns((prev) => [...prev, { role: "user", content: text }]);
+
+      // Flagged once, not looped: an unusual real name should never take more
+      // than one extra tap to get past. This is the exact failure a real
+      // visitor hit — typing their question ("quiero saber los precios de
+      // saona") into the name field.
+      if (looksLikeAQuestionNotAName(text)) {
+        setPendingName(text);
+        setLeadTurns((prev) => [
+          ...prev,
+          { role: "assistant", content: copy.leadConfirmName.replace("{name}", text) },
+        ]);
+        setLeadStep("confirmName");
+        return;
+      }
+
+      advanceToEmailStep(text);
       return;
     }
 
     // leadStep === "askEmail"
     if (!looksLikeEmail(text)) {
+      const attempts = emailAttempts + 1;
+      setEmailAttempts(attempts);
+
+      // Required in principle, but trapping someone who genuinely won't give
+      // an email forever just loses the sale. After a few honest tries, let
+      // them through with the name alone rather than lock the chat.
+      if (attempts >= MAX_EMAIL_ATTEMPTS) {
+        setLeadTurns((prev) => [
+          ...prev,
+          { role: "user", content: text },
+          { role: "assistant", content: copy.leadEmailGiveUp },
+          { role: "assistant", content: copy.welcome },
+        ]);
+        writeStoredLead({ name: leadName, email: "", askedAt: Date.now() });
+        trackGAEvent("submit_chat_lead", { locale, has_name: leadName.length > 0, gave_up_on_email: true });
+        setLeadStep("done");
+        return;
+      }
+
       setLeadTurns((prev) => [
         ...prev,
         { role: "user", content: text },
@@ -328,8 +411,23 @@ export default function SiteWideAIChat({ locale }: SiteWideAIChatProps) {
       { role: "assistant", content: copy.welcome },
     ]);
     writeStoredLead({ name: leadName, email: text, askedAt: Date.now() });
-    trackGAEvent("submit_chat_lead", { locale, has_name: leadName.length > 0 });
+    trackGAEvent("submit_chat_lead", { locale, has_name: leadName.length > 0, gave_up_on_email: false });
     setLeadStep("done");
+  }
+
+  function confirmPendingName() {
+    setLeadTurns((prev) => [...prev, { role: "user", content: copy.leadConfirmYes }]);
+    advanceToEmailStep(pendingName);
+  }
+
+  function retypeName() {
+    setLeadTurns((prev) => [
+      ...prev,
+      { role: "user", content: copy.leadConfirmRetype },
+      { role: "assistant", content: copy.leadAskNameAgain },
+    ]);
+    setPendingName("");
+    setLeadStep("askName");
   }
 
   function dismissTeaser() {
@@ -519,41 +617,60 @@ export default function SiteWideAIChat({ locale }: SiteWideAIChatProps) {
             ) : null}
           </div>
 
-          <form
-            className="flex items-end gap-2 border-t border-slate-200 bg-white p-3"
-            onSubmit={(event) => {
-              event.preventDefault();
-              handlePrimarySubmit();
-            }}
-          >
-            <label className="sr-only" htmlFor="site-ai-chat-input">
-              {activeInputPlaceholder}
-            </label>
-            <textarea
-              id="site-ai-chat-input"
-              rows={2}
-              value={input}
-              onChange={(event) => setInput(event.target.value)}
-              placeholder={activeInputPlaceholder}
-              autoComplete={leadStep === "askName" ? "name" : leadStep === "askEmail" ? "email" : "off"}
-              className="max-h-24 min-h-[2.75rem] flex-1 resize-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none ring-orange-500/25 placeholder:text-slate-400 focus:ring-2"
-              disabled={isPending}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" && !event.shiftKey) {
-                  event.preventDefault();
-                  handlePrimarySubmit();
-                }
+          {leadStep === "confirmName" ? (
+            <div className="flex items-center gap-2 border-t border-slate-200 bg-white p-3">
+              <button
+                type="button"
+                onClick={confirmPendingName}
+                className="flex-1 rounded-xl bg-orange-500 px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-600"
+              >
+                {copy.leadConfirmYes}
+              </button>
+              <button
+                type="button"
+                onClick={retypeName}
+                className="flex-1 rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
+              >
+                {copy.leadConfirmRetype}
+              </button>
+            </div>
+          ) : (
+            <form
+              className="flex items-end gap-2 border-t border-slate-200 bg-white p-3"
+              onSubmit={(event) => {
+                event.preventDefault();
+                handlePrimarySubmit();
               }}
-            />
-            <button
-              type="submit"
-              disabled={isPending || !input.trim()}
-              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-500 text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
-              aria-label={copy.send}
             >
-              <Send className="h-4 w-4" strokeWidth={2} />
-            </button>
-          </form>
+              <label className="sr-only" htmlFor="site-ai-chat-input">
+                {activeInputPlaceholder}
+              </label>
+              <textarea
+                id="site-ai-chat-input"
+                rows={2}
+                value={input}
+                onChange={(event) => setInput(event.target.value)}
+                placeholder={activeInputPlaceholder}
+                autoComplete={leadStep === "askName" ? "name" : leadStep === "askEmail" ? "email" : "off"}
+                className="max-h-24 min-h-[2.75rem] flex-1 resize-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none ring-orange-500/25 placeholder:text-slate-400 focus:ring-2"
+                disabled={isPending}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && !event.shiftKey) {
+                    event.preventDefault();
+                    handlePrimarySubmit();
+                  }
+                }}
+              />
+              <button
+                type="submit"
+                disabled={isPending || !input.trim()}
+                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-500 text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
+                aria-label={copy.send}
+              >
+                <Send className="h-4 w-4" strokeWidth={2} />
+              </button>
+            </form>
+          )}
         </section>
       )}
     </div>
