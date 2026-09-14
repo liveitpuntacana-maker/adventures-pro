@@ -50,7 +50,7 @@ export default function Footer() {
               {t("contactUs")}
             </Link>
           </div>
-          <div className="mt-4 flex justify-center md:hidden">
+          <div className="mt-4 flex justify-center md:justify-start">
             <WeatherWidget compact locale={currentLocale} />
           </div>
         </div>
