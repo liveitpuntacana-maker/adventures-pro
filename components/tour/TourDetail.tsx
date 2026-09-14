@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { client } from "@/sanity/lib/client";
 import { urlFor } from "@/sanity/lib/image";
@@ -62,7 +63,7 @@ type ComboDay = {
 type TourData = {
   title: string;
   slug: string;
-  category?: string | null;
+  categoryRef?: { slug?: string | null; title?: string | null } | null;
   destination?: { slug?: string | null; title?: string | null } | null;
   currency?: string;
   pricing?: Array<{ _key: string; label: string; price?: number | string | null }> | null;
@@ -91,14 +92,22 @@ type TourData = {
 const TOUR_QUERY = `*[_type == "tour" && slug.current in $slugCandidates][0]{
   "title": coalesce(select($locale == "fr-ca" => title.frCA, title[$locale]), title.en, title.es, title.frCA),
   "slug": slug.current,
-  "category": coalesce(
+  // Resuelve la referencia (no solo el slug) para poder sacar tambien el
+  // titulo en el idioma correcto, igual que ya se hace abajo con "destination".
+  // Antes solo se traia el slug y el titulo se fabricaba en JS a partir de el
+  // (formatCategoryTitle), lo que dejaba las migas de pan y la etiqueta de
+  // categoria siempre en ingles sin importar el idioma de la pagina.
+  "categoryRef": coalesce(
     select(
-      isCombo == true => mainTour->category->slug.current,
-      category->slug.current
+      isCombo == true => mainTour->category->,
+      category->
     ),
-    coalesce(comboDays, comboItems)[0].tour->category->slug.current,
-    "multidays-tours"
-  ),
+    coalesce(comboDays, comboItems)[0].tour->category->,
+    *[_type == "category" && slug.current == "multidays-tours"][0]
+  ){
+    "slug": slug.current,
+    "title": coalesce(select($locale == "fr-ca" => title.frCA, title[$locale]), title.en, title.es, title.frCA)
+  },
   "destination": coalesce(destination->, mainTour->destination->){
     "slug": slug.current,
     "title": coalesce(select($locale == "fr-ca" => title.frCA, title[$locale]), title.en, title.es, title.frCA)
@@ -278,6 +287,10 @@ function RatingStars({ rating, size = "md" }: { rating: number; size?: "sm" | "m
 export default async function TourDetailPage({ params }: TourPageProps) {
   const { slug, locale } = await params;
   const activeLocale = locale ?? routing.defaultLocale;
+  // Reuses the same key as the main menu, which already resolves to Inicio,
+  // Accueil, etc. — the breadcrumb previously wrote "Home" verbatim on every
+  // locale.
+  const tNav = await getTranslations({ locale: activeLocale, namespace: "Nav" });
   const slugCandidates = slugLookupVariants(slug);
   const tour = await client.fetch<TourData | null>(
     TOUR_QUERY,
@@ -320,8 +333,8 @@ export default async function TourDetailPage({ params }: TourPageProps) {
       ? "Consultar precio"
       : null;
   const peekUrl = peekBookingUrl(tour.peekProId);
-  const categorySlug = tour.category || "multidays-tours";
-  const categoryTitle = formatCategoryTitle(categorySlug);
+  const categorySlug = tour.categoryRef?.slug || "multidays-tours";
+  const categoryTitle = tour.categoryRef?.title?.trim() || formatCategoryTitle(categorySlug);
   // El destino solo se enlaza si existe de verdad en el CMS: sin el, la ficha
   // se queda como estaba en lugar de apuntar a una pagina que no responde.
   const destinationSlug = tour.destination?.slug?.trim() || null;
@@ -356,7 +369,7 @@ export default async function TourDetailPage({ params }: TourPageProps) {
   });
 
   const breadcrumbJsonLd = buildBreadcrumbJsonLd(activeLocale, [
-    { name: "Home", path: "/" },
+    { name: tNav("home"), path: "/" },
     { name: categoryTitle, path: categoryExcursionPath(categorySlug) },
     { name: tour.title },
   ]);
@@ -373,7 +386,7 @@ export default async function TourDetailPage({ params }: TourPageProps) {
       <main className="mx-auto max-w-7xl px-4 py-8 pb-28 md:px-10 md:py-12 md:pb-12 lg:px-12">
         <Breadcrumbs
           items={[
-            { label: "Home", href: "/" },
+            { label: tNav("home"), href: "/" },
             { label: categoryTitle, href: categoryExcursionPath(categorySlug) },
             { label: tour.title },
           ]}
