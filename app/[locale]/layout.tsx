@@ -18,6 +18,7 @@ import {
 } from "@/lib/seo";
 import { client } from "@/sanity/lib/client";
 import { navCategoriesQuery, type NavCategory } from "@/lib/sanityCategories";
+import { navDestinationsQuery, type NavDestination } from "@/lib/sanityDestinations";
 import { SANITY_TAGS, sanityCache } from "@/lib/sanityCache";
 import "../globals.css";
 
@@ -86,13 +87,24 @@ export default async function LocaleLayout({
   setRequestLocale(locale);
 
   const messages = await getMessages();
-  const categories = await client
-    .fetch<NavCategory[]>(
-      navCategoriesQuery,
-      { locale },
-      sanityCache([SANITY_TAGS.category]),
-    )
-    .catch(() => []);
+  const [categories, destinations] = await Promise.all([
+    client
+      .fetch<NavCategory[]>(
+        navCategoriesQuery,
+        { locale },
+        sanityCache([SANITY_TAGS.category]),
+      )
+      .catch(() => []),
+    client
+      .fetch<NavDestination[]>(
+        navDestinationsQuery,
+        { locale },
+        // A tour is what makes a destination worth linking, so the menu must
+        // also refresh when a tour's own destination changes.
+        sanityCache([SANITY_TAGS.destination, SANITY_TAGS.tour]),
+      )
+      .catch(() => []),
+  ]);
 
   return (
     <html
@@ -109,7 +121,7 @@ export default async function LocaleLayout({
           ]}
         />
         <NextIntlClientProvider messages={messages}>
-          <Navbar categories={categories} />
+          <Navbar categories={categories} destinations={destinations} />
           {children}
           <Footer />
           <SiteWideAIChatLazy locale={locale as AppLocale} />

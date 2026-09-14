@@ -8,28 +8,38 @@ import { Link, usePathname } from "@/i18n/navigation";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import WeatherWidget from "@/components/WeatherWidget";
 import { categoryExcursionPath } from "@/lib/categoryPath";
+import { destinationExcursionPath } from "@/lib/destinationPath";
 import { type NavCategory } from "@/lib/sanityCategories";
+import { type NavDestination } from "@/lib/sanityDestinations";
 
 type NavbarProps = {
   categories?: NavCategory[];
+  destinations?: NavDestination[];
 };
 
-export default function Navbar({ categories = [] }: NavbarProps) {
+export default function Navbar({ categories = [], destinations = [] }: NavbarProps) {
   const [open, setOpen] = useState(false);
   const [excursionsOpen, setExcursionsOpen] = useState(false);
+  const [destinationsOpen, setDestinationsOpen] = useState(false);
   const [desktopExcursionsOpen, setDesktopExcursionsOpen] = useState(false);
+  const [desktopDestinationsOpen, setDesktopDestinationsOpen] = useState(false);
   const desktopMenuRef = useRef<HTMLDivElement>(null);
+  const desktopDestinationsRef = useRef<HTMLDivElement>(null);
   const t = useTranslations("Nav");
   const pathname = usePathname();
   const currentLocale = useLocale();
 
   const isExcursionsActive =
     pathname === "/excursions" || pathname.startsWith("/excursions/");
+  const isDestinationsActive = pathname.startsWith("/excursions/destino/");
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (!desktopMenuRef.current?.contains(event.target as Node)) {
         setDesktopExcursionsOpen(false);
+      }
+      if (!desktopDestinationsRef.current?.contains(event.target as Node)) {
+        setDesktopDestinationsOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -119,6 +129,43 @@ export default function Navbar({ categories = [] }: NavbarProps) {
               </div>
             ) : null}
           </div>
+          {destinations.length > 0 ? (
+            <div
+              ref={desktopDestinationsRef}
+              className="relative"
+              onMouseEnter={() => setDesktopDestinationsOpen(true)}
+              onMouseLeave={() => setDesktopDestinationsOpen(false)}
+            >
+              <button
+                type="button"
+                onClick={() => setDesktopDestinationsOpen((value) => !value)}
+                className={`inline-flex items-center gap-1 transition ${linkClass(isDestinationsActive)}`}
+                aria-expanded={desktopDestinationsOpen}
+                aria-haspopup="true"
+              >
+                {t("destinations")}
+                <ChevronDown
+                  className={`h-4 w-4 transition ${desktopDestinationsOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+              {desktopDestinationsOpen ? (
+                <div className="absolute left-0 top-full z-50 min-w-[220px] pt-2">
+                  <div className="overflow-hidden rounded-xl border border-slate-200 bg-white py-2 shadow-lg">
+                    {destinations.map((destination) => (
+                      <Link
+                        key={destination.slug}
+                        href={destinationExcursionPath(destination.slug)}
+                        className="block px-4 py-2.5 text-sm text-slate-700 transition hover:bg-slate-50 hover:text-[#0a192f]"
+                        onClick={() => setDesktopDestinationsOpen(false)}
+                      >
+                        {destination.title}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
           <Link href="/blog" className={`transition ${linkClass(pathname === "/blog" || pathname.startsWith("/blog/"))}`}>
             {t("blog")}
           </Link>
@@ -211,6 +258,38 @@ export default function Navbar({ categories = [] }: NavbarProps) {
                 </div>
               ) : null}
             </div>
+            {destinations.length > 0 ? (
+              <div className="rounded-lg px-2 py-2">
+                <button
+                  type="button"
+                  onClick={() => setDestinationsOpen((value) => !value)}
+                  className={`flex w-full items-center justify-between py-1 transition ${mobileLinkClass(isDestinationsActive)}`}
+                  aria-expanded={destinationsOpen}
+                >
+                  {t("destinations")}
+                  <ChevronDown
+                    className={`h-4 w-4 transition ${destinationsOpen ? "rotate-180" : ""}`}
+                  />
+                </button>
+                {destinationsOpen ? (
+                  <div className="mt-2 flex flex-col gap-1 border-l border-slate-200 pl-4">
+                    {destinations.map((destination) => (
+                      <Link
+                        key={destination.slug}
+                        href={destinationExcursionPath(destination.slug)}
+                        className="rounded-lg px-2 py-2 transition hover:bg-slate-100"
+                        onClick={() => {
+                          setOpen(false);
+                          setDestinationsOpen(false);
+                        }}
+                      >
+                        {destination.title}
+                      </Link>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
             <Link
               href="/blog"
               className={`rounded-lg px-2 py-2 transition ${mobileLinkClass(pathname === "/blog" || pathname.startsWith("/blog/"))}`}
