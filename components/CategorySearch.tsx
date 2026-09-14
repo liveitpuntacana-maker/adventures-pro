@@ -71,34 +71,36 @@ export default function CategorySearch({
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-12 md:px-10 md:py-16 lg:px-12">
-      <form
-        onSubmit={(event) => event.preventDefault()}
-        className="mx-auto flex max-w-3xl flex-col gap-3 md:flex-row md:items-center"
-      >
-        <input
-          type="search"
-          name="q"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder={t("searchPlaceholder")}
-          className="h-12 w-full rounded-xl border border-slate-200 px-4 text-sm text-slate-800 outline-none transition focus:border-blue-800 focus:ring-2 focus:ring-blue-800/15"
-        />
-        <button
-          type="submit"
-          className="h-12 w-full shrink-0 rounded-xl bg-orange-500 px-6 text-sm font-semibold text-white shadow-md shadow-orange-500/25 transition hover:bg-orange-600 md:w-auto"
+      <div className="sticky top-20 z-30 -mx-6 bg-white px-6 pb-4 pt-2 shadow-[0_4px_6px_-4px_rgba(0,0,0,0.1)] md:-mx-10 md:px-10 xl:top-24">
+        <form
+          onSubmit={(event) => event.preventDefault()}
+          className="mx-auto flex max-w-3xl flex-col gap-3 pt-4 md:flex-row md:items-center"
         >
-          {t("searchButton")}
-        </button>
-      </form>
+          <input
+            type="search"
+            name="q"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder={t("searchPlaceholder")}
+            className="h-12 w-full rounded-xl border border-slate-200 px-4 text-sm text-slate-800 outline-none transition focus:border-blue-800 focus:ring-2 focus:ring-blue-800/15"
+          />
+          <button
+            type="submit"
+            className="h-12 w-full shrink-0 rounded-xl bg-orange-500 px-6 text-sm font-semibold text-white shadow-md shadow-orange-500/25 transition hover:bg-orange-600 md:w-auto"
+          >
+            {t("searchButton")}
+          </button>
+        </form>
 
-      {tours.length > 0 ? (
-        <TourFilters
-          sortOrder={sortOrder}
-          priceRange={priceRange}
-          onSortOrderChange={setSortOrder}
-          onPriceRangeChange={setPriceRange}
-        />
-      ) : null}
+        {tours.length > 0 ? (
+          <TourFilters
+            sortOrder={sortOrder}
+            priceRange={priceRange}
+            onSortOrderChange={setSortOrder}
+            onPriceRangeChange={setPriceRange}
+          />
+        ) : null}
+      </div>
 
       {tours.length === 0 ? (
         <p className="mt-16 text-center text-lg text-slate-600">{t("empty")}</p>
