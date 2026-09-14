@@ -134,7 +134,7 @@ export default function WeatherWidget({
     return (
       <div
         className="inline-flex h-9 max-h-9 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 text-[#0a192f] shadow-sm"
-        title={`${condition} · Punta Cana`}
+        title={`${condition} · ${labels.country}`}
       >
         <img
           src={iconUrl}
@@ -146,8 +146,8 @@ export default function WeatherWidget({
         <span className="text-sm font-semibold tabular-nums leading-none">
           {temperature}°C
         </span>
-        <span className="hidden text-xs font-medium text-slate-500 lg:inline">
-          Punta Cana
+        <span className="hidden whitespace-nowrap text-xs font-medium text-slate-500 lg:inline">
+          {labels.country}
         </span>
       </div>
     );
