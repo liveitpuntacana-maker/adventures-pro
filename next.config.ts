@@ -310,6 +310,8 @@ const legacyRootSlugRedirects: Array<{
     ["excursions", "dominican-culture-safari", "dominican-culture-safari-punta-cana"],
     ["excursions", "wellness-retreat", "wellness-retreat-package"],
     ["blog", "living-in-punta-cana-costs-visas-healthcare-daily-life", "living-in-punta-cana-costs-visas-healthcare-and-daily-life"],
+    ["excursions", "vista-cana-golf", "vista-cana-golf-club"],
+    ["excursions", "catalina-island-vip-tour-with-regular-lunch", "catalina-island-vip-punta-cana"],
   ] as const
 ).map(([section, from, to]) => ({
   source: `/${from}`,
@@ -425,6 +427,8 @@ const slugMigrationRedirects: Array<{
     // El documento se recreo en Sanity y quedo con sufijo -2.
     ["blog", "9-best-golf-courses-in-punta-cana", "9-best-golf-courses-in-punta-cana-2"],
     ["excursions", "vip-brunch-boat-tour-punta-cana", "vip-brunch-private-boat-tour-punta-cana"],
+    ["excursions", "hard-rock-golf-cana-bay-punta-cana", "hard-rock-golf-club-at-cana-bay"],
+    ["excursions", "vista-cana-golf-night-punta-cana", "vista-cana-golf-club"],
   ] as const
 ).map(([section, from, to]) => ({
   source: `/:locale(en|es|fr-ca)/${section}/${from}`,
