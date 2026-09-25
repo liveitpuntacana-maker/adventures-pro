@@ -98,6 +98,20 @@ export default async function JusCollegePage({
 
   return (
     <div className="bg-white">
+      <section className="w-full">
+        <div className="mx-auto w-full max-w-5xl md:overflow-hidden md:rounded-b-3xl">
+          <Image
+            src="/images/banner transfers2.jpg"
+            alt="Punta Cana Airport Transfer"
+            width={1000}
+            height={400}
+            priority
+            className="h-auto w-full"
+            sizes="100vw"
+          />
+        </div>
+      </section>
+
       <div className="mx-auto max-w-4xl px-4 py-10 md:px-8 md:py-14">
       {data.logo ? (
         <div className="flex justify-center border-b border-slate-100 pb-8">
