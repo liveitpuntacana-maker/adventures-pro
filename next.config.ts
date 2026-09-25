@@ -200,8 +200,6 @@ const reservedRootSlugs = [
   "tours",
   "api",
   "widget",
-  // Pagina de partner fuera del shell del sitio (ver app/justcollege).
-  "justcollege",
   "_next",
   "_vercel",
   // favicon / system / crawlers
@@ -350,6 +348,7 @@ const localePrefixRedirects: Array<{
   "/faqs",
   "/terms-and-conditions",
   "/cancellation-policy",
+  "/juscollege",
 ].map((pathname) => ({
   source: pathname,
   destination: `/en${pathname}`,

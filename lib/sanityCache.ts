@@ -14,6 +14,7 @@ export const SANITY_TAGS = {
   review: "sanity:review",
   teamMember: "sanity:teamMember",
   aboutPage: "sanity:aboutPage",
+  partnerTransferLandingPage: "sanity:partnerTransferLandingPage",
 } as const;
 
 export type SanityTag = (typeof SANITY_TAGS)[keyof typeof SANITY_TAGS];

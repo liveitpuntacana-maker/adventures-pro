@@ -2,21 +2,40 @@ import { groq } from "next-sanity";
 import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { setRequestLocale } from "next-intl/server";
 import { client } from "@/sanity/lib/client";
 import { urlFor } from "@/sanity/lib/image";
+import { SANITY_TAGS, sanityCache } from "@/lib/sanityCache";
+import { resolveTitle } from "@/lib/seo";
+import type { AppLocale } from "@/i18n/routing";
 
-export const revalidate = 60;
+export const revalidate = 3600;
 
-const partnerLandingQuery = groq`*[_type == "partnerTransferLandingPage" && slug.current == "justcollege"][0]{
-  partnerName,
+type PartnerLandingPageProps = {
+  params: Promise<{ locale: AppLocale }>;
+};
+
+const localized = (field: string) =>
+  `coalesce(select($locale == "fr-ca" => ${field}.frCA, ${field}[$locale]), ${field}.en, ${field}.es, ${field}.frCA)`;
+
+const partnerLandingQuery = groq`*[_type == "partnerTransferLandingPage" && slug.current == "juscollege"][0]{
   logo,
-  pageTitle,
-  heroTitle,
-  introText,
-  options[]{ title, price, description, image, peekUrl, buttonLabel },
-  noticeTitle,
-  noticeItems,
-  closingText,
+  "pageTitle": ${localized("pageTitle")},
+  "heroTitle": ${localized("heroTitle")},
+  "introText": ${localized("introText")},
+  options[]{
+    "title": ${localized("title")},
+    "price": ${localized("price")},
+    "description": ${localized("description")},
+    image,
+    peekUrl,
+    "buttonLabel": ${localized("buttonLabel")}
+  },
+  "noticeTitle": ${localized("noticeTitle")},
+  "noticeItems": noticeItems[]{
+    "text": coalesce(select($locale == "fr-ca" => @.frCA, @[$locale]), @.en, @.es, @.frCA)
+  },
+  "closingText": ${localized("closingText")},
   supportPhone,
   supportEmail
 }`;
@@ -31,59 +50,66 @@ type TransferOption = {
 };
 
 type PartnerLandingData = {
-  partnerName?: string;
   logo?: unknown;
   pageTitle?: string;
   heroTitle?: string;
   introText?: string;
   options?: TransferOption[];
   noticeTitle?: string;
-  noticeItems?: string[];
+  noticeItems?: { text?: string }[];
   closingText?: string;
   supportPhone?: string;
   supportEmail?: string;
 };
 
-export async function generateMetadata(): Promise<Metadata> {
-  const data = await client
-    .fetch<PartnerLandingData | null>(partnerLandingQuery)
+async function fetchPartnerLanding(locale: AppLocale) {
+  return client
+    .fetch<PartnerLandingData | null>(
+      partnerLandingQuery,
+      { locale },
+      sanityCache([SANITY_TAGS.partnerTransferLandingPage]),
+    )
     .catch(() => null);
+}
+
+export async function generateMetadata({
+  params,
+}: PartnerLandingPageProps): Promise<Metadata> {
+  const { locale } = await params;
+  const data = await fetchPartnerLanding(locale);
 
   return {
-    title: data?.pageTitle ?? "Adventures Finder",
+    title: resolveTitle(data?.pageTitle ?? "Adventures Finder"),
     robots: { index: false, follow: false },
   };
 }
 
-export default async function JusCollegePage() {
-  const data = await client
-    .fetch<PartnerLandingData | null>(partnerLandingQuery)
-    .catch(() => null);
+export default async function JusCollegePage({
+  params,
+}: PartnerLandingPageProps) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+
+  const data = await fetchPartnerLanding(locale);
 
   if (!data) {
     notFound();
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10 md:px-8 md:py-14">
-      <header className="flex flex-wrap items-center justify-center gap-6 border-b border-slate-100 pb-8">
-        {data.logo ? (
+    <div className="bg-white">
+      <div className="mx-auto max-w-4xl px-4 py-10 md:px-8 md:py-14">
+      {data.logo ? (
+        <div className="flex justify-center border-b border-slate-100 pb-8">
           <Image
             src={urlFor(data.logo).width(220).url()}
-            alt={data.partnerName ?? "Partner logo"}
+            alt="JusCollege"
             width={220}
             height={80}
             className="h-auto w-40 object-contain md:w-52"
           />
-        ) : null}
-        <Image
-          src="/images/logo-v3.png"
-          alt="Adventures Finder"
-          width={220}
-          height={73}
-          className="h-14 w-auto object-contain md:h-16"
-        />
-      </header>
+        </div>
+      ) : null}
 
       <section className="mt-10 text-center">
         <h1 className="text-3xl font-bold text-[#0a192f] md:text-4xl">
@@ -110,6 +136,7 @@ export default async function JusCollegePage() {
                     alt={option.title ?? ""}
                     fill
                     className="object-cover"
+                    sizes="(min-width: 768px) 50vw, 100vw"
                   />
                 </div>
               ) : null}
@@ -150,11 +177,8 @@ export default async function JusCollegePage() {
           ) : null}
           <ul className="mt-4 space-y-3">
             {data.noticeItems?.map((item, index) => (
-              <li
-                key={index}
-                className="text-sm leading-relaxed text-slate-600"
-              >
-                {item}
+              <li key={index} className="text-sm leading-relaxed text-slate-600">
+                {item.text}
               </li>
             ))}
           </ul>
@@ -167,18 +191,14 @@ export default async function JusCollegePage() {
         </p>
       ) : null}
 
-      <footer className="mt-12 border-t border-slate-100 pt-8 text-center text-sm text-slate-500">
-        {data.supportPhone || data.supportEmail ? (
-          <p>
-            {data.supportPhone}
-            {data.supportPhone && data.supportEmail ? " · " : ""}
-            {data.supportEmail}
-          </p>
-        ) : null}
-        <p className="mt-2">
-          Copyright &copy; {new Date().getFullYear()} Adventures Finder
+      {data.supportPhone || data.supportEmail ? (
+        <p className="mt-10 text-center text-sm text-slate-500">
+          {data.supportPhone}
+          {data.supportPhone && data.supportEmail ? " · " : ""}
+          {data.supportEmail}
         </p>
-      </footer>
+      ) : null}
+      </div>
     </div>
   );
 }
