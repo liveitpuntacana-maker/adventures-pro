@@ -46,6 +46,16 @@ export default function AllianceLogos() {
             className="h-16 w-auto object-contain grayscale opacity-70 transition-all hover:grayscale-0 hover:opacity-100"
           />
         </a>
+        {/* Sin link todavia: el cliente no dio la URL de Global Agents Canada. */}
+        <div className="inline-flex items-center justify-center">
+          <Image
+            src="/alliances/Global Agents logo.png"
+            alt="Global Agents Canada"
+            width={200}
+            height={70}
+            className="h-16 w-auto object-contain grayscale opacity-70 transition-all hover:grayscale-0 hover:opacity-100"
+          />
+        </div>
       </div>
     </section>
   );
