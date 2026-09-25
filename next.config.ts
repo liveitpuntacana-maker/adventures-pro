@@ -200,6 +200,8 @@ const reservedRootSlugs = [
   "tours",
   "api",
   "widget",
+  // Pagina de partner fuera del shell del sitio (ver app/justcollege).
+  "justcollege",
   "_next",
   "_vercel",
   // favicon / system / crawlers

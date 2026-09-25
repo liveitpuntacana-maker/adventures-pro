@@ -49,5 +49,7 @@ export default function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|widget|_next|_vercel|studio|.*\\..*).*)"],
+  // justcollege: pagina de partner emailada directo al cliente, sin prefijo
+  // de idioma ni redireccion — vive fuera del shell localizado del sitio.
+  matcher: ["/((?!api|widget|_next|_vercel|studio|justcollege|.*\\..*).*)"],
 };
