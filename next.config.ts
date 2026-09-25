@@ -327,6 +327,9 @@ const legacyRootCategoryRedirects: Array<{
 }> = [
   { source: "/combo-experiences", destination: "/en/excursions/categoria/combo-tours", permanent: true },
   { source: "/golf-in-punta-cana", destination: "/en/excursions/categoria/golf-tours", permanent: true },
+  // Landing vieja de WordPress, reemplazada por /en/tournee-burrows.
+  { source: "/tournee-burrows-en", destination: "/en/tournee-burrows", permanent: true },
+  { source: "/tournee-burrows-en/", destination: "/en/tournee-burrows", permanent: true },
 ];
 
 /**
