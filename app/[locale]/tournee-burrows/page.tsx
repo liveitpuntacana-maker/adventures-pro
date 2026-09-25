@@ -1,5 +1,6 @@
 import { groq } from "next-sanity";
 import type { Metadata } from "next";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
 import TourCard from "@/components/TourCard";
@@ -151,10 +152,23 @@ export default async function TourneeBurrowsPage({
 
   return (
     <div className="bg-white">
+      <section className="relative w-full">
+        <div className="relative mx-auto aspect-[16/9] w-full max-w-6xl overflow-hidden sm:aspect-[21/9] md:rounded-b-3xl">
+          <Image
+            src="/images/banner-burrows-english.webp"
+            alt="Tournée Burrows Punta Cana 2026"
+            fill
+            priority
+            className="object-cover"
+            sizes="100vw"
+          />
+        </div>
+      </section>
+
       <div className="mx-auto max-w-7xl px-4 py-12 md:px-8 md:py-16">
         <section className="text-center">
           {data.eyebrow ? (
-            <p className="inline-flex rounded-full bg-orange-100 px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-orange-700">
+            <p className="inline-flex rounded-full bg-red-600 px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-white shadow-sm shadow-red-600/30">
               {data.eyebrow}
             </p>
           ) : null}
@@ -210,7 +224,7 @@ export default async function TourneeBurrowsPage({
             <ol className="mx-auto mt-6 max-w-2xl space-y-4">
               {data.howToClaimSteps?.map((step, index) => (
                 <li key={index} className="flex gap-3 text-sm leading-relaxed text-slate-700">
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-orange-500 text-xs font-bold text-white">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white">
                     {index + 1}
                   </span>
                   <span>{step.text}</span>
@@ -265,8 +279,15 @@ export default async function TourneeBurrowsPage({
 
         {data.ctaTitle || data.ctaText ? (
           <section className="mt-16 rounded-2xl bg-[#0a192f] px-6 py-12 text-center text-white md:px-12">
+            <Image
+              src="/images/logo-tournee-burrows-300x300-1.png"
+              alt="Tournée Burrows Punta Cana 2026"
+              width={120}
+              height={120}
+              className="mx-auto h-24 w-24 object-contain md:h-28 md:w-28"
+            />
             {data.ctaTitle ? (
-              <h2 className="text-xl font-bold md:text-2xl">{data.ctaTitle}</h2>
+              <h2 className="mt-4 text-xl font-bold md:text-2xl">{data.ctaTitle}</h2>
             ) : null}
             {data.ctaText ? (
               <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-slate-200">
@@ -275,7 +296,7 @@ export default async function TourneeBurrowsPage({
             ) : null}
             <a
               href="#featured-tours"
-              className="mt-6 inline-flex h-12 items-center justify-center rounded-xl bg-orange-500 px-8 text-sm font-semibold text-white shadow-md shadow-orange-500/25 transition hover:bg-orange-600"
+              className="mt-6 inline-flex h-12 items-center justify-center rounded-xl bg-red-600 px-8 text-sm font-semibold text-white shadow-md shadow-red-600/30 transition hover:bg-red-700"
             >
               {data.ctaButtonLabel || "View Featured Options"}
             </a>
