@@ -4,6 +4,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
 import TourCard from "@/components/TourCard";
+import ScrollToAnchorButton from "@/components/ScrollToAnchorButton";
 import { client } from "@/sanity/lib/client";
 import { SANITY_TAGS, sanityCache } from "@/lib/sanityCache";
 import { peekBookingUrl } from "@/lib/tourPrice";
@@ -294,12 +295,12 @@ export default async function TourneeBurrowsPage({
                 {data.ctaText}
               </p>
             ) : null}
-            <a
-              href="#featured-tours"
+            <ScrollToAnchorButton
+              targetId="featured-tours"
               className="mt-6 inline-flex h-12 items-center justify-center rounded-xl bg-red-600 px-8 text-sm font-semibold text-white shadow-md shadow-red-600/30 transition hover:bg-red-700"
             >
               {data.ctaButtonLabel || "View Featured Options"}
-            </a>
+            </ScrollToAnchorButton>
           </section>
         ) : null}
       </div>
