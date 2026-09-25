@@ -9,6 +9,9 @@ import { formatTourPrice } from "@/lib/tourPrice";
 import { hasTourRating } from "@/lib/tourRating";
 import { tourExcursionPath } from "@/lib/tourSlug";
 
+const DEFAULT_BOOK_NOW_CLASSNAME =
+  "inline-flex min-h-12 flex-1 items-center justify-center rounded-xl bg-orange-500 px-4 text-sm font-semibold text-white transition hover:bg-orange-600";
+
 type TourCardProps = {
   tour: {
     title: string;
@@ -24,10 +27,12 @@ type TourCardProps = {
     rating?: number | null;
     reviewsCount?: number | null;
   };
+  /** Overrides the "Book Now" button's look for one page without touching every other card on the site. */
+  bookNowClassName?: string;
 };
 
 
-export default function TourCard({ tour }: TourCardProps) {
+export default function TourCard({ tour, bookNowClassName }: TourCardProps) {
   const firstPriceValue = firstPaidPrice(tour.pricing);
   const computedPrice = Number.isFinite(firstPriceValue)
     ? `From ${formatTourPrice(tour.currency || "USD", firstPriceValue)}`
@@ -107,7 +112,7 @@ export default function TourCard({ tour }: TourCardProps) {
             contentName={tour.title}
             value={Number.isFinite(firstPriceValue) ? firstPriceValue : undefined}
             currency={tour.currency || "USD"}
-            className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl bg-orange-500 px-4 text-sm font-semibold text-white transition hover:bg-orange-600"
+            className={bookNowClassName ?? DEFAULT_BOOK_NOW_CLASSNAME}
           >
             Book Now
           </BookNowLink>

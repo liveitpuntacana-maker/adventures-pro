@@ -126,6 +126,11 @@ export async function generateMetadata({
   });
 }
 
+// Matches the navy from the Tournée Burrows logo instead of the site's usual
+// orange, without touching TourCard's default look everywhere else it's used.
+const BURROWS_BOOK_NOW_CLASSNAME =
+  "inline-flex min-h-12 flex-1 items-center justify-center rounded-xl bg-[#1d3461] px-4 text-sm font-semibold text-white transition hover:bg-[#16294b]";
+
 function toTourCardProps(tour: PromoTour) {
   return {
     title: tour.title ?? "",
@@ -190,7 +195,11 @@ export default async function TourneeBurrowsPage({
           <section id="featured-tours" className="mt-12 scroll-mt-24">
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {data.featuredTours.map((tour, index) => (
-                <TourCard key={`${tour.slug}-${index}`} tour={toTourCardProps(tour)} />
+                <TourCard
+                  key={`${tour.slug}-${index}`}
+                  tour={toTourCardProps(tour)}
+                  bookNowClassName={BURROWS_BOOK_NOW_CLASSNAME}
+                />
               ))}
             </div>
           </section>
@@ -210,7 +219,11 @@ export default async function TourneeBurrowsPage({
             ) : null}
             <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {data.golfTours.map((tour, index) => (
-                <TourCard key={`${tour.slug}-${index}`} tour={toTourCardProps(tour)} />
+                <TourCard
+                  key={`${tour.slug}-${index}`}
+                  tour={toTourCardProps(tour)}
+                  bookNowClassName={BURROWS_BOOK_NOW_CLASSNAME}
+                />
               ))}
             </div>
           </section>
