@@ -153,14 +153,15 @@ export default async function TourneeBurrowsPage({
 
   return (
     <div className="bg-white">
-      <section className="relative w-full">
-        <div className="relative mx-auto aspect-[16/9] w-full max-w-6xl overflow-hidden sm:aspect-[21/9] md:rounded-b-3xl">
+      <section className="w-full">
+        <div className="mx-auto w-full max-w-6xl md:overflow-hidden md:rounded-b-3xl">
           <Image
             src="/images/banner-burrows-english.webp"
             alt="Tournée Burrows Punta Cana 2026"
-            fill
+            width={1680}
+            height={640}
             priority
-            className="object-cover"
+            className="h-auto w-full"
             sizes="100vw"
           />
         </div>
