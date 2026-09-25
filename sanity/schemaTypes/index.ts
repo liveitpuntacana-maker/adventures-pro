@@ -18,6 +18,7 @@ import { transferHotelType } from "./transferHotel";
 import { chatSessionType } from "./chatSession";
 import { chatKnowledgeBaseType } from "./chatKnowledgeBase";
 import { partnerTransferLandingPageType } from "./partnerTransferLandingPage";
+import { groupPromoLandingPageType } from "./groupPromoLandingPage";
 
 export const schema: { types: SchemaTypeDefinition[] } = {
   types: [
@@ -40,5 +41,6 @@ export const schema: { types: SchemaTypeDefinition[] } = {
     chatSessionType,
     chatKnowledgeBaseType,
     partnerTransferLandingPageType,
+    groupPromoLandingPageType,
   ],
 };

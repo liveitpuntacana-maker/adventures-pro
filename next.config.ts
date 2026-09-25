@@ -349,6 +349,7 @@ const localePrefixRedirects: Array<{
   "/terms-and-conditions",
   "/cancellation-policy",
   "/juscollege",
+  "/tournee-burrows",
 ].map((pathname) => ({
   source: pathname,
   destination: `/en${pathname}`,
