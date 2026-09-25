@@ -330,6 +330,10 @@ const legacyRootCategoryRedirects: Array<{
   // Landing vieja de WordPress, reemplazada por /en/tournee-burrows.
   { source: "/tournee-burrows-en", destination: "/en/tournee-burrows", permanent: true },
   { source: "/tournee-burrows-en/", destination: "/en/tournee-burrows", permanent: true },
+  // Version en frances de la misma landing vieja. No existe una "-es": la
+  // pagina original de WordPress solo se publico en ingles y frances.
+  { source: "/tournee-burrows-fr", destination: "/fr-ca/tournee-burrows", permanent: true },
+  { source: "/tournee-burrows-fr/", destination: "/fr-ca/tournee-burrows", permanent: true },
 ];
 
 /**
