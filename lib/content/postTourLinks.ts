@@ -56,6 +56,27 @@ const CONCEPT_PHRASES: Record<string, Record<AppLocale, readonly string[]>> = {
     es: ["tours culturales", "tour cultural", "excursión cultural"],
     "fr-ca": ["tours culturels", "tour culturel", "excursion culturelle"],
   },
+  "domitai": {
+    en: ["Domitai Park"],
+    es: ["Domitai Park"],
+    "fr-ca": ["Domitai Park"],
+  },
+  // Nombres de producto usados en la comparacion del articulo de Domitai.
+  "dune-buggy-product": {
+    en: ["Dune Buggy Punta Cana"],
+    es: ["Dune Buggy Punta Cana"],
+    "fr-ca": ["Dune Buggy Punta Cana"],
+  },
+  "zipline-product": {
+    en: ["Zipline Punta Cana"],
+    es: ["Zipline Punta Cana"],
+    "fr-ca": ["Zipline Punta Cana"],
+  },
+  "cap-cana-adventure-park": {
+    en: ["Cap Cana Adventure Park"],
+    es: ["Cap Cana Adventure Park"],
+    "fr-ca": ["Cap Cana Adventure Park"],
+  },
   "excursions": {
     en: ["excursions"],
     es: ["excursiones"],
@@ -271,6 +292,12 @@ const POST_LINKS: Record<string, readonly PostLink[]> = {
   ],
   "dominican-republic-resort-transfer-review": [
     { listing: "/transfers", concept: "transfer" },
+  ],
+  "domitai-park-punta-cana-what-the-day-includes": [
+    { tour: "domitai-park-punta-cana-adventures", concept: "domitai" },
+    { tour: "dune-buggy-punta-cana", concept: "dune-buggy-product" },
+    { tour: "zipline-punta-cana", concept: "zipline-product" },
+    { tour: "cap-cana-adventure-park", concept: "cap-cana-adventure-park" },
   ],
   "fishing-in-punta-cana-how-to-choose-a-charter": [
     { tour: "deep-sea-fishing-share", concept: "fishing-shared" },
