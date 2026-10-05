@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { oneLine } from "@/lib/emailSafe";
+import { clientIp, rateLimit } from "@/lib/rateLimit";
 
 const CONTACT_RECIPIENTS = ["info@afdmctravel.com", "reservations@adventuresfinder.com"];
 
@@ -60,7 +62,23 @@ function buildMailContent(contact: ContactData) {
   };
 }
 
+// Five messages per ten minutes per address, same ceiling as the lead form.
+const MESSAGES_PER_WINDOW = 5;
+const MESSAGE_WINDOW_MS = 10 * 60_000;
+
 export async function POST(request: Request) {
+  const limit = rateLimit({
+    key: `contact:${clientIp(request)}`,
+    limit: MESSAGES_PER_WINDOW,
+    windowMs: MESSAGE_WINDOW_MS,
+  });
+  if (!limit.ok) {
+    return NextResponse.json(
+      { error: "Too many requests." },
+      { status: 429, headers: { "Retry-After": String(limit.retryAfter) } },
+    );
+  }
+
   try {
     const body = (await request.json()) as ContactPayload;
 
@@ -69,10 +87,11 @@ export async function POST(request: Request) {
     }
 
     const contact: ContactData = {
-      name: String(body.name ?? "").trim(),
-      email: String(body.email ?? "").trim(),
-      subject: String(body.subject ?? "").trim(),
-      message: String(body.message ?? "").trim(),
+      name: oneLine(String(body.name ?? ""), 120),
+      email: oneLine(String(body.email ?? ""), 254),
+      // The subject goes into a mail header: no line breaks, bounded length.
+      subject: oneLine(String(body.subject ?? ""), 200),
+      message: String(body.message ?? "").trim().slice(0, 5000),
     };
 
     if (!contact.name || !contact.email || !contact.subject || !contact.message) {

@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
+import { escapeHtml, oneLine } from "@/lib/emailSafe";
+import { clientIp, rateLimit } from "@/lib/rateLimit";
 
 const LEAD_RECIPIENTS = ["info@afdmctravel.com", "reservations@adventuresfinder.com"];
 
@@ -27,6 +29,14 @@ type LeadData = {
 
 function buildMailContent(lead: LeadData) {
   const submittedAt = new Date().toISOString();
+  const safe = {
+    name: escapeHtml(lead.name),
+    email: escapeHtml(lead.email),
+    phone: escapeHtml(lead.phone),
+    travelDates: escapeHtml(lead.travelDates),
+    tripType: escapeHtml(lead.tripType),
+    travelFrequency: escapeHtml(lead.travelFrequency),
+  };
   const mailBody = {
     lead,
     source: "Home Lead Form",
@@ -36,19 +46,19 @@ function buildMailContent(lead: LeadData) {
   const text = JSON.stringify(mailBody, null, 2);
   const html = `
     <h2>New Lead Submission</h2>
-    <p><strong>Name:</strong> ${lead.name}</p>
-    <p><strong>Email:</strong> ${lead.email}</p>
-    <p><strong>Phone:</strong> ${lead.phone}</p>
-    <p><strong>Travel Dates:</strong> ${lead.travelDates}</p>
+    <p><strong>Name:</strong> ${safe.name}</p>
+    <p><strong>Email:</strong> ${safe.email}</p>
+    <p><strong>Phone:</strong> ${safe.phone}</p>
+    <p><strong>Travel Dates:</strong> ${safe.travelDates}</p>
     <p><strong>Guests:</strong> ${lead.guests}</p>
-    <p><strong>Trip Type:</strong> ${lead.tripType}</p>
-    <p><strong>Frequency of travel to Punta Cana:</strong> ${lead.travelFrequency}</p>
+    <p><strong>Trip Type:</strong> ${safe.tripType}</p>
+    <p><strong>Frequency of travel to Punta Cana:</strong> ${safe.travelFrequency}</p>
     <p><strong>Source:</strong> Home Lead Form</p>
     <p><strong>Submitted At:</strong> ${submittedAt}</p>
   `;
 
   return {
-    subject: `New lead: ${lead.name}`,
+    subject: `New lead: ${oneLine(lead.name, 120)}`,
     text,
     html,
   };
@@ -108,7 +118,24 @@ async function sendWithSmtp(lead: LeadData, from: string, content: ReturnType<ty
   return true;
 }
 
+// Five submissions per ten minutes per address: a person filling in the form
+// twice by mistake gets through, a script posting in a loop does not.
+const LEADS_PER_WINDOW = 5;
+const LEAD_WINDOW_MS = 10 * 60_000;
+
 export async function POST(request: Request) {
+  const limit = rateLimit({
+    key: `send-lead:${clientIp(request)}`,
+    limit: LEADS_PER_WINDOW,
+    windowMs: LEAD_WINDOW_MS,
+  });
+  if (!limit.ok) {
+    return NextResponse.json(
+      { error: "Too many requests." },
+      { status: 429, headers: { "Retry-After": String(limit.retryAfter) } },
+    );
+  }
+
   try {
     const body = (await request.json()) as LeadPayload;
 
@@ -117,13 +144,13 @@ export async function POST(request: Request) {
     }
 
     const lead: LeadData = {
-      name: String(body.name ?? "").trim(),
-      email: String(body.email ?? "").trim(),
-      phone: String(body.phone ?? "").trim(),
-      travelDates: String(body.travelDates ?? "").trim(),
-      guests: Number(body.guests),
-      tripType: String(body.tripType ?? "").trim(),
-      travelFrequency: String(body.travelFrequency ?? "").trim(),
+      name: oneLine(String(body.name ?? ""), 120),
+      email: oneLine(String(body.email ?? ""), 254),
+      phone: oneLine(String(body.phone ?? ""), 40),
+      travelDates: oneLine(String(body.travelDates ?? ""), 120),
+      guests: Math.min(Number(body.guests), 500),
+      tripType: oneLine(String(body.tripType ?? ""), 80),
+      travelFrequency: oneLine(String(body.travelFrequency ?? ""), 80),
     };
 
     if (

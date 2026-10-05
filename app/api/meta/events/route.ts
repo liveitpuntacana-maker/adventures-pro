@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { MetaStandardEvent } from "@/lib/meta/constants";
 import { sendMetaConversionEvent } from "@/lib/meta/conversionsApi";
+import { clientIp, rateLimit } from "@/lib/rateLimit";
 
 const ALLOWED_EVENTS = new Set<MetaStandardEvent>([
   "PageView",
@@ -18,7 +19,23 @@ type MetaEventRequestBody = {
   fbc?: string;
 };
 
+// Browsers send a handful of events per page; anything past this is not a visitor.
+// It also keeps the endpoint from being used to feed junk to the Meta account.
+const EVENTS_PER_MINUTE = 120;
+
 export async function POST(request: NextRequest) {
+  const limit = rateLimit({
+    key: `meta-events:${clientIp(request)}`,
+    limit: EVENTS_PER_MINUTE,
+    windowMs: 60_000,
+  });
+  if (!limit.ok) {
+    return new NextResponse(null, {
+      status: 429,
+      headers: { "Retry-After": String(limit.retryAfter) },
+    });
+  }
+
   // The server-side half of Meta tracking is optional: the browser pixel works
   // on its own. Without a token there is nothing to send, and answering 500 on
   // every page view put an error in every visitor's console and filled the

@@ -3,6 +3,7 @@ import { groq } from "next-sanity";
 import { client } from "@/sanity/lib/client";
 import { routing, type AppLocale } from "@/i18n/routing";
 import { tourRatingProjection } from "@/lib/tourRating";
+import { clientIp, rateLimit } from "@/lib/rateLimit";
 
 const tourSearchQuery = groq`*[_type == "tour" && defined(slug.current) && (
   coalesce(title.en, "") match $pattern ||
@@ -44,7 +45,24 @@ function sanitizeSearchTerm(value: string) {
   return value.trim().replace(/[^\p{L}\p{N}\s-]/gu, "");
 }
 
+// Every keystroke (debounced) from the header search and the listing pages lands
+// here and goes straight to Sanity without the CDN, so it needs a ceiling. Sixty a
+// minute is far above anyone typing and far below a script.
+const SEARCHES_PER_MINUTE = 60;
+
 export async function GET(request: NextRequest) {
+  const limit = rateLimit({
+    key: `tours-search:${clientIp(request)}`,
+    limit: SEARCHES_PER_MINUTE,
+    windowMs: 60_000,
+  });
+  if (!limit.ok) {
+    return NextResponse.json(
+      { tours: [] },
+      { status: 429, headers: { "Retry-After": String(limit.retryAfter) } },
+    );
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const q = sanitizeSearchTerm(searchParams.get("q") ?? "");
