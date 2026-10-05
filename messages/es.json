@@ -146,7 +146,9 @@
     "searchPlaceholder": "Buscar tours en este destino",
     "searchButton": "Buscar",
     "empty": "Pronto habrá nuevas aventuras en este destino.",
-    "noResults": "Ningún tour coincide con tu búsqueda."
+    "noResults": "Ningún tour coincide con tu búsqueda.",
+    "otherAreasTitle": "¿Quieres buscar en otra zona?",
+    "otherAreasSubtitle": "Explora tours en otros destinos de República Dominicana."
   },
   "Transfers": {
     "heroTitle": "¡Bienvenido al servicio premier de traslados al aeropuerto en Punta Cana!",

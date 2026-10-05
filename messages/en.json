@@ -146,7 +146,9 @@
     "searchPlaceholder": "Search tours in this destination",
     "searchButton": "Search",
     "empty": "New adventures in this destination are coming soon.",
-    "noResults": "No tours match your search."
+    "noResults": "No tours match your search.",
+    "otherAreasTitle": "Want to search in another area?",
+    "otherAreasSubtitle": "Explore tours in other destinations across the Dominican Republic."
   },
   "Transfers": {
     "heroTitle": "Welcome to the premier airport transfer service in Punta Cana!",

@@ -5,11 +5,14 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import CategoryPageHero from "@/components/CategoryPageHero";
 import CategorySearch, { type CategoryTour } from "@/components/CategorySearch";
 import ListingSeoContent from "@/components/ListingSeoContent";
+import OtherDestinations from "@/components/OtherDestinations";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import JsonLd from "@/components/JsonLd";
 import { client } from "@/sanity/lib/client";
 import { routing, type AppLocale } from "@/i18n/routing";
 import { tourRatingProjection } from "@/lib/tourRating";
 import { destinationExcursionPath } from "@/lib/destinationPath";
+import { navDestinationsQuery, type NavDestination } from "@/lib/sanityDestinations";
 import { tourExcursionPath } from "@/lib/tourSlug";
 import { getDestinationIntro } from "@/lib/content/listingIntro";
 import { sanityOgImage, getDefaultOgImage } from "@/lib/ogImage";
@@ -128,13 +131,20 @@ export default async function DestinationPage({ params }: DestinationPageProps) 
   setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: "Seo" });
 
-  const [destination, tours] = await Promise.all([
+  const [destination, tours, allDestinations] = await Promise.all([
     fetchDestination(locale, slug),
     client
       .fetch<CategoryTour[]>(
         destinationToursQuery,
         { locale, slug },
         sanityCache([SANITY_TAGS.tour, SANITY_TAGS.destination]),
+      )
+      .catch(() => []),
+    client
+      .fetch<NavDestination[]>(
+        navDestinationsQuery,
+        { locale },
+        sanityCache([SANITY_TAGS.destination, SANITY_TAGS.tour]),
       )
       .catch(() => []),
   ]);
@@ -167,12 +177,22 @@ export default async function DestinationPage({ params }: DestinationPageProps) 
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <JsonLd data={jsonLd} />
       <CategoryPageHero title={title} mainImage={destination.mainImage} />
+      <div className="mx-auto max-w-7xl px-6 pt-6 md:px-10 lg:px-12">
+        <Breadcrumbs
+          items={[
+            { label: t("breadcrumbHome"), href: "/" },
+            { label: t("breadcrumbExcursions"), href: "/excursions" },
+            { label: title },
+          ]}
+        />
+      </div>
       <CategorySearch
         tours={tours}
         categorySlug={slug}
         messagesNamespace="DestinationPage"
         showTypeFilter
       />
+      <OtherDestinations destinations={allDestinations} currentSlug={slug} />
       <ListingSeoContent content={content} faqTitle={t("faqSectionTitle")} />
     </div>
   );

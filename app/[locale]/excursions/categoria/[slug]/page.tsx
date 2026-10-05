@@ -5,6 +5,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import CategoryPageHero from "@/components/CategoryPageHero";
 import CategorySearch, { type CategoryTour } from "@/components/CategorySearch";
 import ListingSeoContent from "@/components/ListingSeoContent";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import JsonLd from "@/components/JsonLd";
 import { client } from "@/sanity/lib/client";
 import { routing, type AppLocale } from "@/i18n/routing";
@@ -179,6 +180,15 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
         bannerImage={category.bannerImage}
         mainImage={category.mainImage}
       />
+      <div className="mx-auto max-w-7xl px-6 pt-6 md:px-10 lg:px-12">
+        <Breadcrumbs
+          items={[
+            { label: t("breadcrumbHome"), href: "/" },
+            { label: t("breadcrumbExcursions"), href: "/excursions" },
+            { label: title },
+          ]}
+        />
+      </div>
       <CategorySearch tours={tours} categorySlug={slug} />
       <ListingSeoContent content={content} faqTitle={t("faqSectionTitle")} />
     </div>
