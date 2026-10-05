@@ -34,25 +34,33 @@ export default function HeaderSearch() {
   const locale = useLocale() as AppLocale;
   const router = useRouter();
   const pathname = usePathname();
-  const [open, setOpen] = useState(false);
+  // The panel is open for the page it was opened on, so any navigation (a link,
+  // the back button) closes it without an effect having to reset state.
+  const [openOn, setOpenOn] = useState<string | null>(null);
+  const open = openOn === pathname;
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<SearchTourResult[]>([]);
-  const [searching, setSearching] = useState(false);
+  // Results are stored with the text they answer; they only count while that text
+  // is still what is in the box, so nothing has to be cleared when it changes.
+  const [settled, setSettled] = useState<{ q: string; tours: SearchTourResult[] }>({
+    q: "",
+    tours: [],
+  });
   const inputRef = useRef<HTMLInputElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
 
   const close = () => {
-    setOpen(false);
+    setOpenOn(null);
     setQuery("");
-    setResults([]);
   };
 
-  // A page change (any link, the back button) closes the panel.
-  useEffect(() => {
-    setOpen(false);
-    setQuery("");
-    setResults([]);
-  }, [pathname]);
+  const toggle = () => {
+    if (open) {
+      close();
+    } else {
+      setQuery("");
+      setOpenOn(pathname);
+    }
+  };
 
   useEffect(() => {
     if (open) inputRef.current?.focus();
@@ -76,13 +84,8 @@ export default function HeaderSearch() {
 
   useEffect(() => {
     const trimmed = query.trim();
-    if (!trimmed) {
-      setResults([]);
-      setSearching(false);
-      return;
-    }
+    if (!trimmed) return;
 
-    setSearching(true);
     const controller = new AbortController();
     const timeoutId = window.setTimeout(async () => {
       try {
@@ -91,13 +94,9 @@ export default function HeaderSearch() {
           signal: controller.signal,
         });
         const data = response.ok ? ((await response.json()) as { tours?: SearchTourResult[] }) : null;
-        setResults(data?.tours ?? []);
-        setSearching(false);
+        setSettled({ q: trimmed, tours: data?.tours ?? [] });
       } catch (error) {
-        if ((error as Error).name !== "AbortError") {
-          setResults([]);
-          setSearching(false);
-        }
+        if ((error as Error).name !== "AbortError") setSettled({ q: trimmed, tours: [] });
       }
     }, 300);
 
@@ -113,12 +112,15 @@ export default function HeaderSearch() {
   };
 
   const hasQuery = query.trim().length > 0;
+  const answered = settled.q === query.trim();
+  const results = hasQuery && answered ? settled.tours : [];
+  const searching = hasQuery && !answered;
 
   return (
     <div ref={wrapRef}>
       <button
         type="button"
-        onClick={() => setOpen((value) => !value)}
+        onClick={toggle}
         aria-label={tNav("search")}
         aria-expanded={open}
         className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-700 transition hover:bg-slate-50"

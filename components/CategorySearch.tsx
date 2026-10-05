@@ -154,10 +154,9 @@ export default function CategorySearch({
   // for "Santo Domingo" while on Punta Cana still wants that tour. Ask the whole
   // catalogue, and show whatever this page does not already have.
   useEffect(() => {
-    if (trimmedQuery.length < 2) {
-      setCatalogMatches([]);
-      return;
-    }
+    // Below two characters nothing is requested; `elsewhere` below already ignores
+    // whatever an earlier query left in state, so there is nothing to reset here.
+    if (trimmedQuery.length < 2) return;
     const controller = new AbortController();
     const timeoutId = window.setTimeout(async () => {
       try {
@@ -257,7 +256,6 @@ export default function CategorySearch({
       scope: scopeLabel,
       where,
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [elsewhere, elsewhereBy, scopeLabel, query, tFilters, inFilter.length, outsideFilter.length]);
 
   const handleResetFilters = () => {

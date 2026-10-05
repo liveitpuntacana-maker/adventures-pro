@@ -18,7 +18,6 @@ export function escapeHtml(value: string): string {
 /** Collapses line breaks and control characters, then caps the length. */
 export function oneLine(value: string, max: number): string {
   return value
-    // eslint-disable-next-line no-control-regex
     .replace(/[\u0000-\u001f\u007f]+/g, " ")
     .replace(/\s+/g, " ")
     .trim()
