@@ -217,6 +217,8 @@ const reservedRootSlugs = [
   "the-history-of-punta-cana",
   "top-best-beaches-in-dominican-republic",
   "shopping-center-in-punta-cana",
+  // Tour eliminado: no hay nada con lo que sustituirlo, asi que 410 y no 404.
+  "canam-buggy-punta-cana",
   // sources ya cubiertos por wordpressRedirects (sin slash)
   "when-not-to-visit-punta-cana-costly-mistakes-tourists-make-and-the-best-months-instead",
   "sea-turtles-in-the-dominican-republic-when-where-and-how-to-see-them-responsibly",

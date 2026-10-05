@@ -35,6 +35,11 @@ const GONE_PATHS = new Set([
   // Basura: archivo por fecha de WordPress y un slug mal formado.
   "/2026/04",
   "/samana-",
+  // Tour que se elimino del catalogo. 410 le dice a Google que no vuelva a
+  // buscarlo; un 404 lo sigue reintentando. Cubre la URL antigua de WordPress
+  // (raiz) y la del sitio actual.
+  "/canam-buggy-punta-cana",
+  "/excursions/canam-buggy-punta-cana",
 ]);
 
 function normalizeForGoneCheck(pathname: string): string {
