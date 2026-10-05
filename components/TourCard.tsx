@@ -29,10 +29,16 @@ type TourCardProps = {
   };
   /** Overrides the "Book Now" button's look for one page without touching every other card on the site. */
   bookNowClassName?: string;
+  /**
+   * Denser layout below the sm breakpoint, for grids that show two cards per
+   * row on a phone. Off by default: every other list keeps one card per row.
+   */
+  compactOnMobile?: boolean;
 };
 
 
-export default function TourCard({ tour, bookNowClassName }: TourCardProps) {
+export default function TourCard({ tour, bookNowClassName, compactOnMobile = false }: TourCardProps) {
+  const c = (classes: string) => (compactOnMobile ? classes : "");
   const firstPriceValue = firstPaidPrice(tour.pricing);
   const computedPrice = Number.isFinite(firstPriceValue)
     ? `From ${formatTourPrice(tour.currency || "USD", firstPriceValue)}`
@@ -52,33 +58,37 @@ export default function TourCard({ tour, bookNowClassName }: TourCardProps) {
   })();
 
   return (
-    <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <article className={`overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm ${c("max-sm:flex max-sm:flex-col")}`}>
       <div className="relative">
         {/* The photo is the biggest tap target on the card; on mobile people
             reach for it before any button. */}
         <Link href={detailsHref} aria-label={tour.title} className="block">
           {imageUrl ? (
-            <div className="relative h-56 w-full">
+            <div className={`relative h-56 w-full ${c("max-sm:h-32")}`}>
               <Image
                 src={imageUrl}
                 alt={tour.title}
                 fill
                 className="object-cover"
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                sizes={
+                  compactOnMobile
+                    ? "(max-width: 640px) 50vw, (max-width: 1200px) 50vw, 33vw"
+                    : "(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                }
               />
             </div>
           ) : (
-            <div className="h-56 w-full bg-slate-200" />
+            <div className={`h-56 w-full bg-slate-200 ${c("max-sm:h-32")}`} />
           )}
         </Link>
         {tour.highlightBadge ? (
-          <span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-slate-900">
+          <span className={`absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-slate-900 ${c("max-sm:left-2 max-sm:top-2 max-sm:px-2 max-sm:py-0.5 max-sm:text-[10px]")}`}>
             {tour.highlightBadge}
           </span>
         ) : null}
       </div>
-      <div className="space-y-4 p-5">
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-slate-600">
+      <div className={`space-y-4 p-5 ${c("max-sm:flex max-sm:flex-1 max-sm:flex-col max-sm:space-y-2 max-sm:p-3")}`}>
+        <div className={`flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-slate-600 ${c("max-sm:gap-y-1 max-sm:text-xs")}`}>
           <div className="inline-flex items-center gap-2">
             <Clock3 className="h-4 w-4" />
             <span>{tour.duration || "Duration on request"}</span>
@@ -90,20 +100,20 @@ export default function TourCard({ tour, bookNowClassName }: TourCardProps) {
             </div>
           ) : null}
         </div>
-        <h3 className="text-xl font-semibold leading-tight text-slate-900">
+        <h3 className={`text-xl font-semibold leading-tight text-slate-900 ${c("max-sm:line-clamp-3 max-sm:text-sm max-sm:leading-snug")}`}>
           <Link href={detailsHref} className="transition hover:text-orange-600">
             {tour.title}
           </Link>
         </h3>
-        <p className="text-lg font-semibold text-blue-950">
+        <p className={`text-lg font-semibold text-blue-950 ${c("max-sm:text-sm")}`}>
           {computedPrice}
           {priceTag ? (
-            <span className="ml-1.5 text-sm font-medium text-slate-500">
+            <span className={`ml-1.5 text-sm font-medium text-slate-500 ${c("max-sm:ml-1 max-sm:text-xs")}`}>
               ({priceTag})
             </span>
           ) : null}
         </p>
-        <div className="flex flex-col gap-3 sm:flex-row">
+        <div className={`flex flex-col gap-3 sm:flex-row ${c("max-sm:mt-auto max-sm:gap-2 max-sm:pt-1")}`}>
           <BookNowLink
             href={tour.peekUrl}
             target="_blank"
@@ -112,13 +122,13 @@ export default function TourCard({ tour, bookNowClassName }: TourCardProps) {
             contentName={tour.title}
             value={Number.isFinite(firstPriceValue) ? firstPriceValue : undefined}
             currency={tour.currency || "USD"}
-            className={bookNowClassName ?? DEFAULT_BOOK_NOW_CLASSNAME}
+            className={`${bookNowClassName ?? DEFAULT_BOOK_NOW_CLASSNAME} ${c("max-sm:min-h-10 max-sm:flex-none max-sm:px-2 max-sm:text-xs")}`}
           >
             Book Now
           </BookNowLink>
           <Link
             href={detailsHref}
-            className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 transition hover:bg-slate-50"
+            className={`inline-flex min-h-12 flex-1 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 transition hover:bg-slate-50 ${c("max-sm:min-h-10 max-sm:flex-none max-sm:px-2 max-sm:text-xs")}`}
           >
             More Info
           </Link>
