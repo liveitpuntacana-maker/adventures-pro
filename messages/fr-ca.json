@@ -234,7 +234,8 @@
     "summaryTitle": "Résumé des avis Google",
     "reviewsCount": "{count, plural, =1 {1 avis} other {# avis}}",
     "starsLabel": "{count, plural, =1 {1 étoile} other {# étoiles}}",
-    "starsBreakdown": "{stars} étoiles : {count} sur {total}"
+    "starsBreakdown": "{stars} étoiles : {count} sur {total}",
+    "swipeHint": "Faites défiler pour voir plus d'avis"
   },
   "RelatedTours": {
     "title": "Vous aimerez aussi",

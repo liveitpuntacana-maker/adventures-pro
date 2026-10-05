@@ -232,7 +232,8 @@
     "summaryTitle": "Google review summary",
     "reviewsCount": "{count, plural, =1 {1 review} other {# reviews}}",
     "starsLabel": "{count, plural, =1 {1 star} other {# stars}}",
-    "starsBreakdown": "{stars} stars: {count} of {total}"
+    "starsBreakdown": "{stars} stars: {count} of {total}",
+    "swipeHint": "Swipe to see more reviews"
   },
   "RelatedTours": {
     "title": "You might also like",

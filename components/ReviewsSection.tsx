@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ExternalLink } from "lucide-react";
+import { ChevronsRight, ExternalLink } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { client } from "@/sanity/lib/client";
 import { urlFor } from "@/sanity/lib/image";
@@ -55,7 +55,7 @@ function Star({ filled }: { filled: boolean }) {
   return (
     <svg
       viewBox="0 0 24 24"
-      className={filled ? "h-5 w-5 text-[#fbbc04]" : "h-5 w-5 text-slate-300"}
+      className={filled ? "h-4 w-4 text-[#fbbc04] md:h-5 md:w-5" : "h-4 w-4 text-slate-300 md:h-5 md:w-5"}
       fill="currentColor"
       aria-hidden="true"
     >
@@ -67,7 +67,7 @@ function Star({ filled }: { filled: boolean }) {
 function Stars({ count }: { count: number }) {
   const safe = Math.max(1, Math.min(5, Math.round(count)));
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center gap-1 md:gap-1.5">
       {Array.from({ length: 5 }).map((_, i) => (
         <Star key={i} filled={i < safe} />
       ))}
@@ -99,17 +99,17 @@ export default async function ReviewsSection() {
   const orderedReviews = [...reviews].sort(byCommentThenDate);
 
   return (
-    <section className="w-full bg-white py-16 md:py-24">
-      <div className="mx-auto grid max-w-7xl gap-12 px-6 md:px-10 lg:grid-cols-[360px_1fr] lg:items-center lg:gap-16 lg:px-12">
-        <div className="border border-slate-200 bg-slate-50 p-8 md:p-10">
+    <section className="w-full bg-white py-10 md:py-24">
+      <div className="mx-auto grid max-w-7xl gap-6 px-6 md:gap-12 md:px-10 lg:grid-cols-[360px_1fr] lg:items-center lg:gap-16 lg:px-12">
+        <div className="border border-slate-200 bg-slate-50 p-4 md:p-10">
           <p className="text-sm font-semibold text-slate-700">{t("summaryTitle")}</p>
           {total === 0 ? null : (
           <>
 
-          <div className="mt-6 flex items-start gap-6">
+          <div className="mt-3 flex items-start gap-4 md:mt-6 md:gap-6">
             {/* Distribution bars, widest bucket on top, exactly as Google lays
                 them out. */}
-            <div className="flex-1 space-y-1.5">
+            <div className="flex-1 space-y-1 md:space-y-1.5">
               {distribution.map(({ stars, count }) => {
                 const percent = total > 0 ? (count / total) * 100 : 0;
                 return (
@@ -118,7 +118,7 @@ export default async function ReviewsSection() {
                       {stars}
                     </span>
                     <span
-                      className="h-2.5 flex-1 overflow-hidden rounded-full bg-slate-200"
+                      className="h-2 flex-1 overflow-hidden rounded-full bg-slate-200 md:h-2.5"
                       role="img"
                       aria-label={t("starsBreakdown", { stars, count, total })}
                     >
@@ -133,13 +133,13 @@ export default async function ReviewsSection() {
             </div>
 
             <div className="shrink-0 text-right">
-              <p className="text-5xl font-normal leading-none text-slate-800 tabular-nums">
+              <p className="text-4xl font-normal leading-none text-slate-800 tabular-nums md:text-5xl">
                 {average.toFixed(1)}
               </p>
-              <div className="mt-2 flex justify-end">
+              <div className="mt-1.5 flex justify-end md:mt-2">
                 <Stars count={average} />
               </div>
-              <p className="mt-2 text-sm text-slate-500">
+              <p className="mt-1.5 text-xs text-slate-500 md:mt-2 md:text-sm">
                 {t("reviewsCount", { count: total })}
               </p>
             </div>
@@ -152,15 +152,15 @@ export default async function ReviewsSection() {
             href={GOOGLE_PROFILE_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-7 inline-flex min-h-12 items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 py-2 transition hover:border-slate-300 hover:shadow-sm"
+            className="mt-4 inline-flex min-h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 transition hover:border-slate-300 hover:shadow-sm md:mt-7 md:min-h-12 md:gap-3 md:px-4 md:py-2"
           >
-            <GoogleMark className="h-6 w-6" />
+            <GoogleMark className="h-5 w-5 md:h-6 md:w-6" />
             <span className="text-sm font-semibold text-slate-700">{t("google")}</span>
           </a>
         </div>
 
         <div className="overflow-hidden">
-          <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 md:gap-5">
+          <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 md:gap-5">
             {orderedReviews.map((review) => {
               const author = review.author ?? "Guest";
               const googleReviewUrl =
@@ -177,7 +177,9 @@ export default async function ReviewsSection() {
               return (
                 <article
                   key={review._id}
-                  className="relative min-h-[280px] min-w-[280px] max-w-[340px] flex-1 snap-start border border-slate-200 bg-white p-6 shadow-[0_1px_3px_rgba(15,23,42,0.06)]"
+                  // On a phone the card is ~70% of the width so the next one peeks in from
+                  // the right, which is what tells a visitor the row scrolls.
+                  className="relative min-h-[200px] w-[72%] min-w-[240px] shrink-0 snap-start border border-slate-200 bg-white p-4 shadow-[0_1px_3px_rgba(15,23,42,0.06)] md:min-h-[280px] md:w-auto md:min-w-[280px] md:max-w-[340px] md:flex-1 md:shrink md:p-6"
                 >
                 <div className="absolute right-4 top-4">
                   <GoogleMark className="h-4 w-4" />
@@ -215,17 +217,17 @@ export default async function ReviewsSection() {
                     })()}
                   </div>
                 </div>
-                <div className="mt-4 text-lg">
+                <div className="mt-3 text-lg md:mt-4">
                   <Stars count={review.rating ?? 5} />
                 </div>
-                <p className="mt-4 line-clamp-4 text-sm leading-relaxed text-slate-700">
+                <p className="mt-3 line-clamp-3 text-[13px] leading-relaxed text-slate-700 md:mt-4 md:line-clamp-4 md:text-sm">
                   {review.text ?? ""}
                 </p>
                 <Link
                   href={googleReviewUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-blue-950 underline-offset-4 hover:underline"
+                  className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-blue-950 underline-offset-4 hover:underline md:mt-5 md:text-sm"
                 >
                   {t("readMore")}
                   <ExternalLink className="h-4 w-4" strokeWidth={2} />
@@ -239,6 +241,12 @@ export default async function ReviewsSection() {
               </div>
             ) : null}
           </div>
+          {orderedReviews.length > 1 ? (
+            <p className="mt-2 flex items-center justify-center gap-1 text-xs font-medium text-slate-500 md:hidden">
+              {t("swipeHint")}
+              <ChevronsRight className="h-4 w-4" aria-hidden="true" />
+            </p>
+          ) : null}
         </div>
       </div>
     </section>
