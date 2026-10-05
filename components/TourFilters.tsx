@@ -17,6 +17,12 @@ type TourFiltersProps = {
   tourTypes?: TourTypeOption[];
   activeTourType?: string;
   onTourTypeChange?: (value: string) => void;
+  /**
+   * Bands that have at least one tour in the current list. A chip that would
+   * lead to an empty page is not shown; when fewer than two bands remain the
+   * whole price row goes, since there is nothing left to choose between.
+   */
+  availablePriceRanges?: PriceRange[];
 };
 
 const priceRanges: PriceRange[] = ["all", "upTo100", "100to200", "200to500", "over500"];
@@ -44,9 +50,14 @@ export default function TourFilters({
   tourTypes,
   activeTourType = "all",
   onTourTypeChange,
+  availablePriceRanges,
 }: TourFiltersProps) {
   const t = useTranslations("TourFilters");
   const showTypes = Boolean(tourTypes && tourTypes.length > 1 && onTourTypeChange);
+  const visiblePriceRanges = availablePriceRanges
+    ? priceRanges.filter((range) => range === "all" || availablePriceRanges.includes(range))
+    : priceRanges;
+  const showPrices = !availablePriceRanges || availablePriceRanges.length > 1;
 
   return (
     <div className="mt-6 flex flex-col gap-4">
@@ -73,24 +84,26 @@ export default function TourFilters({
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between lg:gap-6">
         <div className="flex flex-col gap-2 lg:flex-1 lg:flex-row lg:items-center lg:gap-4">
-          {showTypes ? (
+          {showTypes && showPrices ? (
             <span className="text-sm font-medium text-slate-600 lg:w-24 lg:shrink-0">
               {t("priceLabel")}
             </span>
           ) : null}
-          <div className="-mx-1 flex flex-nowrap items-center gap-2 overflow-x-auto px-1 pb-1 lg:flex-1 lg:flex-wrap lg:overflow-visible">
-            {priceRanges.map((range) => (
-              <button
-                key={range}
-                type="button"
-                onClick={() => onPriceRangeChange(range)}
-                aria-pressed={priceRange === range}
-                className={`${chipBase} ${priceRange === range ? chipActive : chipIdle}`}
-              >
-                {t(priceRangeLabelKey[range])}
-              </button>
-            ))}
-          </div>
+          {showPrices ? (
+            <div className="-mx-1 flex flex-nowrap items-center gap-2 overflow-x-auto px-1 pb-1 lg:flex-1 lg:flex-wrap lg:overflow-visible">
+              {visiblePriceRanges.map((range) => (
+                <button
+                  key={range}
+                  type="button"
+                  onClick={() => onPriceRangeChange(range)}
+                  aria-pressed={priceRange === range}
+                  className={`${chipBase} ${priceRange === range ? chipActive : chipIdle}`}
+                >
+                  {t(priceRangeLabelKey[range])}
+                </button>
+              ))}
+            </div>
+          ) : null}
         </div>
         <div className="flex shrink-0 items-center gap-3">
           <label htmlFor="tour-sort" className="text-sm font-medium text-slate-600">

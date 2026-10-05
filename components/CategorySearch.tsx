@@ -7,6 +7,8 @@ import TourFilters, { type TourTypeOption } from "@/components/TourFilters";
 import { peekBookingUrl } from "@/lib/tourPrice";
 import {
   filterAndSortTours,
+  getTourNumericPrice,
+  matchesPriceRange,
   type PriceRange,
   type SortOrder,
 } from "@/lib/tourFilters";
@@ -79,9 +81,29 @@ export default function CategorySearch({
     );
   }, [query, tours, tourType]);
 
+  // Bands with at least one tour among what the type and search already
+  // show, in band order. They come back as soon as a tour is priced there.
+  const availablePriceRanges = useMemo(
+    () =>
+      (["upTo100", "100to200", "200to500", "over500"] as const).filter((range) =>
+        textFilteredTours.some((tour) =>
+          matchesPriceRange(getTourNumericPrice(tour), range),
+        ),
+      ),
+    [textFilteredTours],
+  );
+
+  // A chip picked earlier may vanish when the type changes (or the whole row
+  // does, below two bands); fall back to all rather than keep filtering by
+  // something the visitor can no longer see or undo.
+  const activePriceRange: PriceRange =
+    availablePriceRanges.length > 1 && (availablePriceRanges as PriceRange[]).includes(priceRange)
+      ? priceRange
+      : "all";
+
   const displayTours = useMemo(
-    () => filterAndSortTours(textFilteredTours, sortOrder, priceRange),
-    [textFilteredTours, sortOrder, priceRange],
+    () => filterAndSortTours(textFilteredTours, sortOrder, activePriceRange),
+    [textFilteredTours, sortOrder, activePriceRange],
   );
 
   const handleResetFilters = () => {
@@ -94,7 +116,7 @@ export default function CategorySearch({
     tours.length > 0 &&
     textFilteredTours.length > 0 &&
     displayTours.length === 0 &&
-    priceRange !== "all";
+    activePriceRange !== "all";
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-12 md:px-10 md:py-16 lg:px-12">
@@ -128,7 +150,8 @@ export default function CategorySearch({
         {tours.length > 0 ? (
           <TourFilters
             sortOrder={sortOrder}
-            priceRange={priceRange}
+            priceRange={activePriceRange}
+            availablePriceRanges={availablePriceRanges}
             onSortOrderChange={setSortOrder}
             onPriceRangeChange={setPriceRange}
             tourTypes={tourTypes}
@@ -155,7 +178,7 @@ export default function CategorySearch({
         <p className="mt-16 text-center text-lg text-slate-600">{t("noResults")}</p>
       ) : (
         <div
-          key={`${categorySlug}-${sortOrder}-${priceRange}-${tourType}`}
+          key={`${categorySlug}-${sortOrder}-${activePriceRange}-${tourType}`}
           className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
         >
           {displayTours.map((tour) => {

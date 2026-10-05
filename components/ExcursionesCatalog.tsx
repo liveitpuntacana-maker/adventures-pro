@@ -11,6 +11,7 @@ import { urlFor } from "@/sanity/lib/image";
 import {
   filterAndSortTours,
   getTourNumericPrice,
+  matchesPriceRange,
   type PriceRange,
   type SortOrder,
 } from "@/lib/tourFilters";
@@ -69,9 +70,24 @@ export default function ExcursionesCatalog({
     );
   }, [activeCategory, tours]);
 
+  const availablePriceRanges = useMemo(
+    () =>
+      (["upTo100", "100to200", "200to500", "over500"] as const).filter((range) =>
+        categoryFilteredTours.some((tour) =>
+          matchesPriceRange(getTourNumericPrice(tour), range),
+        ),
+      ),
+    [categoryFilteredTours],
+  );
+
+  const activePriceRange: PriceRange =
+    availablePriceRanges.length > 1 && (availablePriceRanges as PriceRange[]).includes(priceRange)
+      ? priceRange
+      : "all";
+
   const displayTours = useMemo(
-    () => filterAndSortTours(categoryFilteredTours, sortOrder, priceRange),
-    [categoryFilteredTours, sortOrder, priceRange],
+    () => filterAndSortTours(categoryFilteredTours, sortOrder, activePriceRange),
+    [categoryFilteredTours, sortOrder, activePriceRange],
   );
 
   const handleResetFilters = () => {
@@ -83,7 +99,7 @@ export default function ExcursionesCatalog({
     tours.length > 0 &&
     categoryFilteredTours.length > 0 &&
     displayTours.length === 0 &&
-    priceRange !== "all";
+    activePriceRange !== "all";
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
@@ -118,7 +134,8 @@ export default function ExcursionesCatalog({
         {tours.length > 0 ? (
           <TourFilters
             sortOrder={sortOrder}
-            priceRange={priceRange}
+            priceRange={activePriceRange}
+            availablePriceRanges={availablePriceRanges}
             onSortOrderChange={setSortOrder}
             onPriceRangeChange={setPriceRange}
           />
