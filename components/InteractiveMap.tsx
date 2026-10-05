@@ -72,7 +72,8 @@ export default function InteractiveMap({ destinations = [] }: InteractiveMapProp
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-60" />
               <span className="relative inline-flex h-3.5 w-3.5 rounded-full border-2 border-white bg-orange-500 shadow-md" />
             </span>
-            <span className="whitespace-nowrap rounded bg-black/50 px-2 py-0.5 text-xs font-semibold text-white shadow-[0_1px_4px_rgba(0,0,0,0.45)] md:text-sm">
+            {/* Labels collide on a phone-sized map; the buttons below name each place there. */}
+            <span className="hidden whitespace-nowrap rounded bg-black/50 px-2 py-0.5 text-xs font-semibold text-white shadow-[0_1px_4px_rgba(0,0,0,0.45)] md:block md:text-sm">
               {destination.title}
             </span>
           </Link>
