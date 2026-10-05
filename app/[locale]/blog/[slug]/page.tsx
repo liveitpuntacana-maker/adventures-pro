@@ -256,7 +256,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                   <Link
                     key={segmentIndex}
                     href={segment.href}
-                    className="font-medium text-blue-900 underline decoration-blue-900/30 underline-offset-2 transition hover:decoration-blue-900"
+                    className="font-semibold text-blue-700 underline decoration-blue-700 decoration-2 underline-offset-2 transition hover:text-orange-600 hover:decoration-orange-600"
                   >
                     {segment.text}
                   </Link>
