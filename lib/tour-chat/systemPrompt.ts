@@ -1,9 +1,6 @@
 import type { AppLocale } from "@/i18n/routing";
 import type { ChatKnowledge } from "@/lib/sanity/queries/chatKnowledge";
-import {
-  transfersPublicPath,
-  tourPublicPath,
-} from "@/lib/sanity/queries/chatKnowledge";
+import { transfersPublicPath, tourPublicPath } from "@/lib/tour-chat/paths";
 import {
   ADVENTURES_WHATSAPP_PHONE,
   getUniversalWhatsAppUrl,

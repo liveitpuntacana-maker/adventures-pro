@@ -58,7 +58,7 @@ export default function InteractiveMap({ destinations = [] }: InteractiveMapProp
       </div>
       <div className="relative mx-auto aspect-[16/9] h-auto w-full max-w-5xl overflow-hidden rounded-2xl border border-slate-200 bg-blue-950 shadow-lg">
         <Image
-          src="/images/dr-map.jpg"
+          src="/images/dr-map.webp"
           alt={t("mapAlt")}
           fill
           className="object-contain object-center"

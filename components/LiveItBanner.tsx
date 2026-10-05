@@ -12,7 +12,7 @@ export default function LiveItBanner() {
         className="block overflow-hidden rounded-2xl transition-transform duration-300 hover:scale-[1.01] hover:shadow-xl"
       >
         <Image
-          src="/images/live-it-banner-2026.jpg"
+          src="/images/live-it-banner-2026.webp"
           alt="Live It App - Golf, Tours, Transfers - Download on Google Play and App Store"
           width={1600}
           height={600}

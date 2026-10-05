@@ -64,7 +64,7 @@ export default function Navbar({ categories = [], destinations = [] }: NavbarPro
       <div className="mx-auto flex h-20 w-full max-w-7xl items-center justify-between px-3 sm:px-4 md:px-10 lg:px-12 xl:h-24">
         <Link href="/" className="inline-flex shrink-0 items-center">
           <Image
-            src="/images/logo-v3.png"
+            src="/images/logo-v3.webp"
             alt="Adventures Finder"
             width={250}
             height={83}

@@ -268,11 +268,6 @@ export async function getChatKnowledge(locale: string): Promise<ChatKnowledge> {
   };
 }
 
-export function tourPublicPath(locale: AppLocale, slug: string): string {
-  const clean = slug.replace(/^\/+|\/+$/g, "");
-  return `/${locale}/excursions/${clean}`;
-}
-
-export function transfersPublicPath(locale: AppLocale): string {
-  return `/${locale}/transfers`;
-}
+// Re-exported so existing imports keep working; the definitions live in a module
+// that does not pull the Sanity client into browser bundles.
+export { tourPublicPath, transfersPublicPath } from "@/lib/tour-chat/paths";
