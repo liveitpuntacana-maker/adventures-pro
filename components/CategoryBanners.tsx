@@ -28,7 +28,7 @@ export default function CategoryBanners({ categories, locale }: CategoryBannersP
 
   return (
     <div key={locale}>
-      <h2 className="mb-10 text-center text-3xl font-bold tracking-tight text-blue-950 md:mb-12 md:text-4xl">
+      <h2 className="mb-8 text-center text-2xl font-bold tracking-tight text-blue-950 md:mb-12 md:text-4xl">
         {t("sectionTitle")}
       </h2>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8 lg:grid-cols-3">
