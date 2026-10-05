@@ -214,6 +214,7 @@ export default function ExcursionesCatalog({
                         className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 transition hover:bg-slate-50 max-sm:min-h-10 max-sm:flex-none max-sm:px-2 max-sm:text-xs"
                       >
                         More Info
+                        <span className="sr-only"> — {title}</span>
                       </Link>
                     </div>
                   </div>

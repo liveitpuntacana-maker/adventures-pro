@@ -174,7 +174,7 @@ export default async function DestinationPage({ params }: DestinationPageProps) 
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <main className="min-h-screen bg-slate-50 text-slate-900">
       <JsonLd data={jsonLd} />
       <CategoryPageHero title={title} mainImage={destination.mainImage} />
       <div className="mx-auto max-w-7xl px-6 pt-4 md:px-10 lg:px-12">
@@ -197,6 +197,6 @@ export default async function DestinationPage({ params }: DestinationPageProps) 
       />
       <OtherDestinations destinations={allDestinations} currentSlug={slug} />
       <ListingSeoContent content={content} faqTitle={t("faqSectionTitle")} />
-    </div>
+    </main>
   );
 }

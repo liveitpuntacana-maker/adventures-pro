@@ -131,6 +131,9 @@ export default function TourCard({ tour, bookNowClassName, compactOnMobile = fal
             className={`inline-flex min-h-12 flex-1 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 transition hover:bg-slate-50 ${c("max-sm:min-h-10 max-sm:flex-none max-sm:px-2 max-sm:text-xs")}`}
           >
             More Info
+            {/* Same words on every card made the links indistinguishable out of
+                context; screen readers and crawlers now get the tour name too. */}
+            <span className="sr-only"> — {tour.title}</span>
           </Link>
         </div>
       </div>

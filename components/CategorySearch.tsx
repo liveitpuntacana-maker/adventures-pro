@@ -274,6 +274,9 @@ export default function CategorySearch({
 
   return (
     <div className="mx-auto max-w-7xl px-6 pb-12 pt-0 md:px-10 md:pb-16 lg:px-12">
+      {/* The page title is the h1; the tour cards are h3, so give them an h2 to
+          sit under instead of skipping a level. */}
+      {scopeLabel ? <h2 className="sr-only">{scopeLabel}</h2> : null}
       {/* Only the search bar stays pinned while scrolling; the filters scroll
           away with the page so they do not take screen space. */}
       <div className="sticky top-20 z-30 -mx-6 bg-white px-6 pb-3 pt-3 shadow-[0_4px_6px_-4px_rgba(0,0,0,0.1)] md:-mx-10 md:px-10 xl:top-24">

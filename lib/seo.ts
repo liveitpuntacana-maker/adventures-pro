@@ -88,6 +88,8 @@ export const STATIC_PATHS = [
   "/terms-and-conditions",
   "/cancellation-policy",
   "/faqs",
+  // Indexable landing for the Burrows tour; it was missing from the sitemap.
+  "/tournee-burrows",
 ] as const;
 
 export function hreflangForLocale(locale: AppLocale): string {

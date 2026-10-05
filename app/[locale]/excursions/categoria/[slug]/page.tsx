@@ -173,7 +173,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <main className="min-h-screen bg-slate-50 text-slate-900">
       <JsonLd data={jsonLd} />
       <CategoryPageHero
         title={title}
@@ -197,6 +197,6 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
         elsewhereBy="category"
       />
       <ListingSeoContent content={content} faqTitle={t("faqSectionTitle")} />
-    </div>
+    </main>
   );
 }
