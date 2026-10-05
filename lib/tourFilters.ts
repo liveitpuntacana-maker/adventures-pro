@@ -1,5 +1,19 @@
 export type SortOrder = "asc" | "desc";
-export type PriceRange = "all" | "upTo200" | "upTo500" | "over500";
+/**
+ * Consecutive bands: each one starts where the previous one ends, so picking a
+ * different chip always changes the list. The old ranges were cumulative
+ * ("up to 200", "up to 500") and every one of them began at zero, which made
+ * most of the catalogue show up under all of them. A tour priced exactly at a
+ * boundary belongs to the lower band.
+ */
+export type PriceRange = "all" | "upTo100" | "100to200" | "200to500" | "over500";
+
+export const PRICE_BANDS: Record<Exclude<PriceRange, "all">, { min: number; max: number }> = {
+  upTo100: { min: 0, max: 100 },
+  "100to200": { min: 100, max: 200 },
+  "200to500": { min: 200, max: 500 },
+  over500: { min: 500, max: Number.POSITIVE_INFINITY },
+};
 
 export type TourWithPrice = {
   price?: number | string | null;
@@ -53,9 +67,8 @@ export function getTourNumericPrice(tour: TourWithPrice): number {
 export function matchesPriceRange(price: number, range: PriceRange): boolean {
   if (range === "all") return true;
   if (!Number.isFinite(price)) return false;
-  if (range === "upTo200") return price <= 200;
-  if (range === "upTo500") return price <= 500;
-  return price > 500;
+  const band = PRICE_BANDS[range];
+  return price > band.min && price <= band.max;
 }
 
 export function compareTourPriceZeroLast(

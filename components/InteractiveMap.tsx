@@ -1,7 +1,4 @@
-"use client";
-
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { destinationExcursionPath } from "@/lib/destinationPath";
@@ -25,28 +22,23 @@ type PinnedDestination = MapDestination & { top: number; left: number };
 
 export default function InteractiveMap({ destinations = [] }: InteractiveMapProps) {
   const t = useTranslations("InteractiveMap");
-  const [comingSoonSlug, setComingSoonSlug] = useState<string | null>(null);
 
-  const pinnedDestinations = useMemo(
-    () =>
-      destinations
-        .map((destination) => {
-          const position = mapPositions[destination.slug];
-          if (!position) return null;
-          return {
-            ...destination,
-            ...position,
-          };
-        })
-        .filter((item): item is PinnedDestination => item !== null),
-    [destinations],
-  );
+  // A destination with no tours is kept in Sanity but left off the map and the
+  // buttons: it is a dead end for a visitor. It shows up by itself the moment
+  // a tour is assigned to it, because the tour count comes from the query.
+  const available = destinations
+    .filter((destination) => destination.tourCount > 0)
+    // Biggest first, so Punta Cana leads the buttons on a phone.
+    .sort((a, b) => b.tourCount - a.tourCount);
 
-  useEffect(() => {
-    if (!comingSoonSlug) return;
-    const timer = window.setTimeout(() => setComingSoonSlug(null), 2500);
-    return () => window.clearTimeout(timer);
-  }, [comingSoonSlug]);
+  const pinnedDestinations = available
+    .map((destination) => {
+      const position = mapPositions[destination.slug];
+      return position ? { ...destination, ...position } : null;
+    })
+    .filter((item): item is PinnedDestination => item !== null);
+
+  if (available.length === 0) return null;
 
   return (
     <section className="w-full">
@@ -66,76 +58,43 @@ export default function InteractiveMap({ destinations = [] }: InteractiveMapProp
           className="object-contain object-center"
           sizes="(max-width: 768px) 100vw, 1024px"
         />
-        {pinnedDestinations.map((destination) => {
-          const hasTours = destination.tourCount > 0;
-          const showComingSoon = comingSoonSlug === destination.slug;
-
-          const pinClassName = `group absolute z-10 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1.5 transition ${
-            hasTours ? "cursor-pointer hover:scale-105" : "cursor-default"
-          }`;
-          const pinStyle = { top: `${destination.top}%`, left: `${destination.left}%` };
-
-          const pin = (
-            <>
-              {showComingSoon ? (
-                <span className="pointer-events-none absolute bottom-full mb-2 whitespace-nowrap rounded-lg bg-slate-900/95 px-3 py-1.5 text-xs font-semibold text-white shadow-lg ring-1 ring-white/10 md:text-sm">
-                  {t("comingSoon")}
-                </span>
-              ) : null}
-              <span className="relative flex h-5 w-5 items-center justify-center">
-                <span
-                  className={`absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-60 ${
-                    hasTours ? "animate-ping" : ""
-                  }`}
-                />
-                <span
-                  className={`relative inline-flex h-3.5 w-3.5 rounded-full border-2 border-white bg-orange-500 shadow-md ${
-                    hasTours ? "" : "opacity-80"
-                  }`}
-                />
-              </span>
-              <span className="whitespace-nowrap rounded bg-black/50 px-2 py-0.5 text-xs font-semibold text-white shadow-[0_1px_4px_rgba(0,0,0,0.45)] md:text-sm">
-                {destination.title}
-              </span>
-            </>
-          );
-
-          // Un destino con tours es un enlace de verdad, no un boton que navega.
-          // Era un <button onClick={router.push}>, y Google no pulsa botones: las
-          // cinco paginas de destino no recibian un solo enlace interno de todo
-          // el sitio, la de Punta Cana incluida, que agrupa 76 tours. De paso el
-          // visitante recupera lo que un enlace le debe — abrir en otra pestana,
-          // copiar la direccion, verla antes de hacer clic.
-          if (hasTours) {
-            return (
-              <Link
-                key={destination.slug}
-                href={destinationExcursionPath(destination.slug)}
-                className={pinClassName}
-                style={pinStyle}
-                aria-label={destination.title}
-              >
-                {pin}
-              </Link>
-            );
-          }
-
-          // Sin tours no hay pagina a la que ir: el aviso de "proximamente" es
-          // toda la interaccion, y un enlace prometeria algo que no existe.
-          return (
-            <button
-              key={destination.slug}
-              type="button"
-              onClick={() => setComingSoonSlug(destination.slug)}
-              className={pinClassName}
-              style={pinStyle}
-              aria-label={destination.title}
-            >
-              {pin}
-            </button>
-          );
-        })}
+        {pinnedDestinations.map((destination) => (
+          // A real link, not a button that navigates: Google does not press
+          // buttons, and the destination pages were getting no internal links.
+          <Link
+            key={destination.slug}
+            href={destinationExcursionPath(destination.slug)}
+            className="group absolute z-10 flex -translate-x-1/2 -translate-y-1/2 cursor-pointer flex-col items-center gap-1.5 transition hover:scale-105"
+            style={{ top: `${destination.top}%`, left: `${destination.left}%` }}
+            aria-label={destination.title}
+          >
+            <span className="relative flex h-5 w-5 items-center justify-center">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-60" />
+              <span className="relative inline-flex h-3.5 w-3.5 rounded-full border-2 border-white bg-orange-500 shadow-md" />
+            </span>
+            <span className="whitespace-nowrap rounded bg-black/50 px-2 py-0.5 text-xs font-semibold text-white shadow-[0_1px_4px_rgba(0,0,0,0.45)] md:text-sm">
+              {destination.title}
+            </span>
+          </Link>
+        ))}
       </div>
+
+      {/* Small pins are hard to hit on a phone, so every destination also gets
+          a plain button under the map. */}
+      <nav
+        aria-label={t("destinationsNav")}
+        className="mx-auto mt-5 flex max-w-5xl flex-wrap items-center justify-center gap-2"
+      >
+        {available.map((destination) => (
+          <Link
+            key={destination.slug}
+            href={destinationExcursionPath(destination.slug)}
+            className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700"
+          >
+            {destination.title}
+          </Link>
+        ))}
+      </nav>
     </section>
   );
 }

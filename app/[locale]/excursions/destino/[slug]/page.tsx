@@ -67,6 +67,10 @@ const destinationToursQuery = groq`*[_type == "tour" && destination->slug.curren
     coalesce(select($locale == "fr-ca" => duration.frCA, duration[$locale]), duration.en, duration.es, duration.frCA)
   ),
   pricing[]{price},
+  "types": array::compact([category, ...categories[]])[]->{
+    "slug": slug.current,
+    "title": coalesce(select($locale == "fr-ca" => title.frCA, title[$locale]), title.en, title.es, title.frCA)
+  },
   "price": coalesce(pricing[0].price, mainTour->pricing[0].price, 0),
   ${tourRatingProjection}
 } | order(price asc)`;
@@ -167,6 +171,7 @@ export default async function DestinationPage({ params }: DestinationPageProps) 
         tours={tours}
         categorySlug={slug}
         messagesNamespace="DestinationPage"
+        showTypeFilter
       />
       <ListingSeoContent content={content} faqTitle={t("faqSectionTitle")} />
     </div>

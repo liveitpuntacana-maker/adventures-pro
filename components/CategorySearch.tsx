@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import TourCard from "@/components/TourCard";
-import TourFilters from "@/components/TourFilters";
+import TourFilters, { type TourTypeOption } from "@/components/TourFilters";
 import { peekBookingUrl } from "@/lib/tourPrice";
 import {
   filterAndSortTours,
@@ -25,33 +25,59 @@ export type CategoryTour = {
   price?: number | string | null;
   rating?: number | null;
   reviewsCount?: number | null;
+  /** Category plus any extra categories, for the tour-type filter. */
+  types?: TourTypeOption[];
 };
 
 type CategorySearchProps = {
   tours: CategoryTour[];
   categorySlug: string;
   messagesNamespace?: "CategoryPage" | "DestinationPage";
+  /** Adds the tour-type row; destination pages mix land, water, golf, etc. */
+  showTypeFilter?: boolean;
 };
 
 export default function CategorySearch({
   tours,
   categorySlug,
   messagesNamespace = "CategoryPage",
+  showTypeFilter = false,
 }: CategorySearchProps) {
   const t = useTranslations(messagesNamespace);
   const tFilters = useTranslations("TourFilters");
   const [query, setQuery] = useState("");
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
   const [priceRange, setPriceRange] = useState<PriceRange>("all");
+  const [tourType, setTourType] = useState("all");
+
+  // Only the types this list actually has, most tours first, so a chip never
+  // leads to an empty page and the common ones come first.
+  const tourTypes = useMemo(() => {
+    if (!showTypeFilter) return [];
+    const found = new Map<string, { type: TourTypeOption; count: number }>();
+    for (const tour of tours) {
+      for (const type of tour.types ?? []) {
+        if (!type.slug || !type.title) continue;
+        const entry = found.get(type.slug);
+        if (entry) entry.count += 1;
+        else found.set(type.slug, { type, count: 1 });
+      }
+    }
+    return [...found.values()].sort((x, y) => y.count - x.count).map((entry) => entry.type);
+  }, [showTypeFilter, tours]);
 
   const textFilteredTours = useMemo(() => {
-    const scoped = tours.filter((tour) => Boolean(tour.slug));
+    const scoped = tours.filter(
+      (tour) =>
+        Boolean(tour.slug) &&
+        (tourType === "all" || tour.types?.some((type) => type.slug === tourType)),
+    );
     const trimmed = query.trim().toLowerCase();
     if (!trimmed) return scoped;
     return scoped.filter((tour) =>
       (tour.title ?? "").toLowerCase().includes(trimmed),
     );
-  }, [query, tours]);
+  }, [query, tours, tourType]);
 
   const displayTours = useMemo(
     () => filterAndSortTours(textFilteredTours, sortOrder, priceRange),
@@ -61,6 +87,7 @@ export default function CategorySearch({
   const handleResetFilters = () => {
     setSortOrder("asc");
     setPriceRange("all");
+    setTourType("all");
   };
 
   const showPriceRangeEmpty =
@@ -71,7 +98,13 @@ export default function CategorySearch({
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-12 md:px-10 md:py-16 lg:px-12">
-      <div className="sticky top-20 z-30 -mx-6 bg-white px-6 pb-4 pt-2 shadow-[0_4px_6px_-4px_rgba(0,0,0,0.1)] md:-mx-10 md:px-10 xl:top-24">
+      <div
+        className={`${
+          // With the type row the panel is about 260px tall: pinned on a phone it
+          // would cover most of the screen, so there it scrolls away.
+          tourTypes.length > 1 ? "lg:sticky" : "sticky"
+        } top-20 z-30 -mx-6 bg-white px-6 pb-4 pt-2 shadow-[0_4px_6px_-4px_rgba(0,0,0,0.1)] md:-mx-10 md:px-10 xl:top-24`}
+      >
         <form
           onSubmit={(event) => event.preventDefault()}
           className="mx-auto flex max-w-3xl flex-col gap-3 pt-4 md:flex-row md:items-center"
@@ -98,6 +131,9 @@ export default function CategorySearch({
             priceRange={priceRange}
             onSortOrderChange={setSortOrder}
             onPriceRangeChange={setPriceRange}
+            tourTypes={tourTypes}
+            activeTourType={tourType}
+            onTourTypeChange={setTourType}
           />
         ) : null}
       </div>
@@ -119,7 +155,7 @@ export default function CategorySearch({
         <p className="mt-16 text-center text-lg text-slate-600">{t("noResults")}</p>
       ) : (
         <div
-          key={`${categorySlug}-${sortOrder}-${priceRange}`}
+          key={`${categorySlug}-${sortOrder}-${priceRange}-${tourType}`}
           className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
         >
           {displayTours.map((tour) => {

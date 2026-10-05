@@ -163,16 +163,16 @@ export default async function Home({ params }: HomePageProps) {
 
         <PromoBanner />
 
+        <section className="mx-auto max-w-7xl px-6 pt-14 md:px-10 md:pt-16 lg:px-12">
+          <InteractiveMap destinations={mapDestinations} />
+        </section>
+
         <section className="mx-auto max-w-7xl px-6 pb-20 pt-14 md:px-10 md:pb-24 md:pt-16 lg:px-12">
           <CategoryBanners categories={categories} locale={locale} />
         </section>
 
         <section className="mx-auto max-w-7xl px-6 pb-24 pt-16 md:px-10 md:pb-32 md:pt-20 lg:px-12">
           <FeaturedAdventures tours={featuredTours} />
-        </section>
-
-        <section className="mx-auto max-w-7xl px-6 pb-24 pt-8 md:px-10 md:pb-32 md:pt-12 lg:px-12">
-          <InteractiveMap destinations={mapDestinations} />
         </section>
 
         <section className="mx-auto w-full max-w-4xl px-6 py-12 md:px-10 lg:px-12">
