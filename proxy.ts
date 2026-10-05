@@ -21,6 +21,20 @@ const GONE_PATHS = new Set([
   // relacionada seria un soft 404, que Google trata peor que un 410 limpio.
   "/best-restaurants-in-punta-cana",
   "/explore-the-secrets-of-punta-cana-unforgettable-adventures-await-you",
+  // Articulos de estilo de vida del WordPress viejo que nunca se migraron y
+  // siguen apareciendo en Search Console como 404 (octubre 2026).
+  "/best-night-life-in-punta-cana",
+  "/dominican-flavors",
+  "/10-things-tourists-dont-realize-about-punta-cana-until-they-arrive",
+  "/why-everyones-talking-about-punta-canas-real-estate-boom",
+  "/are-punta-cana-excursions-safe",
+  "/how-safe-is-punta-cana-real-talk-for-visitors-expats",
+  "/shopping-center",
+  "/supermarkets",
+  "/top-best-beaches",
+  // Basura: archivo por fecha de WordPress y un slug mal formado.
+  "/2026/04",
+  "/samana-",
 ]);
 
 function normalizeForGoneCheck(pathname: string): string {

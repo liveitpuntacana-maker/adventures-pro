@@ -243,6 +243,15 @@ const reservedRootSlugs = [
   // Retiradas sin equivalente: el proxy les responde 410.
   "best-restaurants-in-punta-cana",
   "explore-the-secrets-of-punta-cana-unforgettable-adventures-await-you",
+  "best-night-life-in-punta-cana",
+  "dominican-flavors",
+  "10-things-tourists-dont-realize-about-punta-cana-until-they-arrive",
+  "why-everyones-talking-about-punta-canas-real-estate-boom",
+  "are-punta-cana-excursions-safe",
+  "how-safe-is-punta-cana-real-talk-for-visitors-expats",
+  "shopping-center",
+  "supermarkets",
+  "top-best-beaches",
 ].join("|");
 
 // Exact-match negative lookahead: (?!(?:a|b)$) excludes only the full segment "a" or "b",
@@ -312,6 +321,18 @@ const legacyRootSlugRedirects: Array<{
     ["blog", "living-in-punta-cana-costs-visas-healthcare-daily-life", "living-in-punta-cana-costs-visas-healthcare-and-daily-life"],
     ["excursions", "vista-cana-golf", "vista-cana-golf-club"],
     ["excursions", "catalina-island-vip-tour-with-regular-lunch", "catalina-island-vip-punta-cana"],
+    // Search Console (octubre 2026): seguian en 404 porque el catch-all los
+    // mandaba a /en/excursions/<slug-viejo>. Cada destino se comprobo en Sanity.
+    ["excursions", "unique-evening-buggy-tour", "evening-buggy-tour-punta-cana"],
+    ["excursions", "saona", "saona-island-classic-tour"],
+    ["excursions", "golf-n-shots", "golf-n-shots-punta-cana-interactive-golf-experience"],
+    ["excursions", "punta-cana-sky-sea-adventure", "parasailing-hookah-diving-snorkeling-punta-cana"],
+    ["blog", "are-catamaran-tours-worth-it-the-honest-answer", "are-catamaran-tours-worth-it-the-honest-answer"],
+    ["blog", "dominican-republic-island-hopping", "dominican-republic-island-hopping-what-works"],
+    ["blog", "group-tours-vs-private-tours", "group-tours-vs-private-tours-which-fits"],
+    ["blog", "living-in-punta-cana-the-things-no-one-tells-you-before-moving", "living-in-punta-cana-costs-visas-healthcare-and-daily-life"],
+    ["blog", "beach-clubs", "punta-cana-beach-club-experiences-that-fit-you"],
+    ["blog", "punta-cana-honeymoon-itinerary-example", "8-romantic-punta-cana-experiences-to-book"],
   ] as const
 ).map(([section, from, to]) => ({
   source: `/${from}`,
