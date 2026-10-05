@@ -1,3 +1,4 @@
+import FaqAccordion from "@/components/FaqAccordion";
 import type { ListingIntro } from "@/lib/content/listingIntro";
 
 type ListingSeoContentProps = {
@@ -28,18 +29,10 @@ export default function ListingSeoContent({
           <h2 className="text-xl font-semibold tracking-tight text-[#0a192f] md:text-2xl">
             {faqTitle}
           </h2>
-          <dl className="mt-6 space-y-6">
-            {content.faqs.map((faq) => (
-              <div key={faq.question}>
-                <dt className="text-base font-semibold text-slate-900">
-                  {faq.question}
-                </dt>
-                <dd className="mt-2 text-[15px] leading-relaxed text-slate-700">
-                  {faq.answer}
-                </dd>
-              </div>
-            ))}
-          </dl>
+          <FaqAccordion
+            className="mt-5"
+            items={content.faqs.map((faq) => ({ question: faq.question, answer: <p>{faq.answer}</p> }))}
+          />
         </div>
       ) : null}
     </section>

@@ -17,6 +17,8 @@ import { Link } from "@/i18n/navigation";
 import { client } from "@/sanity/lib/client";
 import { urlFor } from "@/sanity/lib/image";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import FaqAccordion from "@/components/FaqAccordion";
+import { parseFaqText } from "@/lib/faqParser";
 import BookNowLink from "@/components/meta/BookNowLink";
 import TourViewContent from "@/components/meta/TourViewContent";
 import { formatTourPrice, peekBookingUrl } from "@/lib/tourPrice";
@@ -312,6 +314,7 @@ export default async function TourDetailPage({ params }: TourPageProps) {
   const includesLines = splitLines(tour.includes);
   const excludesLines = splitLines(tour.excludes);
   const faqText = (tour.faq ?? "").trim();
+  const faqItems = parseFaqText(faqText);
   const fullGallery = buildGallery(tour.gallery ?? [], tour.mainImage);
   const gallery = fullGallery.slice(0, 3);
   const galleryLightbox = fullGallery.slice(0, 5);
@@ -749,11 +752,22 @@ export default async function TourDetailPage({ params }: TourPageProps) {
                   <h2 className="text-2xl font-semibold tracking-tight text-slate-900">
                     FAQs
                   </h2>
-                  <div className="mt-6 rounded-xl border border-slate-200 bg-white px-5 py-4">
-                    <p className="whitespace-pre-line text-[15px] leading-7 text-slate-700">
-                      {faqText}
-                    </p>
-                  </div>
+                  {faqItems ? (
+                    <FaqAccordion
+                      className="mt-6"
+                      items={faqItems.map((item) => ({
+                        question: item.question,
+                        answer: <p className="whitespace-pre-line">{item.answer}</p>,
+                      }))}
+                    />
+                  ) : (
+                    // Text that is not in question/answer form is shown as it was written.
+                    <div className="mt-6 rounded-xl border border-slate-200 bg-white px-5 py-4">
+                      <p className="whitespace-pre-line text-[15px] leading-7 text-slate-700">
+                        {faqText}
+                      </p>
+                    </div>
+                  )}
                 </section>
               </>
             ) : null}

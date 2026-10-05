@@ -95,7 +95,7 @@ export default function InteractiveMap({ destinations = [] }: InteractiveMapProp
           <Link
             key={destination.slug}
             href={destinationExcursionPath(destination.slug)}
-            className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700"
+            className="inline-flex min-h-10 items-center justify-center rounded-xl bg-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-orange-500/25 transition hover:bg-orange-600"
           >
             {destination.title}
           </Link>

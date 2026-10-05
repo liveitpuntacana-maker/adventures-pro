@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
+import FaqAccordion from "@/components/FaqAccordion";
 import TourCard from "@/components/TourCard";
 import ScrollToAnchorButton from "@/components/ScrollToAnchorButton";
 import { client } from "@/sanity/lib/client";
@@ -281,16 +282,15 @@ export default async function TourneeBurrowsPage({
             <h2 className="text-center text-xl font-bold text-[#0a192f] md:text-2xl">
               FAQ
             </h2>
-            <div className="mt-6 space-y-4">
-              {data.faqs.map((faq, index) => (
-                <div key={index} className="rounded-xl border border-slate-200 p-5">
-                  <p className="font-semibold text-[#0a192f]">{faq.question}</p>
-                  <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                    {faq.answer}
-                  </p>
-                </div>
-              ))}
-            </div>
+            <FaqAccordion
+              className="mt-6"
+              items={data.faqs
+                .filter((faq) => faq.question && faq.answer)
+                .map((faq) => ({
+                  question: faq.question ?? "",
+                  answer: <p className="text-sm text-slate-600">{faq.answer}</p>,
+                }))}
+            />
           </section>
         ) : null}
 
