@@ -53,7 +53,11 @@ export async function generateMetadata({
 }
 
 type LandingPageData = {
-  sliderImages?: Array<{ url?: string; alt?: string | null }>;
+  sliderImages?: Array<{
+    url?: string;
+    alt?: string | null;
+    focus?: { x: number; y: number } | null;
+  }>;
 };
 
 const featuredToursQuery = groq`*[_type == "tour" && isFeatured == true] {
@@ -95,7 +99,8 @@ export default async function Home({ params }: HomePageProps) {
       groq`*[_type == "landingPage"][0]{
         "sliderImages": sliderImages[]{
           "url": asset->url,
-          "alt": coalesce(alt, asset->altText, asset->title)
+          "alt": coalesce(alt, asset->altText, asset->title),
+          "focus": hotspot{x, y}
         }
       }`,
       { locale },
@@ -136,6 +141,7 @@ export default async function Home({ params }: HomePageProps) {
       ?.filter((image) => image?.url?.trim())
       .map((image, index) => ({
         src: image.url!.trim(),
+        focus: image.focus ?? null,
         alt:
           image.alt?.trim() ||
           (index === 0
