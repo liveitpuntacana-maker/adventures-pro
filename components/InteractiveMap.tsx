@@ -14,11 +14,32 @@ const mapPositions: Record<string, { top: number; left: number }> = {
   "santo-domingo": { top: 75, left: 48 },
 };
 
-// Pins that sit close together would overlap labels on a phone-sized map; these
-// nudge a label sideways below the md breakpoint only.
-const mobileLabelShift: Record<string, string> = {
-  "bayahibe-la-romana": "max-md:-translate-x-14",
+// The five pins are close together on a phone-sized map and labels under every
+// pin ended up covering the neighbouring pins. Below md a few labels move: Punta
+// Cana above its pin (nudged right), Sámana and Miches to the left of theirs.
+// From md up every label stays under its pin, exactly as before.
+const mobileLabelPlacement: Record<string, string> = {
+  "punta-cana": "max-md:-translate-y-[45px] max-md:translate-x-2.5",
+  samana: "max-md:-translate-x-[39px] max-md:-translate-y-6",
+  miches: "max-md:-translate-x-[37px] max-md:-translate-y-6",
 };
+
+/**
+ * "Bayahibe / La Romana" is twice as wide as every other label and, on a phone,
+ * ran into its neighbours and sat off-centre from its pin. Below md it stacks on
+ * two lines, so it stays centred under the pin; from md up it is one line.
+ */
+function MapLabel({ title }: { title: string }) {
+  const parts = title.split(" / ");
+  if (parts.length !== 2) return <>{title}</>;
+  return (
+    <>
+      {parts[0]} /<br className="md:hidden" />
+      <span className="max-md:hidden"> </span>
+      {parts[1]}
+    </>
+  );
+}
 
 type InteractiveMapProps = {
   destinations?: MapDestination[];
@@ -78,8 +99,8 @@ export default function InteractiveMap({ destinations = [] }: InteractiveMapProp
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-60" />
               <span className="relative inline-flex h-3.5 w-3.5 rounded-full border-2 border-white bg-orange-500 shadow-md" />
             </span>
-            <span className={`whitespace-nowrap rounded bg-black/50 px-1.5 py-0.5 text-[10px] font-semibold leading-tight text-white shadow-[0_1px_4px_rgba(0,0,0,0.45)] md:px-2 md:text-sm ${mobileLabelShift[destination.slug] ?? ""}`}>
-              {destination.title}
+            <span className={`whitespace-nowrap rounded bg-black/50 px-1.5 py-0.5 text-[10px] font-semibold leading-tight text-white shadow-[0_1px_4px_rgba(0,0,0,0.45)] md:px-2 md:text-sm max-md:text-center ${mobileLabelPlacement[destination.slug] ?? ""}`}>
+              <MapLabel title={destination.title} />
             </span>
           </Link>
         ))}
