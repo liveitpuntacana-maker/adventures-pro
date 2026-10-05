@@ -193,12 +193,13 @@ export default async function TourneeBurrowsPage({
 
         {data.featuredTours?.length ? (
           <section id="featured-tours" className="mt-12 scroll-mt-24">
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
               {data.featuredTours.map((tour, index) => (
                 <TourCard
                   key={`${tour.slug}-${index}`}
                   tour={toTourCardProps(tour)}
                   bookNowClassName={BURROWS_BOOK_NOW_CLASSNAME}
+                  compactOnMobile
                 />
               ))}
             </div>
@@ -217,12 +218,13 @@ export default async function TourneeBurrowsPage({
                 {data.golfSectionText}
               </p>
             ) : null}
-            <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3">
               {data.golfTours.map((tour, index) => (
                 <TourCard
                   key={`${tour.slug}-${index}`}
                   tour={toTourCardProps(tour)}
                   bookNowClassName={BURROWS_BOOK_NOW_CLASSNAME}
+                  compactOnMobile
                 />
               ))}
             </div>

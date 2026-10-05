@@ -131,10 +131,11 @@ export default async function RelatedTours({
       </h2>
       <p className="mt-2 text-sm text-slate-600 md:text-base">{t("subtitle")}</p>
 
-      <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
         {tours.map((tour) => (
           <TourCard
             key={tour._id}
+            compactOnMobile
             tour={{
               title: tour.title,
               slug: tour.slug,

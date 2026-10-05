@@ -153,7 +153,7 @@ export default function ExcursionesCatalog({
             </button>
           </div>
         ) : (
-          <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="mt-10 grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
             {displayTours.map((tour) => {
               const firstPricingValue = getTourNumericPrice(tour);
               const computedPrice = Number.isFinite(firstPricingValue)
@@ -167,7 +167,7 @@ export default function ExcursionesCatalog({
               return (
                 <article
                   key={tour._id}
-                  className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+                  className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm max-sm:flex max-sm:flex-col"
                 >
                   <div className="relative">
                     <Link
@@ -181,20 +181,20 @@ export default function ExcursionesCatalog({
                           alt={title}
                           width={1200}
                           height={800}
-                          className="h-56 w-full object-cover"
-                          sizes="(max-width: 768px) 100vw, (max-width: 1400px) 50vw, 25vw"
+                          className="h-56 w-full object-cover max-sm:h-32"
+                          sizes="(max-width: 640px) 50vw, (max-width: 1400px) 50vw, 25vw"
                         />
                       ) : (
-                        <div className="h-56 w-full bg-slate-200" />
+                        <div className="h-56 w-full bg-slate-200 max-sm:h-32" />
                       )}
                     </Link>
                   </div>
-                  <div className="space-y-4 p-5">
-                    <div className="inline-flex items-center gap-2 text-sm text-slate-600">
+                  <div className="space-y-4 p-5 max-sm:flex max-sm:flex-1 max-sm:flex-col max-sm:space-y-2 max-sm:p-3">
+                    <div className="inline-flex items-center gap-2 text-sm text-slate-600 max-sm:text-xs">
                       <Clock3 className="h-4 w-4" />
                       <span>{tour.duration || "Duration on request"}</span>
                     </div>
-                    <h2 className="text-xl font-semibold leading-tight text-slate-900">
+                    <h2 className="text-xl font-semibold leading-tight text-slate-900 max-sm:line-clamp-3 max-sm:text-sm max-sm:leading-snug">
                       <Link
                         href={tourExcursionPath(slug)}
                         className="transition hover:text-orange-600"
@@ -202,18 +202,18 @@ export default function ExcursionesCatalog({
                         {title}
                       </Link>
                     </h2>
-                    <p className="text-sm text-slate-600">
+                    <p className="text-sm text-slate-600 max-sm:text-xs">
                       {tour.category?.title || tour.category?.slug || "Uncategorized"}
                     </p>
-                    <p className="text-lg font-semibold text-blue-950">
+                    <p className="text-lg font-semibold text-blue-950 max-sm:text-sm">
                       From {computedPrice}
                       {priceTag ? (
-                        <span className="ml-1.5 text-sm font-medium text-slate-500">
+                        <span className="ml-1.5 text-sm font-medium text-slate-500 max-sm:ml-1 max-sm:text-xs">
                           ({priceTag})
                         </span>
                       ) : null}
                     </p>
-                    <div className="flex flex-col gap-3 sm:flex-row">
+                    <div className="flex flex-col gap-3 sm:flex-row max-sm:mt-auto max-sm:gap-2 max-sm:pt-1">
                       <BookNowLink
                         href={peekUrl}
                         target="_blank"
@@ -222,13 +222,13 @@ export default function ExcursionesCatalog({
                         contentName={title}
                         value={Number.isFinite(firstPricingValue) ? firstPricingValue : undefined}
                         currency={tour.currency}
-                        className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl bg-orange-500 px-4 text-sm font-semibold text-white transition hover:bg-orange-600"
+                        className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl bg-orange-500 px-4 text-sm font-semibold text-white transition hover:bg-orange-600 max-sm:min-h-10 max-sm:flex-none max-sm:px-2 max-sm:text-xs"
                       >
                         Book Now
                       </BookNowLink>
                       <Link
                         href={tourExcursionPath(slug)}
-                        className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 transition hover:bg-slate-50"
+                        className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 transition hover:bg-slate-50 max-sm:min-h-10 max-sm:flex-none max-sm:px-2 max-sm:text-xs"
                       >
                         More Info
                       </Link>
