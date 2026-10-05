@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import HeaderSearch from "@/components/HeaderSearch";
 import { categoryExcursionPath } from "@/lib/categoryPath";
 import { destinationExcursionPath } from "@/lib/destinationPath";
 import { type NavCategory } from "@/lib/sanityCategories";
@@ -175,9 +176,11 @@ export default function Navbar({ categories = [], destinations = [] }: NavbarPro
           >
             {t("agencyRegistration")}
           </a>
+          <HeaderSearch />
           <LanguageSwitcher />
         </nav>
         <div className="flex items-center gap-2 xl:hidden">
+          <HeaderSearch />
           <LanguageSwitcher compact />
           <button
             type="button"
