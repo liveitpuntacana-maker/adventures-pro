@@ -126,7 +126,9 @@
     "typeAll": "Todos los tipos",
     "priceLabel": "Precio",
     "noPriceRangeResults": "No hay tours en este rango de precio",
-    "resetFilters": "Restablecer filtros"
+    "resetFilters": "Restablecer filtros",
+    "searchOutsideEmpty": "No hay resultados para «{query}» con tus filtros actuales ({filters}). Sí está disponible en: {where}.",
+    "searchOutsideMore": "Más resultados para «{query}» fuera de tus filtros actuales ({filters}), disponibles en: {where}."
   },
   "InteractiveMap": {
     "kicker": "Explora por destino",

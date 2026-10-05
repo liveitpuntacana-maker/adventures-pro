@@ -17,7 +17,7 @@ export default function ListingSeoContent({
   faqTitle,
 }: ListingSeoContentProps) {
   return (
-    <section className="mx-auto max-w-3xl px-6 pb-4 pt-12 md:px-10 md:pt-16 lg:px-12">
+    <section className="mx-auto max-w-3xl px-6 pb-4 pt-8 md:px-10 md:pt-16 lg:px-12">
       <div className="space-y-4 text-[15px] leading-relaxed text-slate-700 md:text-base">
         <p>{content.intro}</p>
         <p>{content.detail}</p>

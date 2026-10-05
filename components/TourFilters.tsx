@@ -13,21 +13,21 @@ type TourFiltersProps = {
   priceRange: PriceRange;
   onSortOrderChange: (value: SortOrder) => void;
   onPriceRangeChange: (value: PriceRange) => void;
-  /** Tour types present in the list; when given, a type row is shown first. */
+  /** Tour types present in the list; when given, a type dropdown is shown. */
   tourTypes?: TourTypeOption[];
   activeTourType?: string;
   onTourTypeChange?: (value: string) => void;
   /**
-   * Bands that have at least one tour in the current list. A chip that would
-   * lead to an empty page is not shown; when fewer than two bands remain the
-   * whole price row goes, since there is nothing left to choose between.
+   * Bands that have at least one tour in the current list. A band that would
+   * lead to an empty page is not offered; when fewer than two remain the whole
+   * price dropdown goes, since there is nothing left to choose between.
    */
   availablePriceRanges?: PriceRange[];
 };
 
 const priceRanges: PriceRange[] = ["all", "upTo100", "100to200", "200to500", "over500"];
 
-const priceRangeLabelKey: Record<
+export const priceRangeLabelKey: Record<
   PriceRange,
   "priceAll" | "priceUpTo100" | "price100to200" | "price200to500" | "priceOver500"
 > = {
@@ -38,9 +38,11 @@ const priceRangeLabelKey: Record<
   over500: "priceOver500",
 };
 
-const chipBase = "shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition-all duration-300";
-const chipActive = "border-blue-800 bg-blue-800 text-white shadow-md shadow-blue-800/20";
-const chipIdle = "border-slate-200 bg-white text-slate-700 shadow-sm hover:border-blue-200 hover:bg-blue-50";
+// Dropdowns, not chips: a row of chips that scrolls sideways gives no hint
+// that there is more to the right, and a select is understood at a glance.
+const selectClass =
+  "h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-800 outline-none transition focus:border-blue-800 focus:ring-2 focus:ring-blue-800/15";
+const labelClass = "mb-1 block text-xs font-medium text-slate-500";
 
 export default function TourFilters({
   sortOrder,
@@ -60,65 +62,61 @@ export default function TourFilters({
   const showPrices = !availablePriceRanges || availablePriceRanges.length > 1;
 
   return (
-    <div className="mt-6 flex flex-col gap-4">
+    <div className="mt-4 grid grid-cols-2 gap-3 lg:flex lg:items-end lg:gap-4">
       {showTypes ? (
-        <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:gap-4">
-          <span className="text-sm font-medium text-slate-600 lg:w-24 lg:shrink-0">
+        <div className="min-w-0 lg:w-64">
+          <label htmlFor="tour-type" className={labelClass}>
             {t("typeLabel")}
-          </span>
-          <div className="-mx-1 flex flex-nowrap items-center gap-2 overflow-x-auto px-1 pb-1 lg:flex-1 lg:flex-wrap lg:overflow-visible">
-            {[{ slug: "all", title: t("typeAll") }, ...(tourTypes ?? [])].map((type) => (
-              <button
-                key={type.slug}
-                type="button"
-                onClick={() => onTourTypeChange?.(type.slug)}
-                aria-pressed={activeTourType === type.slug}
-                className={`${chipBase} ${activeTourType === type.slug ? chipActive : chipIdle}`}
-              >
+          </label>
+          <select
+            id="tour-type"
+            value={activeTourType}
+            onChange={(event) => onTourTypeChange?.(event.target.value)}
+            className={selectClass}
+          >
+            <option value="all">{t("typeAll")}</option>
+            {(tourTypes ?? []).map((type) => (
+              <option key={type.slug} value={type.slug}>
                 {type.title}
-              </button>
+              </option>
             ))}
-          </div>
+          </select>
         </div>
       ) : null}
 
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between lg:gap-6">
-        <div className="flex flex-col gap-2 lg:flex-1 lg:flex-row lg:items-center lg:gap-4">
-          {showTypes && showPrices ? (
-            <span className="text-sm font-medium text-slate-600 lg:w-24 lg:shrink-0">
-              {t("priceLabel")}
-            </span>
-          ) : null}
-          {showPrices ? (
-            <div className="-mx-1 flex flex-nowrap items-center gap-2 overflow-x-auto px-1 pb-1 lg:flex-1 lg:flex-wrap lg:overflow-visible">
-              {visiblePriceRanges.map((range) => (
-                <button
-                  key={range}
-                  type="button"
-                  onClick={() => onPriceRangeChange(range)}
-                  aria-pressed={priceRange === range}
-                  className={`${chipBase} ${priceRange === range ? chipActive : chipIdle}`}
-                >
-                  {t(priceRangeLabelKey[range])}
-                </button>
-              ))}
-            </div>
-          ) : null}
-        </div>
-        <div className="flex shrink-0 items-center gap-3">
-          <label htmlFor="tour-sort" className="text-sm font-medium text-slate-600">
-            {t("sortLabel")}
+      {showPrices ? (
+        <div className="min-w-0 lg:w-56">
+          <label htmlFor="tour-price" className={labelClass}>
+            {t("priceLabel")}
           </label>
           <select
-            id="tour-sort"
-            value={sortOrder}
-            onChange={(event) => onSortOrderChange(event.target.value as SortOrder)}
-            className="h-11 min-w-[200px] rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-800 outline-none transition focus:border-blue-800 focus:ring-2 focus:ring-blue-800/15"
+            id="tour-price"
+            value={priceRange}
+            onChange={(event) => onPriceRangeChange(event.target.value as PriceRange)}
+            className={selectClass}
           >
-            <option value="asc">{t("sortLowToHigh")}</option>
-            <option value="desc">{t("sortHighToLow")}</option>
+            {visiblePriceRanges.map((range) => (
+              <option key={range} value={range}>
+                {t(priceRangeLabelKey[range])}
+              </option>
+            ))}
           </select>
         </div>
+      ) : null}
+
+      <div className="col-span-2 min-w-0 lg:col-span-1 lg:ml-auto lg:w-56">
+        <label htmlFor="tour-sort" className={labelClass}>
+          {t("sortLabel")}
+        </label>
+        <select
+          id="tour-sort"
+          value={sortOrder}
+          onChange={(event) => onSortOrderChange(event.target.value as SortOrder)}
+          className={selectClass}
+        >
+          <option value="asc">{t("sortLowToHigh")}</option>
+          <option value="desc">{t("sortHighToLow")}</option>
+        </select>
       </div>
     </div>
   );

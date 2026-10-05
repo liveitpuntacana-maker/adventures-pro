@@ -3,12 +3,17 @@
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import TourCard from "@/components/TourCard";
-import TourFilters, { type TourTypeOption } from "@/components/TourFilters";
+import TourFilters, {
+  priceRangeLabelKey,
+  type TourTypeOption,
+} from "@/components/TourFilters";
 import { peekBookingUrl } from "@/lib/tourPrice";
 import {
   filterAndSortTours,
   getTourNumericPrice,
   matchesPriceRange,
+  priceBandOf,
+  sortToursPriceZeroLast,
   type PriceRange,
   type SortOrder,
 } from "@/lib/tourFilters";
@@ -35,9 +40,46 @@ type CategorySearchProps = {
   tours: CategoryTour[];
   categorySlug: string;
   messagesNamespace?: "CategoryPage" | "DestinationPage";
-  /** Adds the tour-type row; destination pages mix land, water, golf, etc. */
+  /** Adds the tour-type dropdown; destination pages mix land, water, golf, etc. */
   showTypeFilter?: boolean;
 };
+
+const BANDS = ["upTo100", "100to200", "200to500", "over500"] as const;
+
+function TourGrid({ tours, gridKey }: { tours: CategoryTour[]; gridKey: string }) {
+  return (
+    <div
+      key={gridKey}
+      className="mt-5 grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4"
+    >
+      {tours.map((tour) => {
+        const slug = tour.slug ?? "";
+        const title = tour.title ?? "Tour";
+        const peekUrl = tour.peekProId ? peekBookingUrl(tour.peekProId) : "#";
+
+        return (
+          <TourCard
+            key={tour._id}
+            compactOnMobile
+            tour={{
+              title,
+              slug,
+              duration: tour.duration,
+              listingImage: tour.listingImage,
+              highlightBadge: tour.highlightBadge,
+              pricing: tour.pricing,
+              currency: tour.currency,
+              priceTag: tour.priceTag,
+              peekUrl,
+              rating: tour.rating,
+              reviewsCount: tour.reviewsCount,
+            }}
+          />
+        );
+      })}
+    </div>
+  );
+}
 
 export default function CategorySearch({
   tours,
@@ -52,12 +94,14 @@ export default function CategorySearch({
   const [priceRange, setPriceRange] = useState<PriceRange>("all");
   const [tourType, setTourType] = useState("all");
 
-  // Only the types this list actually has, most tours first, so a chip never
+  const scoped = useMemo(() => tours.filter((tour) => Boolean(tour.slug)), [tours]);
+
+  // Only the types this list actually has, most tours first, so an option never
   // leads to an empty page and the common ones come first.
   const tourTypes = useMemo(() => {
     if (!showTypeFilter) return [];
     const found = new Map<string, { type: TourTypeOption; count: number }>();
-    for (const tour of tours) {
+    for (const tour of scoped) {
       for (const type of tour.types ?? []) {
         if (!type.slug || !type.title) continue;
         const entry = found.get(type.slug);
@@ -66,45 +110,89 @@ export default function CategorySearch({
       }
     }
     return [...found.values()].sort((x, y) => y.count - x.count).map((entry) => entry.type);
-  }, [showTypeFilter, tours]);
+  }, [showTypeFilter, scoped]);
 
-  const textFilteredTours = useMemo(() => {
-    const scoped = tours.filter(
-      (tour) =>
-        Boolean(tour.slug) &&
-        (tourType === "all" || tour.types?.some((type) => type.slug === tourType)),
-    );
-    const trimmed = query.trim().toLowerCase();
-    if (!trimmed) return scoped;
-    return scoped.filter((tour) =>
-      (tour.title ?? "").toLowerCase().includes(trimmed),
-    );
-  }, [query, tours, tourType]);
+  const hasType = (tour: CategoryTour) =>
+    tourType === "all" || Boolean(tour.types?.some((type) => type.slug === tourType));
 
-  // Bands with at least one tour among what the type and search already
-  // show, in band order. They come back as soon as a tour is priced there.
+  // Price bands that exist within the chosen type. This deliberately ignores the
+  // search text: the dropdown should not change while someone is typing.
+  const typeTours = useMemo(
+    () => scoped.filter(hasType),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [scoped, tourType],
+  );
   const availablePriceRanges = useMemo(
     () =>
-      (["upTo100", "100to200", "200to500", "over500"] as const).filter((range) =>
-        textFilteredTours.some((tour) =>
-          matchesPriceRange(getTourNumericPrice(tour), range),
-        ),
+      BANDS.filter((range) =>
+        typeTours.some((tour) => matchesPriceRange(getTourNumericPrice(tour), range)),
       ),
-    [textFilteredTours],
+    [typeTours],
   );
 
-  // A chip picked earlier may vanish when the type changes (or the whole row
-  // does, below two bands); fall back to all rather than keep filtering by
-  // something the visitor can no longer see or undo.
+  // A band picked earlier may disappear when the type changes (or the whole
+  // dropdown does, below two bands); fall back to all rather than keep filtering
+  // by something the visitor can no longer see or undo.
   const activePriceRange: PriceRange =
     availablePriceRanges.length > 1 && (availablePriceRanges as PriceRange[]).includes(priceRange)
       ? priceRange
       : "all";
 
-  const displayTours = useMemo(
-    () => filterAndSortTours(textFilteredTours, sortOrder, activePriceRange),
-    [textFilteredTours, sortOrder, activePriceRange],
-  );
+  const trimmedQuery = query.trim().toLowerCase();
+  const matchesQuery = (tour: CategoryTour) =>
+    !trimmedQuery || (tour.title ?? "").toLowerCase().includes(trimmedQuery);
+
+  // A search is never silenced by a filter. Tours that match the text but fall
+  // outside the selected type or price are kept apart and shown under a note
+  // that says where they are, instead of vanishing.
+  const { inFilter, outsideFilter } = useMemo(() => {
+    const textMatches = scoped.filter(matchesQuery);
+    const within = textMatches.filter(
+      (tour) => hasType(tour) && matchesPriceRange(getTourNumericPrice(tour), activePriceRange),
+    );
+    const withinIds = new Set(within.map((tour) => tour._id));
+    return {
+      inFilter: filterAndSortTours(within, sortOrder, "all"),
+      outsideFilter: trimmedQuery
+        ? sortToursPriceZeroLast(
+            textMatches.filter((tour) => !withinIds.has(tour._id)),
+            sortOrder,
+          )
+        : [],
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scoped, trimmedQuery, tourType, activePriceRange, sortOrder]);
+
+  const outsideNote = useMemo(() => {
+    if (outsideFilter.length === 0) return null;
+
+    const activeFilters: string[] = [];
+    if (tourType !== "all") {
+      const type = tourTypes.find((item) => item.slug === tourType);
+      if (type) activeFilters.push(type.title);
+    }
+    if (activePriceRange !== "all") {
+      activeFilters.push(tFilters(priceRangeLabelKey[activePriceRange]));
+    }
+
+    const where = new Set<string>();
+    for (const tour of outsideFilter) {
+      if (tourType !== "all" && !hasType(tour)) {
+        for (const type of tour.types ?? []) where.add(type.title);
+      }
+      if (activePriceRange !== "all") {
+        const band = priceBandOf(getTourNumericPrice(tour));
+        if (band && band !== activePriceRange) where.add(tFilters(priceRangeLabelKey[band]));
+      }
+    }
+
+    return tFilters(inFilter.length === 0 ? "searchOutsideEmpty" : "searchOutsideMore", {
+      query: query.trim(),
+      filters: activeFilters.join(" · "),
+      where: [...where].join(", "),
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [outsideFilter, inFilter.length, tourType, activePriceRange, tourTypes, query, tFilters]);
 
   const handleResetFilters = () => {
     setSortOrder("asc");
@@ -112,24 +200,19 @@ export default function CategorySearch({
     setTourType("all");
   };
 
+  const nothingToShow = inFilter.length === 0 && outsideFilter.length === 0;
   const showPriceRangeEmpty =
-    tours.length > 0 &&
-    textFilteredTours.length > 0 &&
-    displayTours.length === 0 &&
-    activePriceRange !== "all";
+    scoped.length > 0 && nothingToShow && !trimmedQuery && activePriceRange !== "all";
+  const gridKey = `${categorySlug}-${sortOrder}-${activePriceRange}-${tourType}`;
 
   return (
-    <div className="mx-auto max-w-7xl px-6 py-12 md:px-10 md:py-16 lg:px-12">
-      <div
-        className={`${
-          // With the type row the panel is about 260px tall: pinned on a phone it
-          // would cover most of the screen, so there it scrolls away.
-          tourTypes.length > 1 ? "lg:sticky" : "sticky"
-        } top-20 z-30 -mx-6 bg-white px-6 pb-4 pt-2 shadow-[0_4px_6px_-4px_rgba(0,0,0,0.1)] md:-mx-10 md:px-10 xl:top-24`}
-      >
+    <div className="mx-auto max-w-7xl px-6 pb-12 pt-0 md:px-10 md:pb-16 lg:px-12">
+      {/* Only the search bar stays pinned while scrolling; the filters scroll
+          away with the page so they do not take screen space. */}
+      <div className="sticky top-20 z-30 -mx-6 bg-white px-6 pb-3 pt-3 shadow-[0_4px_6px_-4px_rgba(0,0,0,0.1)] md:-mx-10 md:px-10 xl:top-24">
         <form
           onSubmit={(event) => event.preventDefault()}
-          className="mx-auto flex max-w-3xl flex-col gap-3 pt-4 md:flex-row md:items-center"
+          className="mx-auto flex max-w-3xl flex-row items-center gap-2 md:gap-3"
         >
           <input
             type="search"
@@ -137,29 +220,29 @@ export default function CategorySearch({
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder={t("searchPlaceholder")}
-            className="h-12 w-full rounded-xl border border-slate-200 px-4 text-sm text-slate-800 outline-none transition focus:border-blue-800 focus:ring-2 focus:ring-blue-800/15"
+            className="h-12 min-w-0 flex-1 rounded-xl border border-slate-200 px-4 text-sm text-slate-800 outline-none transition focus:border-blue-800 focus:ring-2 focus:ring-blue-800/15"
           />
           <button
             type="submit"
-            className="h-12 w-full shrink-0 rounded-xl bg-orange-500 px-6 text-sm font-semibold text-white shadow-md shadow-orange-500/25 transition hover:bg-orange-600 md:w-auto"
+            className="h-12 shrink-0 rounded-xl bg-orange-500 px-5 text-sm font-semibold text-white shadow-md shadow-orange-500/25 transition hover:bg-orange-600 md:px-6"
           >
             {t("searchButton")}
           </button>
         </form>
-
-        {tours.length > 0 ? (
-          <TourFilters
-            sortOrder={sortOrder}
-            priceRange={activePriceRange}
-            availablePriceRanges={availablePriceRanges}
-            onSortOrderChange={setSortOrder}
-            onPriceRangeChange={setPriceRange}
-            tourTypes={tourTypes}
-            activeTourType={tourType}
-            onTourTypeChange={setTourType}
-          />
-        ) : null}
       </div>
+
+      {scoped.length > 0 ? (
+        <TourFilters
+          sortOrder={sortOrder}
+          priceRange={activePriceRange}
+          availablePriceRanges={availablePriceRanges}
+          onSortOrderChange={setSortOrder}
+          onPriceRangeChange={setPriceRange}
+          tourTypes={tourTypes}
+          activeTourType={tourType}
+          onTourTypeChange={setTourType}
+        />
+      ) : null}
 
       {tours.length === 0 ? (
         <p className="mt-16 text-center text-lg text-slate-600">{t("empty")}</p>
@@ -174,39 +257,23 @@ export default function CategorySearch({
             {tFilters("resetFilters")}
           </button>
         </div>
-      ) : displayTours.length === 0 ? (
+      ) : nothingToShow ? (
         <p className="mt-16 text-center text-lg text-slate-600">{t("noResults")}</p>
       ) : (
-        <div
-          key={`${categorySlug}-${sortOrder}-${activePriceRange}-${tourType}`}
-          className="mt-12 grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4"
-        >
-          {displayTours.map((tour) => {
-            const slug = tour.slug ?? "";
-            const title = tour.title ?? "Tour";
-            const peekUrl = tour.peekProId ? peekBookingUrl(tour.peekProId) : "#";
-
-            return (
-              <TourCard
-                key={tour._id}
-                compactOnMobile
-                tour={{
-                  title,
-                  slug,
-                  duration: tour.duration,
-                  listingImage: tour.listingImage,
-                  highlightBadge: tour.highlightBadge,
-                  pricing: tour.pricing,
-                  currency: tour.currency,
-                  priceTag: tour.priceTag,
-                  peekUrl,
-                  rating: tour.rating,
-                  reviewsCount: tour.reviewsCount,
-                }}
-              />
-            );
-          })}
-        </div>
+        <>
+          {inFilter.length > 0 ? <TourGrid tours={inFilter} gridKey={gridKey} /> : null}
+          {outsideNote ? (
+            <p
+              role="status"
+              className="mt-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900"
+            >
+              {outsideNote}
+            </p>
+          ) : null}
+          {outsideFilter.length > 0 ? (
+            <TourGrid tours={outsideFilter} gridKey={`${gridKey}-outside`} />
+          ) : null}
+        </>
       )}
     </div>
   );

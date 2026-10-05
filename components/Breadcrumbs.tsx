@@ -7,11 +7,13 @@ export type BreadcrumbItem = {
 
 type BreadcrumbsProps = {
   items: BreadcrumbItem[];
+  /** Bottom margin; listing pages pass "mb-0" because the page below sets its own spacing. */
+  className?: string;
 };
 
-export default function Breadcrumbs({ items }: BreadcrumbsProps) {
+export default function Breadcrumbs({ items, className = "mb-6" }: BreadcrumbsProps) {
   return (
-    <nav aria-label="Breadcrumb" className="mb-6 text-sm text-slate-500">
+    <nav aria-label="Breadcrumb" className={`${className} text-sm text-slate-500`}>
       <ol className="flex flex-wrap items-center gap-x-2 gap-y-1">
         {items.map((item, index) => (
           <li key={`${item.label}-${index}`} className="flex items-center gap-2">

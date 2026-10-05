@@ -111,26 +111,6 @@ export default function ExcursionesCatalog({
           Explore premium curated adventures across Punta Cana and filter by category.
         </p>
 
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          {categories.map((category) => {
-            const isActive = activeCategory === category.slug;
-            return (
-              <button
-                key={category.slug}
-                type="button"
-                onClick={() => setActiveCategory(category.slug)}
-                className={`rounded-full border px-5 py-2 text-sm font-semibold transition-all duration-300 ${
-                  isActive
-                    ? "border-[#0a192f] bg-[#0a192f] text-white shadow-md"
-                    : "border-slate-200 bg-white text-slate-700 shadow-sm hover:border-slate-300 hover:bg-slate-100"
-                }`}
-              >
-                {category.title}
-              </button>
-            );
-          })}
-        </div>
-
         {tours.length > 0 ? (
           <TourFilters
             sortOrder={sortOrder}
@@ -138,6 +118,9 @@ export default function ExcursionesCatalog({
             availablePriceRanges={availablePriceRanges}
             onSortOrderChange={setSortOrder}
             onPriceRangeChange={setPriceRange}
+            tourTypes={categories.filter((category) => category.slug !== "all")}
+            activeTourType={activeCategory}
+            onTourTypeChange={setActiveCategory}
           />
         ) : null}
 

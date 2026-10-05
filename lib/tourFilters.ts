@@ -15,6 +15,13 @@ export const PRICE_BANDS: Record<Exclude<PriceRange, "all">, { min: number; max:
   over500: { min: 500, max: Number.POSITIVE_INFINITY },
 };
 
+/** The band a price falls in, or null when there is no paid price to place. */
+export function priceBandOf(price: number): Exclude<PriceRange, "all"> | null {
+  if (!Number.isFinite(price) || price <= 0) return null;
+  const bands = Object.keys(PRICE_BANDS) as Array<Exclude<PriceRange, "all">>;
+  return bands.find((band) => price > PRICE_BANDS[band].min && price <= PRICE_BANDS[band].max) ?? null;
+}
+
 export type TourWithPrice = {
   price?: number | string | null;
   pricing?: Array<{ price?: number | string | null }>;

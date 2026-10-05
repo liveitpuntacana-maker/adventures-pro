@@ -180,8 +180,9 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
         bannerImage={category.bannerImage}
         mainImage={category.mainImage}
       />
-      <div className="mx-auto max-w-7xl px-6 pt-6 md:px-10 lg:px-12">
+      <div className="mx-auto max-w-7xl px-6 pt-4 md:px-10 lg:px-12">
         <Breadcrumbs
+          className="mb-0"
           items={[
             { label: t("breadcrumbHome"), href: "/" },
             { label: t("breadcrumbExcursions"), href: "/excursions" },

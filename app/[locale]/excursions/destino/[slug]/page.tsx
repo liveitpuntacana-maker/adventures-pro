@@ -177,8 +177,9 @@ export default async function DestinationPage({ params }: DestinationPageProps) 
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <JsonLd data={jsonLd} />
       <CategoryPageHero title={title} mainImage={destination.mainImage} />
-      <div className="mx-auto max-w-7xl px-6 pt-6 md:px-10 lg:px-12">
+      <div className="mx-auto max-w-7xl px-6 pt-4 md:px-10 lg:px-12">
         <Breadcrumbs
+          className="mb-0"
           items={[
             { label: t("breadcrumbHome"), href: "/" },
             { label: t("breadcrumbExcursions"), href: "/excursions" },

@@ -128,7 +128,9 @@
     "typeAll": "Tous les types",
     "priceLabel": "Prix",
     "noPriceRangeResults": "Aucune excursion dans cette fourchette de prix",
-    "resetFilters": "Réinitialiser les filtres"
+    "resetFilters": "Réinitialiser les filtres",
+    "searchOutsideEmpty": "Aucun résultat pour « {query} » avec vos filtres actuels ({filters}). Il est disponible dans : {where}.",
+    "searchOutsideMore": "D'autres résultats pour « {query} » en dehors de vos filtres actuels ({filters}), disponibles dans : {where}."
   },
   "InteractiveMap": {
     "kicker": "Explorer par destination",
