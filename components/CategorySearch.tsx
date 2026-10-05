@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useEffect, useMemo, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import TourCard from "@/components/TourCard";
 import TourFilters, {
   priceRangeLabelKey,
@@ -42,7 +42,13 @@ type CategorySearchProps = {
   messagesNamespace?: "CategoryPage" | "DestinationPage";
   /** Adds the tour-type dropdown; destination pages mix land, water, golf, etc. */
   showTypeFilter?: boolean;
+  /** Name of this page's destination or category, for the "not here, but there" notice. */
+  scopeLabel?: string;
+  /** What a match from outside this page is labelled with. */
+  elsewhereBy?: "destination" | "category";
 };
+
+type ElsewhereTour = CategoryTour & { destinationTitle?: string | null; categoryTitle?: string | null };
 
 const BANDS = ["upTo100", "100to200", "200to500", "over500"] as const;
 
@@ -86,8 +92,11 @@ export default function CategorySearch({
   categorySlug,
   messagesNamespace = "CategoryPage",
   showTypeFilter = false,
+  scopeLabel = "",
+  elsewhereBy = "destination",
 }: CategorySearchProps) {
   const t = useTranslations(messagesNamespace);
+  const locale = useLocale();
   const tFilters = useTranslations("TourFilters");
   const [query, setQuery] = useState("");
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
@@ -95,6 +104,7 @@ export default function CategorySearch({
   const [tourType, setTourType] = useState("all");
 
   const scoped = useMemo(() => tours.filter((tour) => Boolean(tour.slug)), [tours]);
+  const [catalogMatches, setCatalogMatches] = useState<ElsewhereTour[]>([]);
 
   // Only the types this list actually has, most tours first, so an option never
   // leads to an empty page and the common ones come first.
@@ -139,6 +149,44 @@ export default function CategorySearch({
       : "all";
 
   const trimmedQuery = query.trim().toLowerCase();
+
+  // The page only holds its own destination or category, but someone searching
+  // for "Santo Domingo" while on Punta Cana still wants that tour. Ask the whole
+  // catalogue, and show whatever this page does not already have.
+  useEffect(() => {
+    if (trimmedQuery.length < 2) {
+      setCatalogMatches([]);
+      return;
+    }
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(async () => {
+      try {
+        const params = new URLSearchParams({ q: query.trim(), locale });
+        const response = await fetch(`/api/tours/search?${params.toString()}`, {
+          signal: controller.signal,
+        });
+        const data = response.ok ? ((await response.json()) as { tours?: ElsewhereTour[] }) : null;
+        setCatalogMatches(data?.tours ?? []);
+      } catch (error) {
+        if ((error as Error).name !== "AbortError") setCatalogMatches([]);
+      }
+    }, 350);
+    return () => {
+      controller.abort();
+      window.clearTimeout(timeoutId);
+    };
+  }, [trimmedQuery, query, locale]);
+
+  const elsewhere = useMemo(() => {
+    if (trimmedQuery.length < 2) return [];
+    const here = new Set(scoped.map((tour) => tour.slug));
+    return sortToursPriceZeroLast(
+      catalogMatches.filter((tour) => tour.slug && !here.has(tour.slug)),
+      sortOrder,
+    );
+  }, [catalogMatches, scoped, trimmedQuery, sortOrder]);
+
+
   const matchesQuery = (tour: CategoryTour) =>
     !trimmedQuery || (tour.title ?? "").toLowerCase().includes(trimmedQuery);
 
@@ -194,13 +242,32 @@ export default function CategorySearch({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [outsideFilter, inFilter.length, tourType, activePriceRange, tourTypes, query, tFilters]);
 
+  const elsewhereNote = useMemo(() => {
+    if (elsewhere.length === 0) return null;
+    const where = [
+      ...new Set(
+        elsewhere
+          .map((tour) => (elsewhereBy === "category" ? tour.categoryTitle : tour.destinationTitle))
+          .filter((label): label is string => Boolean(label)),
+      ),
+    ].join(", ");
+    const hasHere = inFilter.length > 0 || outsideFilter.length > 0;
+    return tFilters(hasHere ? "searchElsewhereMore" : "searchElsewhereEmpty", {
+      query: query.trim(),
+      scope: scopeLabel,
+      where,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [elsewhere, elsewhereBy, scopeLabel, query, tFilters, inFilter.length, outsideFilter.length]);
+
   const handleResetFilters = () => {
     setSortOrder("asc");
     setPriceRange("all");
     setTourType("all");
   };
 
-  const nothingToShow = inFilter.length === 0 && outsideFilter.length === 0;
+  const nothingToShow =
+    inFilter.length === 0 && outsideFilter.length === 0 && elsewhere.length === 0;
   const showPriceRangeEmpty =
     scoped.length > 0 && nothingToShow && !trimmedQuery && activePriceRange !== "all";
   const gridKey = `${categorySlug}-${sortOrder}-${activePriceRange}-${tourType}`;
@@ -272,6 +339,17 @@ export default function CategorySearch({
           ) : null}
           {outsideFilter.length > 0 ? (
             <TourGrid tours={outsideFilter} gridKey={`${gridKey}-outside`} />
+          ) : null}
+          {elsewhereNote ? (
+            <p
+              role="status"
+              className="mt-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900"
+            >
+              {elsewhereNote}
+            </p>
+          ) : null}
+          {elsewhere.length > 0 ? (
+            <TourGrid tours={elsewhere} gridKey={`${gridKey}-elsewhere`} />
           ) : null}
         </>
       )}

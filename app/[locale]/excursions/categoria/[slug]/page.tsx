@@ -190,7 +190,12 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
           ]}
         />
       </div>
-      <CategorySearch tours={tours} categorySlug={slug} />
+      <CategorySearch
+        tours={tours}
+        categorySlug={slug}
+        scopeLabel={title}
+        elsewhereBy="category"
+      />
       <ListingSeoContent content={content} faqTitle={t("faqSectionTitle")} />
     </div>
   );

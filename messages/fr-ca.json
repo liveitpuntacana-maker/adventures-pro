@@ -130,7 +130,9 @@
     "noPriceRangeResults": "Aucune excursion dans cette fourchette de prix",
     "resetFilters": "Réinitialiser les filtres",
     "searchOutsideEmpty": "Aucun résultat pour « {query} » avec vos filtres actuels ({filters}). Il est disponible dans : {where}.",
-    "searchOutsideMore": "D'autres résultats pour « {query} » en dehors de vos filtres actuels ({filters}), disponibles dans : {where}."
+    "searchOutsideMore": "D'autres résultats pour « {query} » en dehors de vos filtres actuels ({filters}), disponibles dans : {where}.",
+    "searchElsewhereEmpty": "Aucune excursion pour « {query} » dans {scope}, mais elle est disponible dans : {where}.",
+    "searchElsewhereMore": "Correspond aussi à « {query} » dans d'autres zones : {where}."
   },
   "InteractiveMap": {
     "kicker": "Explorer par destination",

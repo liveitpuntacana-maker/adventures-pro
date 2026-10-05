@@ -192,6 +192,8 @@ export default async function DestinationPage({ params }: DestinationPageProps) 
         categorySlug={slug}
         messagesNamespace="DestinationPage"
         showTypeFilter
+        scopeLabel={title}
+        elsewhereBy="destination"
       />
       <OtherDestinations destinations={allDestinations} currentSlug={slug} />
       <ListingSeoContent content={content} faqTitle={t("faqSectionTitle")} />
