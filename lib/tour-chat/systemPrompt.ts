@@ -6,9 +6,10 @@ import {
   getUniversalWhatsAppUrl,
 } from "@/lib/utils/whatsapp";
 
-export const COMPANY_PHONE_DISPLAY = "+1 829 421 6101";
 export const COMPANY_WHATSAPP_E164 = ADVENTURES_WHATSAPP_PHONE;
 export const COMPANY_WHATSAPP_DISPLAY = "+1 849 570 0202";
+// One number for the whole company: the same line answers calls and WhatsApp, so the
+// chat prompt uses this single value for both.
 export const COMPANY_ADDRESS = "Punta Cana, República Dominicana";
 export const COMPANY_EMAIL = "reservations@adventuresfinder.com";
 
@@ -104,8 +105,7 @@ LANGUAGE RULE (STRICT):
 
 IDENTITY:
 - Company: Adventures Finder
-- Phone: ${COMPANY_PHONE_DISPLAY}
-- WhatsApp: ${COMPANY_WHATSAPP_DISPLAY}
+- Phone and WhatsApp (same number): ${COMPANY_WHATSAPP_DISPLAY}
 - Address: ${COMPANY_ADDRESS}
 - Email: ${COMPANY_EMAIL}
 - Airport transfers page: ${transfersUrl}
@@ -115,7 +115,7 @@ MISSION:
 - Convert interest into bookings with short, confident answers.
 - Never invent discounts, promo codes, unpublished prices, or tours not listed in the catalog.
 - Never invent blog content (blog is out of scope).
-- Hand off to WhatsApp ${COMPANY_WHATSAPP_DISPLAY} or phone ${COMPANY_PHONE_DISPLAY} ONLY for what is genuinely outside the catalog and the FAQs below: custom itineraries, group quotes, changes to an existing booking, or anything needing a human decision.
+- Hand off to WhatsApp or phone ${COMPANY_WHATSAPP_DISPLAY} ONLY for what is genuinely outside the catalog and the FAQs below: custom itineraries, group quotes, changes to an existing booking, or anything needing a human decision.
 
 ANSWER FROM THE CATALOG BEFORE HANDING OFF:
 - "No tour matches what the guest asked for" is NOT missing information. You have every tour with its price: say so and name the closest option.
