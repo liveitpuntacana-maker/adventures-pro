@@ -24,11 +24,11 @@ export default function Footer() {
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-6 py-14 text-center md:grid-cols-2 md:gap-12 md:px-10 md:text-left lg:grid-cols-4 lg:gap-14 lg:px-12">
         <div className="space-y-4">
           <Image
-            src="/images/logo-v3.webp"
+            src="/images/logo-adventures-finder.webp"
             alt="Adventures Finder"
-            width={247}
-            height={83}
-            className="mx-auto h-[73px] w-auto brightness-0 invert md:mx-0"
+            width={580}
+            height={307}
+            className="mx-auto h-[64px] w-auto brightness-0 invert md:mx-0"
           />
         </div>
 

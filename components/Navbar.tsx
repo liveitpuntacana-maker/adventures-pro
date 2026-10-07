@@ -64,11 +64,12 @@ export default function Navbar({ categories = [], destinations = [] }: NavbarPro
       <div className="mx-auto flex h-20 w-full max-w-7xl items-center justify-between px-3 sm:px-4 md:px-10 lg:px-12 xl:h-24">
         <Link href="/" className="inline-flex shrink-0 items-center">
           <Image
-            src="/images/logo-v3.webp"
+            src="/images/logo-adventures-finder.webp"
             alt="Adventures Finder"
-            width={250}
-            height={83}
-            className="h-[58px] w-auto shrink-0 sm:h-16 xl:h-[83px]"
+            width={580}
+            height={307}
+            priority
+            className="h-[52px] w-auto shrink-0 sm:h-[60px] xl:h-[76px]"
           />
         </Link>
         <nav
