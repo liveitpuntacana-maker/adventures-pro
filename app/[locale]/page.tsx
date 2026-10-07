@@ -49,6 +49,7 @@ export async function generateMetadata({
     description: t("home.description"),
     image: await getDefaultOgImage(),
     imageAlt: t("home.title"),
+    includeBrand: true,
   });
 }
 
@@ -93,6 +94,7 @@ export default async function Home({ params }: HomePageProps) {
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: "Seo" });
+  const tHome = await getTranslations({ locale, namespace: "Home" });
 
   const landingPage = await client
     .fetch<LandingPageData | null>(
@@ -136,6 +138,16 @@ export default async function Home({ params }: HomePageProps) {
 
   // Alt text comes from Sanity when the editor set one; otherwise it describes
   // what the slide actually shows instead of "Hero slide 1".
+  // What each slide shows, found by the asset hash in its URL so it still matches if
+  // the editor reorders the slides. Used when Sanity has no alt text of its own.
+  const heroAltByHash: Record<string, string> = {
+    "60faf7d2": tHome("heroAltBeach"),
+    "8468b4c4": tHome("heroAltZipline"),
+    "797058cd": tHome("heroAltMonkeys"),
+  };
+  const describedAlt = (url: string) =>
+    Object.entries(heroAltByHash).find(([hash]) => url.includes(hash))?.[1];
+
   const heroSlides =
     landingPage?.sliderImages
       ?.filter((image) => image?.url?.trim())
@@ -144,6 +156,7 @@ export default async function Home({ params }: HomePageProps) {
         focus: image.focus ?? null,
         alt:
           image.alt?.trim() ||
+          describedAlt(image.url!) ||
           (index === 0
             ? `${t("home.title")} — Adventures Finder`
             : `${t("home.title")} — ${index + 1}`),

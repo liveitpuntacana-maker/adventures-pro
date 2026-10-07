@@ -25,7 +25,10 @@
   "Home": {
     "brandEyebrow": "Adventures Finder",
     "defaultTitle": "Las Mejores Excursiones y Tours en República Dominicana",
-    "defaultSubtitle": "Reserva directamente con expertos locales. Descubre aventuras únicas, traslados seguros y experiencias sin estrés."
+    "defaultSubtitle": "Reserva directamente con expertos locales. Descubre aventuras únicas, traslados seguros y experiencias sin estrés.",
+    "heroAltBeach": "Playa de arena blanca con palmeras y agua turquesa en Punta Cana",
+    "heroAltZipline": "Mujer en una tirolesa sobre la selva dominicana",
+    "heroAltMonkeys": "Mujer sonriente haciéndose una selfie con monos ardilla"
   },
   "HeroSearch": {
     "tabActivities": "Actividades",

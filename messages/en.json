@@ -25,7 +25,10 @@
   "Home": {
     "brandEyebrow": "Adventures Finder",
     "defaultTitle": "Top-Rated Tours & Excursions in the Dominican Republic",
-    "defaultSubtitle": "Book directly with local experts. Discover unique adventures, safe transfers, and stress-free experiences."
+    "defaultSubtitle": "Book directly with local experts. Discover unique adventures, safe transfers, and stress-free experiences.",
+    "heroAltBeach": "White-sand beach with palm trees and turquoise water in Punta Cana",
+    "heroAltZipline": "Woman riding a zipline above the Dominican jungle canopy",
+    "heroAltMonkeys": "Smiling woman taking a selfie with squirrel monkeys"
   },
   "HeroSearch": {
     "tabActivities": "Activities",

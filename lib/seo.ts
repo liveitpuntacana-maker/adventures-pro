@@ -36,7 +36,9 @@ export function toIsoDateTime(value?: string | number | Date | null): string | n
 }
 
 export const SITE_URL = "https://www.adventuresfinder.com";
-export const SITE_NAME = "Adventures Finder Pro";
+// The brand is "Adventures Finder"; "Pro" is the project folder name and had leaked
+// into the organisation schema, the WebSite schema and og:site_name.
+export const SITE_NAME = "Adventures Finder";
 export const SITE_LOGO_URL = `${SITE_URL}/images/icon.png`;
 export const SITE_DESCRIPTION =
   "DMC in Punta Cana offering curated tours, excursions, and airport transfers with local experts.";
@@ -45,6 +47,8 @@ export const SITE_DESCRIPTION =
 export const SITE_CONTACT = {
   telephone: "+1-849-570-0202",
   email: "reservations@adventuresfinder.com",
+  /** As printed in the footer. */
+  streetAddress: "Plaza Cueva Taina, Local #B2, Av. Estados Unidos, Bávaro",
   sameAs: [
     "https://www.facebook.com/adventurefinder1/",
     "https://www.instagram.com/adventuresfinder1",
@@ -179,6 +183,12 @@ export type PageMetadataInput = {
   noIndex?: boolean;
   /** Locales that actually have translated content for this page. */
   availableLocales?: readonly AppLocale[];
+  /**
+   * Put the brand in the title tag. Only the home page needs this: the locale
+   * layout's title template does not apply to the page that sits in the same
+   * segment as the layout, so the home page was the one title without the brand.
+   */
+  includeBrand?: boolean;
 };
 
 /**
@@ -200,6 +210,7 @@ export function buildPageMetadata({
   modifiedTime,
   noIndex,
   availableLocales,
+  includeBrand,
 }: PageMetadataInput): Metadata {
   const canonical = localizedUrl(locale, pathname);
   const languages = buildLanguageAlternates(pathname, availableLocales);
@@ -208,6 +219,12 @@ export function buildPageMetadata({
   const resolvedDescription = description
     ? truncateMetaDescription(description)
     : undefined;
+
+  const brandedTitle =
+    includeBrand && title
+      ? `${title.trim().replace(/s*|s*Adventures Finders*$/i, "")}${TITLE_SUFFIX}`
+      : null;
+  const shownTitle = brandedTitle ?? title;
 
   const ogImages = [
     {
@@ -219,7 +236,11 @@ export function buildPageMetadata({
   ];
 
   return {
-    ...(title ? { title: resolveTitle(title) } : {}),
+    ...(brandedTitle
+      ? { title: { absolute: brandedTitle } }
+      : title
+        ? { title: resolveTitle(title) }
+        : {}),
     ...(resolvedDescription ? { description: resolvedDescription } : {}),
     alternates: {
       canonical,
@@ -231,7 +252,7 @@ export function buildPageMetadata({
       url: canonical,
       siteName: SITE_NAME,
       locale: htmlLangForLocale(locale).replace("-", "_"),
-      ...(title ? { title } : {}),
+      ...(shownTitle ? { title: shownTitle } : {}),
       ...(resolvedDescription ? { description: resolvedDescription } : {}),
       images: ogImages,
       ...(type === "article" && publishedTime ? { publishedTime } : {}),
@@ -239,7 +260,7 @@ export function buildPageMetadata({
     },
     twitter: {
       card: "summary_large_image",
-      ...(title ? { title } : {}),
+      ...(shownTitle ? { title: shownTitle } : {}),
       ...(resolvedDescription ? { description: resolvedDescription } : {}),
       images: [{ url: resolvedImage, alt: resolvedAlt }],
     },
@@ -270,10 +291,12 @@ export function buildTravelAgencyJsonLd() {
     sameAs: [...SITE_CONTACT.sameAs],
     address: {
       "@type": "PostalAddress",
+      streetAddress: SITE_CONTACT.streetAddress,
       addressLocality: "Punta Cana",
       addressRegion: "La Altagracia",
       addressCountry: "DO",
     },
+    knowsLanguage: ["en", "es", "fr"],
     geo: {
       "@type": "GeoCoordinates",
       latitude: 18.582,
