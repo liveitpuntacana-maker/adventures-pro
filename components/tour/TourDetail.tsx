@@ -426,8 +426,20 @@ export default async function TourDetailPage({ params }: TourPageProps) {
               </span>
             </div>
           ) : null}
-          {(tour.duration || tour.availability || tour.ages || tour.starts) ? (
+          {(tour.duration || tour.availability || tour.ages || tour.starts || Number.isFinite(adultLeadPriceValue)) ? (
             <div className="mt-5 flex flex-wrap items-center gap-4 text-sm text-slate-600">
+              {/* The price used to appear only in the booking panel on the right, which
+                  text extractors (and AI assistants that read a page) tend to drop as
+                  "sidebar", so they reported no price. Here it is in the main text. */}
+              {Number.isFinite(adultLeadPriceValue) && leadFromFormatted ? (
+                <span className="inline-flex items-center gap-2 rounded-full bg-orange-50 px-3 py-1.5 font-semibold text-slate-800">
+                  <Ticket className="h-4 w-4" />
+                  From {leadFromFormatted}
+                  {tour.priceTag?.trim() ? (
+                    <span className="font-normal text-slate-500">({tour.priceTag.trim()})</span>
+                  ) : null}
+                </span>
+              ) : null}
               {tour.duration ? (
                 <span className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1.5">
                   <Clock className="h-4 w-4" />
