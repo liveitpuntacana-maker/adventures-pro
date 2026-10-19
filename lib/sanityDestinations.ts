@@ -8,7 +8,7 @@ export const mapDestinationsQuery = groq`*[_type == "destination"] | order(coale
     title.es,
     title.frCA
   ),
-  "tourCount": count(*[_type == "tour" && destination->slug.current == ^.slug.current])
+  "tourCount": count(*[_type == "tour" && (destination->slug.current == ^.slug.current || ^.slug.current in alsoInDestinations[]->slug.current)])
 }`;
 
 export type MapDestination = {
@@ -28,7 +28,7 @@ export type MapDestination = {
  */
 export const navDestinationsQuery = groq`*[
   _type == "destination" &&
-  count(*[_type == "tour" && destination->slug.current == ^.slug.current]) > 0
+  count(*[_type == "tour" && (destination->slug.current == ^.slug.current || ^.slug.current in alsoInDestinations[]->slug.current)]) > 0
 ] {
   "slug": slug.current,
   "title": coalesce(

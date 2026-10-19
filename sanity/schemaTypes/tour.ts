@@ -236,6 +236,15 @@ export const tourType = defineType({
       hidden: hideWhenCombo,
     }),
     defineField({
+      name: "alsoInDestinations",
+      title: "Also show in these destinations",
+      description:
+        "Optional. The tour always belongs to the Destination above; add other destinations here when it should also be listed there (for example a Santo Domingo tour that Punta Cana visitors also book).",
+      type: "array",
+      of: [{ type: "reference", to: [{ type: "destination" }] }],
+      hidden: hideWhenCombo,
+    }),
+    defineField({
       name: "currency",
       title: "Currency",
       type: "string",

@@ -48,10 +48,10 @@ const destinationBySlugQuery = groq`*[_type == "destination" && slug.current == 
   "slug": slug.current,
   mainImage,
   "seoIntro": select($locale == "fr-ca" => seoIntro.frCA, seoIntro[$locale]),
-  "tourCount": count(*[_type == "tour" && destination->slug.current == $slug])
+  "tourCount": count(*[_type == "tour" && (destination->slug.current == $slug || $slug in alsoInDestinations[]->slug.current)])
 }`;
 
-const destinationToursQuery = groq`*[_type == "tour" && destination->slug.current == $slug] {
+const destinationToursQuery = groq`*[_type == "tour" && (destination->slug.current == $slug || $slug in alsoInDestinations[]->slug.current)] {
   _id,
   "title": coalesce(select($locale == "fr-ca" => title.frCA, title[$locale]), title.en, title),
   "slug": slug.current,

@@ -38,7 +38,7 @@ const categoriesQuery = groq`*[_type == "category" && defined(slug.current)]{
 const destinationsQuery = groq`*[_type == "destination" && defined(slug.current)]{
   "slug": slug.current,
   _updatedAt,
-  "tourCount": count(*[_type == "tour" && destination->slug.current == ^.slug.current])
+  "tourCount": count(*[_type == "tour" && (destination->slug.current == ^.slug.current || ^.slug.current in alsoInDestinations[]->slug.current)])
 }`;
 
 const toursQuery = groq`*[_type == "tour" && defined(slug.current)]{

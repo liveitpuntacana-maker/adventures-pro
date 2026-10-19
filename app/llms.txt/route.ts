@@ -28,6 +28,8 @@ type TourRow = {
   slug: string;
   category?: string;
   destination?: string;
+  /** Other destinations the tour is also listed under. */
+  alsoIn?: Array<string | null> | null;
   currency?: string;
   price?: number | null;
   duration?: string;
@@ -40,6 +42,7 @@ const toursQuery = groq`*[_type == "tour" && defined(slug.current)] | order(titl
   "slug": slug.current,
   "category": coalesce(category->title.en, mainTour->category->title.en),
   "destination": coalesce(destination->title.en, mainTour->destination->title.en),
+  "alsoIn": alsoInDestinations[]->title.en,
   "currency": coalesce(currency, mainTour->currency, "USD"),
   "price": coalesce(pricing[price > 0][0].price, mainTour->pricing[price > 0][0].price),
   "duration": coalesce(duration.en, mainTour->duration.en)
@@ -57,7 +60,7 @@ const categoriesQuery = groq`*[_type == "category" && defined(slug.current)] | o
 const destinationsQuery = groq`*[_type == "destination" && defined(slug.current)] | order(title.en asc) {
   "title": title.en,
   "slug": slug.current,
-  "tourCount": count(*[_type == "tour" && destination->slug.current == ^.slug.current])
+  "tourCount": count(*[_type == "tour" && (destination->slug.current == ^.slug.current || ^.slug.current in alsoInDestinations[]->slug.current)])
 }`;
 
 const postsQuery = groq`*[_type == "post" && defined(slug.current)] | order(publishedAt desc) {
@@ -122,7 +125,7 @@ export async function GET() {
     for (const t of tours) {
       const facts = [
         clean(t.category),
-        clean(t.destination),
+        [clean(t.destination), ...(t.alsoIn ?? []).map(clean)].filter(Boolean).join(" / "),
         clean(t.duration) ? `duration ${clean(t.duration)}` : null,
         t.price ? `from ${t.currency === "USD" || !t.currency ? "US$" : `${t.currency} `}${t.price}` : null,
       ].filter(Boolean);
