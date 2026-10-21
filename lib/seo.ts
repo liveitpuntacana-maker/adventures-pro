@@ -3,6 +3,7 @@ import type { MetadataRoute } from "next";
 import { routing, type AppLocale } from "@/i18n/routing";
 import { categoryExcursionPath } from "@/lib/categoryPath";
 import { destinationExcursionPath } from "@/lib/destinationPath";
+import { MITUR_LICENSE } from "@/lib/license";
 import { parseReviewDate } from "@/lib/reviewDate";
 import { tourExcursionPath } from "@/lib/tourSlug";
 
@@ -288,6 +289,11 @@ export function buildTravelAgencyJsonLd() {
     telephone: SITE_CONTACT.telephone,
     email: SITE_CONTACT.email,
     priceRange: "$$",
+    identifier: {
+      "@type": "PropertyValue",
+      propertyID: "MITUR license",
+      value: MITUR_LICENSE,
+    },
     sameAs: [...SITE_CONTACT.sameAs],
     address: {
       "@type": "PostalAddress",

@@ -1,6 +1,7 @@
 import { groq } from "next-sanity";
 import { client } from "@/sanity/lib/client";
 import { RETIRED_POST_SLUGS } from "@/lib/content/retiredPosts";
+import { MITUR_LICENSE } from "@/lib/license";
 import { SANITY_TAGS, sanityCache } from "@/lib/sanityCache";
 import {
   SITE_CONTACT,
@@ -92,6 +93,7 @@ export async function GET() {
     `- Website: ${SITE_URL}`,
     `- Reservations: ${SITE_CONTACT.email} / ${SITE_CONTACT.telephone}`,
     `- Address: ${SITE_CONTACT.streetAddress}, Punta Cana, Dominican Republic`,
+    `- Tourism licence: MITUR ${MITUR_LICENSE} (Dominican Republic Ministry of Tourism)`,
     `- Languages: English (${localizedUrl("en", "/")}), Spanish (${localizedUrl("es", "/")}), French (${localizedUrl("fr-ca", "/")})`,
     "",
     "## Main pages",

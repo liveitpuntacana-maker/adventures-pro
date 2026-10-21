@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { MITUR_LICENSE } from "@/lib/license";
 import TrackedWhatsAppLink from "@/components/meta/TrackedWhatsAppLink";
 import WeatherWidget from "@/components/WeatherWidget";
 import {
@@ -30,6 +31,7 @@ export default function Footer() {
             height={307}
             className="mx-auto h-[64px] w-auto brightness-0 invert md:mx-0"
           />
+          <p className="whitespace-nowrap text-xs text-gray-400">{t("license", { license: MITUR_LICENSE })}</p>
         </div>
 
         <div>

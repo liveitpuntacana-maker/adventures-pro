@@ -8,6 +8,7 @@ import { SANITY_TAGS, sanityCache } from "@/lib/sanityCache";
 import { urlFor } from "@/sanity/lib/image";
 import { groq } from "next-sanity";
 import type { AppLocale } from "@/i18n/routing";
+import { MITUR_LICENSE } from "@/lib/license";
 import { buildBreadcrumbJsonLd, buildPageMetadata } from "@/lib/seo";
 import { getDefaultOgImage, sanityOgImage } from "@/lib/ogImage";
 
@@ -71,6 +72,7 @@ export default async function AboutPage({ params }: AboutPageProps) {
   const { locale } = await params;
   setRequestLocale(locale);
   const tSeo = await getTranslations({ locale, namespace: "Seo" });
+  const tAbout = await getTranslations({ locale, namespace: "About" });
 
   const about = await client
     .fetch<AboutPageData | null>(
@@ -147,6 +149,9 @@ export default async function AboutPage({ params }: AboutPageProps) {
             </article>
           ))}
         </div>
+        <p className="mx-auto mt-10 max-w-3xl text-center text-sm leading-relaxed text-slate-600 md:text-base">
+          {tAbout("licenseNotice", { license: MITUR_LICENSE })}
+        </p>
       </section>
 
       <section className="border-t border-slate-200 bg-slate-50 px-6 py-16 md:px-10 md:py-24 lg:px-12">

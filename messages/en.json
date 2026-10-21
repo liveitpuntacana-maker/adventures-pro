@@ -19,8 +19,12 @@
     "contactUs": "Contact Us",
     "followUs": "Follow Us",
     "whatsapp": "WhatsApp",
+    "license": "MITUR license: {license}",
     "copyright": "Copyright © 2026 Adventures Finder. All rights reserved.",
     "builtBy": "Built by"
+  },
+  "About": {
+    "licenseNotice": "Adventures Finder operates under tourism license {license}, issued by MITUR, the Dominican Republic's Ministry of Tourism."
   },
   "Home": {
     "brandEyebrow": "Adventures Finder",
