@@ -57,9 +57,9 @@ export function trackGa4CompanionEvent(
             : "contact",
       });
       break;
-    case "InitiateCheckout": {
+    case "AddToCart": {
       const item = getTourItem(customData);
-      window.gtag("event", "begin_checkout", {
+      window.gtag("event", "add_to_cart", {
         ...getValueParams(customData),
         ...(item ? { items: [item] } : {}),
       });

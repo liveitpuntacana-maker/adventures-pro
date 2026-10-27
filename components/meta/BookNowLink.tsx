@@ -25,7 +25,7 @@ export default function BookNowLink({
   ...anchorProps
 }: BookNowLinkProps) {
   const handleClick = () => {
-    trackMetaEvent("InitiateCheckout", {
+    trackMetaEvent("AddToCart", {
       content_ids: [contentId],
       content_name: contentName,
       content_type: "product",

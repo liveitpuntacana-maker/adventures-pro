@@ -7,4 +7,7 @@ export type MetaStandardEvent =
   | "PageView"
   | "ViewContent"
   | "Contact"
-  | "InitiateCheckout";
+  // "Book Now" click. The checkout itself happens on Peek, whose pixel sends
+  // InitiateCheckout and the purchase; using the same name here counted one
+  // visitor twice in the same pixel.
+  | "AddToCart";

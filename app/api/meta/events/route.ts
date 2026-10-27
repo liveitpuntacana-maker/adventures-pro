@@ -7,7 +7,7 @@ const ALLOWED_EVENTS = new Set<MetaStandardEvent>([
   "PageView",
   "ViewContent",
   "Contact",
-  "InitiateCheckout",
+  "AddToCart",
 ]);
 
 type MetaEventRequestBody = {
