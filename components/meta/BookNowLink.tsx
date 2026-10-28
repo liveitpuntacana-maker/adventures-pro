@@ -1,7 +1,9 @@
 "use client";
 
 import type { AnchorHTMLAttributes, ReactNode } from "react";
+import { useLocale } from "next-intl";
 import { trackMetaEvent } from "@/lib/meta/trackEvent";
+import { getWhatsAppBookingUrl } from "@/lib/utils/whatsapp";
 
 type BookNowLinkProps = Omit<
   AnchorHTMLAttributes<HTMLAnchorElement>,
@@ -24,6 +26,10 @@ export default function BookNowLink({
   children,
   ...anchorProps
 }: BookNowLinkProps) {
+  const locale = useLocale();
+  // Tours that Peek cannot schedule are booked over WhatsApp, on every page that shows this button.
+  const bookingHref = getWhatsAppBookingUrl(contentId, locale) ?? href;
+
   const handleClick = () => {
     trackMetaEvent("AddToCart", {
       content_ids: [contentId],
@@ -34,7 +40,7 @@ export default function BookNowLink({
   };
 
   return (
-    <a href={href} onClick={handleClick} {...anchorProps}>
+    <a href={bookingHref} onClick={handleClick} {...anchorProps}>
       {children}
     </a>
   );
