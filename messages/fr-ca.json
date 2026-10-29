@@ -169,7 +169,7 @@
     "otherAreasSubtitle": "Découvrez les excursions dans les autres destinations de la République dominicaine."
   },
   "Transfers": {
-    "heroTitle": "Bienvenue au service de transfert aéroportuaire de premier plan à Punta Cana !",
+    "heroTitle": "Réservez votre transfert aéroport à Punta Cana",
     "heroSubtitle": "Que vous recherchiez le luxe VIP ou des services de navette fiables, nous offrons des options de transport fluides vers et depuis l'aéroport, pour des voyages confortables et sans stress en République dominicaine.",
     "section1Text": "Découvrez nos options flexibles de transfert aéroportuaire. Explorez notre gamme variée de solutions de transport adaptées à vos besoins. Des voyageurs solo aux grands groupes, nos services s'étendent de Punta Cana à toute destination en République dominicaine. Choisissez parmi notre flotte moderne, y compris des Suburban VIP pour une touche de luxe supplémentaire.",
     "busesImageAlt": "Autobus de transfert aéroportuaire",
@@ -179,8 +179,6 @@
     "suvChevyImageAlt": "SUV VIP de transfert aéroportuaire",
     "outroText": "Profitez du summum de la commodité et de la fiabilité avec nos services de transfert aéroportuaire à Punta Cana. Réservez votre trajet aujourd'hui et commencez votre voyage du bon pied !",
     "ctaButton": "Nous joindre",
-    "searchTitle": "Réservez votre transfert depuis l'aéroport",
-    "searchSubtitle": "Choisissez votre hôtel et votre véhicule pour voir le prix. Réservez en ligne en quelques clics.",
     "priceNote": "Les tarifs sont par véhicule, et non par personne."
   },
   "Seo": {

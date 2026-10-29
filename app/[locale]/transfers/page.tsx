@@ -94,7 +94,8 @@ export default async function TransfersPage({ params }: TransfersPageProps) {
           { name: tSeo("transfers.title") },
         ])}
       />
-      <section className="relative overflow-hidden bg-[#0a192f] px-6 py-20 md:px-10 md:py-28 lg:px-12">
+      {/* No overflow-hidden: the hotel suggestions drop below the form and would be cut off at the hero's edge. */}
+      <section className="relative bg-[#0a192f] px-6 py-12 md:px-10 md:py-16 lg:px-12">
         {heroImageUrl ? (
           <Image
             src={heroImageUrl}
@@ -116,24 +117,15 @@ export default async function TransfersPage({ params }: TransfersPageProps) {
           <h1 className="text-3xl font-bold tracking-tight text-white md:text-5xl md:leading-tight">
             {heroTitle}
           </h1>
-          <p className="mx-auto mt-6 max-w-3xl text-base leading-relaxed text-slate-200 md:text-lg">
+          <p className="mx-auto mt-4 max-w-3xl text-base leading-relaxed text-slate-200 md:mt-6 md:text-lg">
             {heroSubtitle}
           </p>
+          {/* Ad clicks land here: the price and the booking must be on screen without scrolling. */}
+          <div className="mx-auto mt-8 max-w-3xl text-left md:mt-10">
+            <HeroSearch transfersOnly />
+            <p className="mt-3 text-center text-sm text-slate-300">{t("priceNote")}</p>
+          </div>
         </div>
-      </section>
-
-      {/* Ad clicks land here: the price and the booking have to be on screen without scrolling far. */}
-      <section className="mx-auto max-w-3xl px-6 py-12 md:px-10 md:py-16">
-        <div className="mb-6 text-center">
-          <h2 className="text-2xl font-semibold tracking-tight text-[#0a192f] md:text-3xl">
-            {t("searchTitle")}
-          </h2>
-          <p className="mt-2 text-sm text-slate-600 md:text-base">{t("searchSubtitle")}</p>
-        </div>
-        <div className="rounded-2xl border border-slate-200 shadow-lg">
-          <HeroSearch transfersOnly />
-        </div>
-        <p className="mt-3 text-center text-sm text-slate-500">{t("priceNote")}</p>
       </section>
 
       <section className="mx-auto max-w-7xl px-6 py-16 md:px-10 md:py-24 lg:px-12">
