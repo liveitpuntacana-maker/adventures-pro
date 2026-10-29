@@ -57,6 +57,8 @@
     "noToursFound": "Aucune excursion trouvée",
     "selectVehicle": "Choisissez votre véhicule",
     "noVehiclesAvailable": "Aucun véhicule disponible pour cette zone.",
+    "vehicleUnavailable": "Indisponible pour cette destination",
+    "selectHotelForPrice": "Choisissez votre hôtel pour voir le prix de chaque véhicule.",
     "hotelNotListed": "Vous ne trouvez pas votre hôtel ?",
     "quoteViaWhatsapp": "Demandez-nous un devis sur WhatsApp",
     "quoteWhatsappMessage": "Bonjour, je souhaite un devis pour un transfert depuis {origin} vers {destination}.",

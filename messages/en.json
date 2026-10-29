@@ -55,6 +55,8 @@
     "noToursFound": "No tours found",
     "selectVehicle": "Choose your vehicle",
     "noVehiclesAvailable": "No vehicles available for this zone.",
+    "vehicleUnavailable": "Not available for this destination",
+    "selectHotelForPrice": "Select your hotel to see the price of each vehicle.",
     "hotelNotListed": "Don't see your hotel?",
     "quoteViaWhatsapp": "Ask us for a quote on WhatsApp",
     "quoteWhatsappMessage": "Hi, I'd like a quote for an airport transfer from {origin} to {destination}.",

@@ -52,7 +52,6 @@ export async function generateMetadata({
 type TransferPageData = {
   heroImage?: unknown;
   heroTitle?: string | null;
-  heroSubtitle?: string | null;
 };
 
 // No cross-locale fallback: without Sanity copy for the active locale we use
@@ -60,8 +59,7 @@ type TransferPageData = {
 // /fr-ca, which is what was happening before.
 const TRANSFER_PAGE_QUERY = groq`*[_type == "transferPage"][0]{
   heroImage,
-  "heroTitle": select($locale == "fr-ca" => heroTitle.frCA, heroTitle[$locale]),
-  "heroSubtitle": select($locale == "fr-ca" => heroSubtitle.frCA, heroSubtitle[$locale])
+  "heroTitle": select($locale == "fr-ca" => heroTitle.frCA, heroTitle[$locale])
 }`;
 
 export default async function TransfersPage({ params }: TransfersPageProps) {
@@ -75,7 +73,6 @@ export default async function TransfersPage({ params }: TransfersPageProps) {
     .catch(() => null);
 
   const heroTitle = transferPage?.heroTitle?.trim() || t("heroTitle");
-  const heroSubtitle = transferPage?.heroSubtitle?.trim() || t("heroSubtitle");
   const heroImageUrl = (() => {
     try {
       return transferPage?.heroImage
@@ -113,15 +110,13 @@ export default async function TransfersPage({ params }: TransfersPageProps) {
               : "absolute inset-0 bg-gradient-to-br from-[#0a192f] via-[#0f2744] to-[#0a192f]"
           }
         />
-        <div className="relative mx-auto max-w-4xl text-center">
-          <h1 className="text-3xl font-bold tracking-tight text-white md:text-5xl md:leading-tight">
+        <div className="relative mx-auto max-w-5xl text-center">
+          {/* text-balance keeps "Punta Cana" together when the title has to wrap. */}
+          <h1 className="text-balance text-3xl font-bold tracking-tight text-white md:text-5xl md:leading-tight">
             {heroTitle}
           </h1>
-          <p className="mx-auto mt-4 max-w-3xl text-base leading-relaxed text-slate-200 md:mt-6 md:text-lg">
-            {heroSubtitle}
-          </p>
           {/* Ad clicks land here: the price and the booking must be on screen without scrolling. */}
-          <div className="mx-auto mt-8 max-w-3xl text-left md:mt-10">
+          <div className="mx-auto mt-6 max-w-3xl text-left md:mt-8">
             <HeroSearch transfersOnly />
             <p className="mt-3 text-center text-sm text-slate-300">{t("priceNote")}</p>
           </div>

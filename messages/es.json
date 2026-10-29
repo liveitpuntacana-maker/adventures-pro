@@ -55,6 +55,8 @@
     "noToursFound": "No se encontraron tours",
     "selectVehicle": "Elige tu vehículo",
     "noVehiclesAvailable": "No hay vehículos disponibles para esta zona.",
+    "vehicleUnavailable": "No disponible para este destino",
+    "selectHotelForPrice": "Elige tu hotel para ver el precio de cada vehículo.",
     "hotelNotListed": "¿No ves tu hotel?",
     "quoteViaWhatsapp": "Pídenos una cotización por WhatsApp",
     "quoteWhatsappMessage": "Hola, quiero cotizar un traslado desde {origin} hasta {destination}.",
