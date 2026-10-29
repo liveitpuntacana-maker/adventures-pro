@@ -54,7 +54,11 @@
     "noHotelsMatch": "No hotels match your search.",
     "noToursFound": "No tours found",
     "selectVehicle": "Choose your vehicle",
-    "noVehiclesAvailable": "No vehicles available for this zone."
+    "noVehiclesAvailable": "No vehicles available for this zone.",
+    "hotelNotListed": "Don't see your hotel?",
+    "quoteViaWhatsapp": "Ask us for a quote on WhatsApp",
+    "quoteWhatsappMessage": "Hi, I'd like a quote for an airport transfer from {origin} to {destination}.",
+    "quoteWhatsappMessageNoDestination": "Hi, I'd like a quote for an airport transfer from {origin}. My destination is not in the list."
   },
   "Featured": {
     "kicker": "Our recommended adventures",
@@ -172,7 +176,10 @@
     "section3Text": "Contact Us for Personalized Travel Arrangements. Need assistance or have special requests? Contact us via email at reservations@adventuresfinder.com or through our WhatsApp/phone at +1 849 570 0202. Our dedicated team is ready to cater to your specific travel needs and preferences, ensuring a hassle-free journey.",
     "suvChevyImageAlt": "VIP SUV airport transfer",
     "outroText": "Experience the ultimate in convenience and reliability with our Punta Cana airport transfer services. Book your ride today and start your trip on the right note!",
-    "ctaButton": "Contact Us"
+    "ctaButton": "Contact Us",
+    "searchTitle": "Book your airport transfer",
+    "searchSubtitle": "Choose your hotel and vehicle to see your price. Book online in a few clicks.",
+    "priceNote": "Prices are per vehicle, not per person."
   },
   "Seo": {
     "defaultTitle": "Tours & Excursions in Punta Cana",

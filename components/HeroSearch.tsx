@@ -5,8 +5,11 @@ import { X } from "lucide-react";
 import { useMemo, useState, useRef, useEffect, useCallback } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
+import TrackedWhatsAppLink from "@/components/meta/TrackedWhatsAppLink";
+import { trackMetaEvent } from "@/lib/meta/trackEvent";
 import { formatTourPrice, withPriceTag } from "@/lib/tourPrice";
 import { tourExcursionPath } from "@/lib/tourSlug";
+import { ADVENTURES_WHATSAPP_PHONE, getUniversalWhatsAppUrl } from "@/lib/utils/whatsapp";
 import { type AppLocale } from "@/i18n/routing";
 
 type TripType = "one_way" | "round_trip";
@@ -105,11 +108,17 @@ function rateKey(rate: TransferPricingRate) {
   return rate._key ?? rate.vehicle._id;
 }
 
-export default function HeroSearch() {
+type HeroSearchProps = {
+  /** Shows only the airport-transfer form, with no tab bar (the /transfers page). */
+  transfersOnly?: boolean;
+};
+
+export default function HeroSearch({ transfersOnly = false }: HeroSearchProps) {
   const t = useTranslations("HeroSearch");
   const locale = useLocale() as AppLocale;
   const router = useRouter();
-  const originOptions = useMemo(
+  // PUJ first: it is the fallback while the routes load.
+  const allOriginOptions = useMemo(
     () =>
       [
         { code: "PUJ" as const, label: t("originPUJ") },
@@ -118,7 +127,9 @@ export default function HeroSearch() {
     [t],
   );
 
-  const [tab, setTab] = useState<"activities" | "transfers">("activities");
+  const [tab, setTab] = useState<"activities" | "transfers">(
+    transfersOnly ? "transfers" : "activities",
+  );
   const [activityQuery, setActivityQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchTourResult[]>([]);
   const [activityListOpen, setActivityListOpen] = useState(false);
@@ -135,11 +146,34 @@ export default function HeroSearch() {
   const wrapRef = useRef<HTMLDivElement>(null);
   const activityWrapRef = useRef<HTMLDivElement>(null);
 
+  // An airport with no priced route yet would only show an empty vehicle list,
+  // so it stays hidden until Sanity has at least one route for it.
+  const originOptions = useMemo(() => {
+    const withRoutes = allOriginOptions.filter((o) =>
+      transferRoutes.some((route) => route.originCode === o.code),
+    );
+    return withRoutes.length > 0 ? withRoutes : allOriginOptions.slice(0, 1);
+  }, [allOriginOptions, transferRoutes]);
+
+  const originLabel = originOptions.find((o) => o.code === origin)?.label ?? "";
+  const quoteHref = getUniversalWhatsAppUrl(
+    ADVENTURES_WHATSAPP_PHONE,
+    hotelQuery.trim()
+      ? t("quoteWhatsappMessage", { origin: originLabel, destination: hotelQuery.trim() })
+      : t("quoteWhatsappMessageNoDestination", { origin: originLabel }),
+  );
+
   const filteredHotels = useMemo(() => {
     const q = hotelQuery.trim().toLowerCase();
     if (!q) return transferHotels;
     return transferHotels.filter((hotel) => hotel.title.toLowerCase().includes(q));
   }, [hotelQuery, transferHotels]);
+
+  const hotelNotListed =
+    !selectedHotel &&
+    !transfersLoading &&
+    hotelQuery.trim().length > 0 &&
+    filteredHotels.length === 0;
 
   const activeRoute = useMemo(() => {
     if (!selectedHotel?.zone?.id) return null;
@@ -265,17 +299,26 @@ export default function HeroSearch() {
 
   const transferHref =
     selectedRate && selectedHotel
-      ? buildPeekTransferHref(
-          selectedRate,
-          tripType,
-          originOptions.find((o) => o.code === origin)?.label ?? "",
-        )
+      ? buildPeekTransferHref(selectedRate, tripType, originLabel)
       : "";
 
   const transferReady = Boolean(selectedHotel && selectedRate);
 
+  // Picking a vehicle and pressing Search is the transfer equivalent of "Book Now".
+  const trackTransferClick = () => {
+    if (!selectedRate || !selectedHotel) return;
+    const price = tripType === "one_way" ? selectedRate.priceOneWay : selectedRate.priceRoundTrip;
+    trackMetaEvent("AddToCart", {
+      content_ids: ["airport-transfer"],
+      content_name: `Airport transfer to ${selectedHotel.title}`,
+      content_type: "product",
+      ...(Number.isFinite(price) ? { value: price, currency: "USD" } : {}),
+    });
+  };
+
   return (
     <div className="rounded-2xl bg-white p-1 shadow-lg md:p-2">
+      {transfersOnly ? null : (
       <div className="flex border-b border-slate-200 px-2 pt-1 md:px-3">
         <button
           type="button"
@@ -306,6 +349,7 @@ export default function HeroSearch() {
           ) : null}
         </button>
       </div>
+      )}
 
       <div className="p-4 md:p-6">
         {tab === "activities" ? (
@@ -424,21 +468,30 @@ export default function HeroSearch() {
               >
                 {t("origin")}
               </label>
-              <select
-                id="hero-origin"
-                value={origin}
-                onChange={(e) => {
-                  setOrigin(e.target.value as OriginCode);
-                  setSelectedRate(null);
-                }}
-                className="h-12 w-full cursor-pointer rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-800 outline-none transition focus:border-blue-800 focus:ring-2 focus:ring-blue-800/15"
-              >
-                {originOptions.map((o) => (
-                  <option key={o.code} value={o.code}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
+              {originOptions.length > 1 ? (
+                <select
+                  id="hero-origin"
+                  value={origin}
+                  onChange={(e) => {
+                    setOrigin(e.target.value as OriginCode);
+                    setSelectedRate(null);
+                  }}
+                  className="h-12 w-full cursor-pointer rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-800 outline-none transition focus:border-blue-800 focus:ring-2 focus:ring-blue-800/15"
+                >
+                  {originOptions.map((o) => (
+                    <option key={o.code} value={o.code}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <p
+                  id="hero-origin"
+                  className="flex h-12 w-full items-center rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-medium text-slate-800"
+                >
+                  {originLabel}
+                </p>
+              )}
             </div>
 
             <div ref={wrapRef} className="relative">
@@ -512,12 +565,22 @@ export default function HeroSearch() {
                       </li>
                     ))}
                   </ul>
-                ) : hotelQuery.trim().length > 0 && !transfersLoading ? (
-                  <div className="absolute z-20 mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500 shadow-lg">
-                    {t("noHotelsMatch")}
-                  </div>
                 ) : null
               ) : null}
+              {hotelNotListed ? (
+                <p className="mt-2 text-sm text-slate-500">{t("noHotelsMatch")}</p>
+              ) : null}
+              {/* Not every address is in the list: anything else is quoted by the team. */}
+              <p className="mt-2 text-sm text-slate-600">
+                {t("hotelNotListed")}{" "}
+                <TrackedWhatsAppLink
+                  href={quoteHref}
+                  source="transfer_quote_whatsapp"
+                  className="font-semibold text-blue-800 underline underline-offset-2 transition hover:text-blue-950"
+                >
+                  {t("quoteViaWhatsapp")}
+                </TrackedWhatsAppLink>
+              </p>
             </div>
 
             {selectedHotel ? (
@@ -575,7 +638,11 @@ export default function HeroSearch() {
                 href={transferReady ? transferHref : undefined}
                 aria-disabled={!transferReady}
                 onClick={(e) => {
-                  if (!transferReady) e.preventDefault();
+                  if (!transferReady) {
+                    e.preventDefault();
+                    return;
+                  }
+                  trackTransferClick();
                 }}
                 target="_blank"
                 rel="noopener noreferrer"

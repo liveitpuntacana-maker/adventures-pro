@@ -2,6 +2,7 @@ import Image from "next/image";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { groq } from "next-sanity";
+import HeroSearch from "@/components/HeroSearch";
 import TrackedWhatsAppLink from "@/components/meta/TrackedWhatsAppLink";
 import JsonLd from "@/components/JsonLd";
 import { Link } from "@/i18n/navigation";
@@ -119,6 +120,20 @@ export default async function TransfersPage({ params }: TransfersPageProps) {
             {heroSubtitle}
           </p>
         </div>
+      </section>
+
+      {/* Ad clicks land here: the price and the booking have to be on screen without scrolling far. */}
+      <section className="mx-auto max-w-3xl px-6 py-12 md:px-10 md:py-16">
+        <div className="mb-6 text-center">
+          <h2 className="text-2xl font-semibold tracking-tight text-[#0a192f] md:text-3xl">
+            {t("searchTitle")}
+          </h2>
+          <p className="mt-2 text-sm text-slate-600 md:text-base">{t("searchSubtitle")}</p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 shadow-lg">
+          <HeroSearch transfersOnly />
+        </div>
+        <p className="mt-3 text-center text-sm text-slate-500">{t("priceNote")}</p>
       </section>
 
       <section className="mx-auto max-w-7xl px-6 py-16 md:px-10 md:py-24 lg:px-12">
