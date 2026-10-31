@@ -17,7 +17,7 @@ const mapPositions: Record<string, { top: number; left: number }> = {
 
 // The five pins are close together on a phone-sized map and labels under every
 // pin ended up covering the neighbouring pins. Below md a few labels move: Punta
-// Cana above its pin (nudged right), Sámana and Miches to the left of theirs.
+// Cana above its pin (nudged right), Samaná and Miches to the left of theirs.
 // From md up every label stays under its pin, exactly as before.
 const mobileLabelPlacement: Record<string, string> = {
   "punta-cana": "max-md:-translate-y-[45px] max-md:translate-x-2.5",
@@ -132,6 +132,9 @@ export default function InteractiveMap({ destinations = [] }: InteractiveMapProp
               <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
               <span className="absolute inset-x-0 bottom-0 p-3 text-left text-base font-semibold leading-tight text-white drop-shadow md:p-4 md:text-lg">
                 {destination.title}
+                <span className="mt-0.5 block text-xs font-medium text-white/85 md:text-sm">
+                  {t("toursCount", { count: destination.tourCount })}
+                </span>
               </span>
             </Link>
           );

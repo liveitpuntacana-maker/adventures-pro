@@ -152,6 +152,7 @@
     "headline": "Descubre República Dominicana",
     "mapAlt": "Mapa de República Dominicana",
     "destinationsNav": "Explorar por destino",
+    "toursCount": "{count, plural, =1 {1 tour} other {# tours}}",
     "destinations": {
       "punta-cana": "Punta Cana",
       "la-romana-bayahibe": "La Romana / Bayahibe",
