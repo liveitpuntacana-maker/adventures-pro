@@ -1,6 +1,7 @@
 import HeroSearch from "@/components/HeroSearch";
 import HomeHeroText from "@/components/HomeHeroText";
 import HeroTrustLine from "@/components/HeroTrustLine";
+import BrandBand from "@/components/BrandBand";
 import HomeHeroSlider from "@/components/HomeHeroSlider";
 import FeaturedAdventures, { type FeaturedTour } from "@/components/FeaturedAdventures";
 import InteractiveMap from "@/components/InteractiveMap";
@@ -187,11 +188,9 @@ export default async function Home({ params }: HomePageProps) {
               </div>
             </div>
           </div>
-          <div className="w-full bg-blue-950 px-4 py-6 md:px-10 md:py-8 lg:px-12">
-            <div className="mx-auto w-full max-w-4xl">
-              <HeroSearch />
-            </div>
-          </div>
+          <BrandBand>
+            <HeroSearch />
+          </BrandBand>
         </section>
 
         {/* Real tours with photo and price come first, so the page shows what is for sale without scrolling past maps and banners. */}
@@ -207,9 +206,9 @@ export default async function Home({ params }: HomePageProps) {
           <CategoryBanners categories={categories} locale={locale} />
         </section>
 
-        <section className="mx-auto w-full max-w-4xl px-6 py-12 md:px-10 lg:px-12">
+        <BrandBand paddingClassName="py-12 md:py-16">
           <LeadForm />
-        </section>
+        </BrandBand>
 
         <ReviewsSection />
 

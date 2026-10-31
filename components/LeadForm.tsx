@@ -116,7 +116,7 @@ export default function LeadForm() {
   };
 
   return (
-    <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+    <section className="rounded-3xl bg-white p-6 shadow-xl shadow-black/20 md:p-8">
       <h2 className="text-2xl font-semibold tracking-tight text-slate-900">{t("title")}</h2>
       <p className="mt-2 text-sm text-slate-600">{t("subtitle")}</p>
 
@@ -140,7 +140,7 @@ export default function LeadForm() {
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20"
+            className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm text-slate-900 outline-none transition focus:border-blue-800 focus:ring-2 focus:ring-blue-800/15"
             required
           />
         </div>
@@ -155,7 +155,7 @@ export default function LeadForm() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20"
+              className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm text-slate-900 outline-none transition focus:border-blue-800 focus:ring-2 focus:ring-blue-800/15"
               required
             />
           </div>
@@ -168,7 +168,7 @@ export default function LeadForm() {
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20"
+              className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm text-slate-900 outline-none transition focus:border-blue-800 focus:ring-2 focus:ring-blue-800/15"
               required
             />
           </div>
@@ -184,7 +184,7 @@ export default function LeadForm() {
             placeholder={t("travelDatesPlaceholder")}
             value={travelDates}
             onChange={(e) => setTravelDates(e.target.value)}
-            className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20"
+            className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm text-slate-900 outline-none transition focus:border-blue-800 focus:ring-2 focus:ring-blue-800/15"
             required
           />
         </div>
@@ -199,7 +199,7 @@ export default function LeadForm() {
             min={1}
             value={guests}
             onChange={(e) => setGuests(e.target.value)}
-            className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20"
+            className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm text-slate-900 outline-none transition focus:border-blue-800 focus:ring-2 focus:ring-blue-800/15"
             required
           />
         </div>
@@ -216,7 +216,7 @@ export default function LeadForm() {
                   onClick={() => setTripKey(id)}
                   className={`rounded-xl border px-4 py-3 text-left text-sm font-medium transition ${
                     active
-                      ? "border-cyan-500 bg-cyan-50 text-slate-900"
+                      ? "border-orange-500 bg-orange-50 text-slate-900"
                       : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
                   }`}
                 >
@@ -239,7 +239,7 @@ export default function LeadForm() {
                   onClick={() => setFrequencyKey(id)}
                   className={`rounded-xl border px-4 py-3 text-left text-sm font-medium transition ${
                     active
-                      ? "border-cyan-500 bg-cyan-50 text-slate-900"
+                      ? "border-orange-500 bg-orange-50 text-slate-900"
                       : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
                   }`}
                 >
@@ -258,7 +258,7 @@ export default function LeadForm() {
         <button
           type="submit"
           disabled={!canSubmit}
-          className="h-12 w-full rounded-xl bg-blue-600 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className="h-12 w-full rounded-xl bg-orange-500 text-sm font-semibold text-white shadow-md shadow-orange-500/25 transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {status === "loading" ? t("submitting") : t("submit")}
         </button>

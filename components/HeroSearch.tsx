@@ -126,6 +126,8 @@ export default function HeroSearch({ transfersOnly = false }: HeroSearchProps) {
   const [tab, setTab] = useState<"activities" | "transfers">(
     transfersOnly ? "transfers" : "activities",
   );
+  // The transfers form lists every vehicle before a hotel is chosen, on /transfers and in the home tab alike.
+  const vehiclesFirst = transfersOnly || tab === "transfers";
   const [activityQuery, setActivityQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchTourResult[]>([]);
   const [activityListOpen, setActivityListOpen] = useState(false);
@@ -192,10 +194,10 @@ export default function HeroSearch({ transfersOnly = false }: HeroSearchProps) {
     [availableRates, selectedVehicleId],
   );
 
-  // On /transfers the vehicles are shown before the hotel, so a choice made there survives
-  // changes to the hotel. Everywhere else the choice is cleared when the hotel changes.
+  // In the transfers form the vehicles are shown before the hotel, so a choice made there survives
+  // changes to the hotel. Otherwise the choice is cleared when the hotel changes.
   const resetVehicle = () => {
-    if (!transfersOnly) setSelectedVehicleId(null);
+    if (!vehiclesFirst) setSelectedVehicleId(null);
   };
 
   // Every vehicle sold from the chosen airport, cheapest first, for the pre-hotel view.
@@ -214,7 +216,7 @@ export default function HeroSearch({ transfersOnly = false }: HeroSearchProps) {
     return [...lowest.values()].sort((a, b) => a.price - b.price).map((entry) => entry.vehicle);
   }, [origin, transferRoutes]);
 
-  const vehicleCards = transfersOnly
+  const vehicleCards = vehiclesFirst
     ? allVehicles.map((vehicle) => ({
         vehicle,
         rate: availableRates.find((rate) => rate.vehicle._id === vehicle._id) ?? null,
@@ -265,8 +267,8 @@ export default function HeroSearch({ transfersOnly = false }: HeroSearchProps) {
   }, []);
 
   useEffect(() => {
-    if (!transfersOnly) setSelectedVehicleId(null);
-  }, [origin, tripType, selectedHotel?._id, transfersOnly]);
+    if (!vehiclesFirst) setSelectedVehicleId(null);
+  }, [origin, tripType, selectedHotel?._id, vehiclesFirst]);
 
   useEffect(() => {
     const onDoc = (e: MouseEvent) => {
@@ -615,12 +617,12 @@ export default function HeroSearch({ transfersOnly = false }: HeroSearchProps) {
               </p>
             </div>
 
-            {selectedHotel || transfersOnly ? (
+            {selectedHotel || vehiclesFirst ? (
               <div>
                 <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-blue-950">
                   {t("selectVehicle")}
                 </p>
-                {transfersOnly && transfersLoading ? (
+                {vehiclesFirst && transfersLoading ? (
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-2" aria-hidden="true">
                     {[0, 1, 2, 3].map((n) => (
                       <div key={n} className="h-28 animate-pulse rounded-xl bg-slate-100" />
@@ -645,7 +647,7 @@ export default function HeroSearch({ transfersOnly = false }: HeroSearchProps) {
                             disabled={unavailable}
                             onClick={() => setSelectedVehicleId(vehicle._id)}
                             className={`flex w-full items-center gap-4 rounded-xl border p-3 text-left transition ${
-                              transfersOnly ? "md:p-4" : ""
+                              vehiclesFirst ? "md:p-4" : ""
                             } ${
                               unavailable
                                 ? "cursor-not-allowed border-slate-200 bg-slate-50 opacity-50"
@@ -656,7 +658,7 @@ export default function HeroSearch({ transfersOnly = false }: HeroSearchProps) {
                           >
                             <div
                               className={`relative shrink-0 overflow-hidden rounded-lg bg-slate-100 ${
-                                transfersOnly ? "h-20 w-28 md:h-24 md:w-32" : "h-16 w-20"
+                                vehiclesFirst ? "h-20 w-28 md:h-24 md:w-32" : "h-16 w-20"
                               }`}
                             >
                               {vehicle.imageUrl ? (
@@ -686,7 +688,7 @@ export default function HeroSearch({ transfersOnly = false }: HeroSearchProps) {
                         );
                       })}
                     </div>
-                    {transfersOnly && !selectedHotel ? (
+                    {vehiclesFirst && !selectedHotel ? (
                       <p className="mt-3 text-sm text-slate-500">{t("selectHotelForPrice")}</p>
                     ) : null}
                   </>
