@@ -596,6 +596,7 @@ export default function SiteWideAIChat({ locale }: SiteWideAIChatProps) {
         <section
           className="pointer-events-auto flex h-[min(28rem,70vh)] w-[min(22rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-orange-200/80 bg-white shadow-2xl shadow-orange-500/20"
           aria-label={copy.title}
+          data-clarity-mask="True"
         >
           <header className="flex items-start justify-between gap-3 border-b border-orange-200/80 bg-orange-500 px-4 py-3 text-white">
             <div className="min-w-0">

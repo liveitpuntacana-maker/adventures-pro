@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
+import MicrosoftClarity from "@/components/analytics/MicrosoftClarity";
 import MetaPixel from "@/components/meta/MetaPixel";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -114,6 +115,7 @@ export default async function LocaleLayout({
       <body className="min-h-full flex flex-col">
         <GoogleAnalytics />
         <MetaPixel />
+        <MicrosoftClarity />
         <JsonLd
           data={[
             buildTravelAgencyJsonLd(),

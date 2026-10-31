@@ -116,7 +116,7 @@ export default function LeadForm() {
   };
 
   return (
-    <section className="rounded-3xl bg-white p-6 shadow-xl shadow-black/20 md:p-8">
+    <section data-clarity-mask="True" className="rounded-3xl bg-white p-6 shadow-xl shadow-black/20 md:p-8">
       <h2 className="text-2xl font-semibold tracking-tight text-slate-900">{t("title")}</h2>
       <p className="mt-2 text-sm text-slate-600">{t("subtitle")}</p>
 
