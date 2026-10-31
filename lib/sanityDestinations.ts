@@ -8,6 +8,7 @@ export const mapDestinationsQuery = groq`*[_type == "destination"] | order(coale
     title.es,
     title.frCA
   ),
+  mainImage,
   "tourCount": count(*[_type == "tour" && (destination->slug.current == ^.slug.current || ^.slug.current in alsoInDestinations[]->slug.current)])
 }`;
 
@@ -15,6 +16,8 @@ export type MapDestination = {
   slug: string;
   title: string;
   tourCount: number;
+  /** Photo of the zone, as stored in Sanity (with its hotspot). */
+  mainImage?: unknown;
 };
 
 /**

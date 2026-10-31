@@ -3,6 +3,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { destinationExcursionPath } from "@/lib/destinationPath";
 import { type MapDestination } from "@/lib/sanityDestinations";
+import { urlFor } from "@/sanity/lib/image";
 
 const mapPositions: Record<string, { top: number; left: number }> = {
   "puerto-plata": { top: 16, left: 41 },
@@ -39,6 +40,21 @@ function MapLabel({ title }: { title: string }) {
       {parts[1]}
     </>
   );
+}
+
+/**
+ * Crop of a destination photo, honouring the hotspot set in Sanity. Portrait for
+ * the cards; landscape for the lead card on a phone, where it spans the full
+ * width. Cropping the portrait down to a wide strip kept only sand and water.
+ */
+function destinationImageUrl(image: unknown, landscape = false): string | null {
+  if (!image) return null;
+  try {
+    const crop = landscape ? urlFor(image).width(1200).height(675) : urlFor(image).width(800).height(1000);
+    return crop.fit("crop").url();
+  } catch {
+    return null;
+  }
 }
 
 type InteractiveMapProps = {
@@ -107,20 +123,47 @@ export default function InteractiveMap({ destinations = [] }: InteractiveMapProp
       </div>
 
       {/* Small pins are hard to hit on a phone, so every destination also gets
-          a plain button under the map. */}
+          a card under the map, with a photo of the zone. The biggest zone leads
+          and spans the full width on a phone, so the rest pair up evenly. */}
       <nav
         aria-label={t("destinationsNav")}
-        className="mx-auto mt-5 flex max-w-5xl flex-wrap items-center justify-center gap-2"
+        className="mx-auto mt-6 flex max-w-5xl flex-wrap items-stretch justify-center gap-3"
       >
-        {available.map((destination) => (
-          <Link
-            key={destination.slug}
-            href={destinationExcursionPath(destination.slug)}
-            className="inline-flex min-h-10 items-center justify-center rounded-xl bg-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-orange-500/25 transition hover:bg-orange-600"
-          >
-            {destination.title}
-          </Link>
-        ))}
+        {available.map((destination, index) => {
+          const imageUrl = destinationImageUrl(destination.mainImage);
+          // Only the lead card changes shape (full width below md).
+          const wideUrl = index === 0 ? destinationImageUrl(destination.mainImage, true) : null;
+          return (
+            <Link
+              key={destination.slug}
+              href={destinationExcursionPath(destination.slug)}
+              className="group relative isolate block aspect-[4/5] w-[calc(50%-0.375rem)] overflow-hidden rounded-2xl bg-slate-800 shadow-md transition hover:-translate-y-1 hover:shadow-xl max-md:first:aspect-[16/9] max-md:first:w-full md:w-[calc(33.333%-0.5rem)] lg:w-[calc(20%-0.6rem)]"
+            >
+              {wideUrl ? (
+                <Image
+                  src={wideUrl}
+                  alt=""
+                  fill
+                  className="object-cover object-center transition duration-500 group-hover:scale-105 md:hidden"
+                  sizes="100vw"
+                />
+              ) : null}
+              {imageUrl ? (
+                <Image
+                  src={imageUrl}
+                  alt=""
+                  fill
+                  className={`object-cover object-center transition duration-500 group-hover:scale-105 ${wideUrl ? "max-md:hidden" : ""}`}
+                  sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 200px"
+                />
+              ) : null}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
+              <span className="absolute inset-x-0 bottom-0 p-3 text-left text-base font-semibold leading-tight text-white drop-shadow md:p-4 md:text-lg">
+                {destination.title}
+              </span>
+            </Link>
+          );
+        })}
       </nav>
     </section>
   );
