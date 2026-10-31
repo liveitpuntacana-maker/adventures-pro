@@ -65,8 +65,7 @@
     "quoteWhatsappMessageNoDestination": "Hi, I'd like a quote for an airport transfer from {origin}. My destination is not in the list."
   },
   "Featured": {
-    "kicker": "Our recommended adventures",
-    "headline": "Exceptional travel moments designed with You in mind",
+    "title": "Our recommended adventures",
     "empty": "Featured tours will appear here when marked in the CMS."
   },
   "Contact": {

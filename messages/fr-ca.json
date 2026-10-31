@@ -67,8 +67,7 @@
     "quoteWhatsappMessageNoDestination": "Bonjour, je souhaite un devis pour un transfert depuis {origin}. Ma destination ne figure pas dans la liste."
   },
   "Featured": {
-    "kicker": "Nos aventures recommandées",
-    "headline": "Des moments de voyage exceptionnels pensés pour vous",
+    "title": "Nos aventures recommandées",
     "empty": "Les excursions en vedette s'afficheront ici lorsqu'elles seront marquées dans le CMS."
   },
   "Contact": {

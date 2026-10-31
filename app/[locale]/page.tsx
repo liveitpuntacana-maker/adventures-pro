@@ -176,17 +176,20 @@ export default async function Home({ params }: HomePageProps) {
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <JsonLd data={featuredItemList} />
       <main>
-        <section className="relative w-full">
-          <div className="relative min-h-[600px] w-full md:min-h-[70vh]">
+        <section className="w-full">
+          {/* The photo keeps its own band with the title and the three promises on it; the search box sits below, on a blue band so the white card stands out, and never hides the picture. */}
+          <div className="relative h-[300px] w-full sm:h-[360px] lg:h-[440px]">
             <HomeHeroSlider slides={heroSlides} />
-            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-8 px-4 text-white md:gap-10 md:px-10 lg:px-12">
+            <div className="absolute inset-0 z-10 flex items-center justify-center px-4 text-white md:px-10 lg:px-12">
               <div className="w-full max-w-4xl text-center">
                 <HomeHeroText />
-                <div className="mx-auto mt-8 w-full max-w-4xl md:mt-10">
-                  <HeroSearch />
-                  <HeroTrustLine rating={reviewAverage} reviewCount={reviewCount} />
-                </div>
+                <HeroTrustLine rating={reviewAverage} reviewCount={reviewCount} />
               </div>
+            </div>
+          </div>
+          <div className="w-full bg-blue-950 px-4 py-6 md:px-10 md:py-8 lg:px-12">
+            <div className="mx-auto w-full max-w-4xl">
+              <HeroSearch />
             </div>
           </div>
         </section>

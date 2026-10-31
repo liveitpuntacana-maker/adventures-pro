@@ -87,7 +87,7 @@ export default function HomeHeroSlider({ slides }: HomeHeroSliderProps) {
           />
         </div>
       ))}
-      <div className="absolute inset-0 z-[2] bg-black/50" aria-hidden />
+      <div className="absolute inset-0 z-[2] bg-black/40" aria-hidden />
     </div>
   );
 }

@@ -385,7 +385,7 @@ export default function HeroSearch({ transfersOnly = false }: HeroSearchProps) {
 
       <div className="p-4 md:p-6">
         {tab === "activities" ? (
-          <div ref={activityWrapRef} className="relative pb-6 md:pb-8">
+          <div ref={activityWrapRef} className="relative">
             <form
               onSubmit={handleActivitySubmit}
               className="flex flex-col gap-3 md:flex-row md:items-start"
