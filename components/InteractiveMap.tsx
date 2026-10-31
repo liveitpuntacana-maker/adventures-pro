@@ -93,41 +93,13 @@ export default function InteractiveMap({ destinations = [] }: InteractiveMapProp
           {t("headline")}
         </h2>
       </div>
-      <div className="relative mx-auto aspect-[16/9] h-auto w-full max-w-5xl overflow-hidden rounded-2xl border border-slate-200 bg-blue-950 shadow-lg">
-        <Image
-          src="/images/dr-map.webp"
-          alt={t("mapAlt")}
-          fill
-          className="object-contain object-center"
-          sizes="(max-width: 768px) 100vw, 1024px"
-        />
-        {pinnedDestinations.map((destination) => (
-          // A real link, not a button that navigates: Google does not press
-          // buttons, and the destination pages were getting no internal links.
-          <Link
-            key={destination.slug}
-            href={destinationExcursionPath(destination.slug)}
-            className="group absolute z-10 flex -translate-x-1/2 -translate-y-1/2 cursor-pointer flex-col items-center gap-1.5 transition hover:scale-105"
-            style={{ top: `${destination.top}%`, left: `${destination.left}%` }}
-            aria-label={destination.title}
-          >
-            <span className="relative flex h-5 w-5 items-center justify-center">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-60" />
-              <span className="relative inline-flex h-3.5 w-3.5 rounded-full border-2 border-white bg-orange-500 shadow-md" />
-            </span>
-            <span className={`whitespace-nowrap rounded bg-black/50 px-1.5 py-0.5 text-[10px] font-semibold leading-tight text-white shadow-[0_1px_4px_rgba(0,0,0,0.45)] md:px-2 md:text-sm max-md:text-center ${mobileLabelPlacement[destination.slug] ?? ""}`}>
-              <MapLabel title={destination.title} />
-            </span>
-          </Link>
-        ))}
-      </div>
-
-      {/* Small pins are hard to hit on a phone, so every destination also gets
-          a card under the map, with a photo of the zone. The biggest zone leads
-          and spans the full width on a phone, so the rest pair up evenly. */}
+      {/* Every destination gets a card with a photo of the zone, first thing under
+          the heading, so a visitor can pick a zone before looking at the map. The
+          biggest zone leads and spans the full width on a phone, so the rest pair
+          up evenly. */}
       <nav
         aria-label={t("destinationsNav")}
-        className="mx-auto mt-6 flex max-w-5xl flex-wrap items-stretch justify-center gap-3"
+        className="mx-auto flex max-w-5xl flex-wrap items-stretch justify-center gap-3"
       >
         {available.map((destination, index) => {
           const imageUrl = destinationImageUrl(destination.mainImage);
@@ -165,6 +137,34 @@ export default function InteractiveMap({ destinations = [] }: InteractiveMapProp
           );
         })}
       </nav>
+      <div className="relative mx-auto mt-8 aspect-[16/9] h-auto w-full max-w-5xl overflow-hidden rounded-2xl border border-slate-200 bg-blue-950 shadow-lg">
+        <Image
+          src="/images/dr-map.webp"
+          alt={t("mapAlt")}
+          fill
+          className="object-contain object-center"
+          sizes="(max-width: 768px) 100vw, 1024px"
+        />
+        {pinnedDestinations.map((destination) => (
+          // A real link, not a button that navigates: Google does not press
+          // buttons, and the destination pages were getting no internal links.
+          <Link
+            key={destination.slug}
+            href={destinationExcursionPath(destination.slug)}
+            className="group absolute z-10 flex -translate-x-1/2 -translate-y-1/2 cursor-pointer flex-col items-center gap-1.5 transition hover:scale-105"
+            style={{ top: `${destination.top}%`, left: `${destination.left}%` }}
+            aria-label={destination.title}
+          >
+            <span className="relative flex h-5 w-5 items-center justify-center">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-60" />
+              <span className="relative inline-flex h-3.5 w-3.5 rounded-full border-2 border-white bg-orange-500 shadow-md" />
+            </span>
+            <span className={`whitespace-nowrap rounded bg-black/50 px-1.5 py-0.5 text-[10px] font-semibold leading-tight text-white shadow-[0_1px_4px_rgba(0,0,0,0.45)] md:px-2 md:text-sm max-md:text-center ${mobileLabelPlacement[destination.slug] ?? ""}`}>
+              <MapLabel title={destination.title} />
+            </span>
+          </Link>
+        ))}
+      </div>
     </section>
   );
 }

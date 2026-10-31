@@ -1,7 +1,7 @@
 import HeroSearch from "@/components/HeroSearch";
 import HomeHeroText from "@/components/HomeHeroText";
+import HeroTrustLine from "@/components/HeroTrustLine";
 import HomeHeroSlider from "@/components/HomeHeroSlider";
-import PromoBanner from "@/components/PromoBanner";
 import FeaturedAdventures, { type FeaturedTour } from "@/components/FeaturedAdventures";
 import InteractiveMap from "@/components/InteractiveMap";
 import { mapDestinationsQuery, type MapDestination } from "@/lib/sanityDestinations";
@@ -10,7 +10,6 @@ import OurBrands from "@/components/OurBrands";
 import BoutiqueBanner from "@/components/BoutiqueBanner";
 import AllianceLogos from "@/components/AllianceLogos";
 import LiveItBanner from "@/components/LiveItBanner";
-import LiveItBannerSticky from "@/components/LiveItBannerSticky";
 import BlogSection from "@/components/BlogSection";
 import CategoryBanners, { type CategoryBanner } from "@/components/CategoryBanners";
 import LeadForm from "@/components/LeadForm";
@@ -84,6 +83,10 @@ const featuredToursQuery = groq`*[_type == "tour" && isFeatured == true] {
   ${tourRatingProjection}
 } | order(price asc)`;
 
+// Same query the Google reviews section uses, so the number under the search box
+// always matches the summary lower on the page.
+const allRatingsQuery = groq`*[_type == "review" && defined(rating)].rating`;
+
 const categoriesQuery = groq`*[_type == "category"] {
   "slug": slug.current,
   mainImage,
@@ -110,7 +113,7 @@ export default async function Home({ params }: HomePageProps) {
     )
     .catch(() => null);
 
-  const [featuredTours, categories, mapDestinations] = await Promise.all([
+  const [featuredTours, categories, mapDestinations, reviewRatings] = await Promise.all([
     client
       .fetch<FeaturedTour[]>(
         featuredToursQuery,
@@ -128,7 +131,14 @@ export default async function Home({ params }: HomePageProps) {
         sanityCache([SANITY_TAGS.destination]),
       )
       .catch(() => []),
+    client
+      .fetch<number[]>(allRatingsQuery, {}, sanityCache([SANITY_TAGS.review]))
+      .catch(() => [] as number[]),
   ]);
+
+  const reviewCount = reviewRatings.length;
+  const reviewAverage =
+    reviewCount > 0 ? reviewRatings.reduce((sum, r) => sum + r, 0) / reviewCount : 0;
 
   const featuredItemList = buildItemListJsonLd(
     locale,
@@ -174,13 +184,17 @@ export default async function Home({ params }: HomePageProps) {
                 <HomeHeroText />
                 <div className="mx-auto mt-8 w-full max-w-4xl md:mt-10">
                   <HeroSearch />
+                  <HeroTrustLine rating={reviewAverage} reviewCount={reviewCount} />
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        <PromoBanner />
+        {/* Real tours with photo and price come first, so the page shows what is for sale without scrolling past maps and banners. */}
+        <section className="mx-auto max-w-7xl px-6 pb-14 pt-12 md:px-10 md:pb-20 md:pt-16 lg:px-12">
+          <FeaturedAdventures tours={featuredTours} />
+        </section>
 
         <section className="mx-auto max-w-7xl px-6 pt-14 md:px-10 md:pt-16 lg:px-12">
           <InteractiveMap destinations={mapDestinations} />
@@ -188,10 +202,6 @@ export default async function Home({ params }: HomePageProps) {
 
         <section className="mx-auto max-w-7xl px-6 pb-20 pt-14 md:px-10 md:pb-24 md:pt-16 lg:px-12">
           <CategoryBanners categories={categories} locale={locale} />
-        </section>
-
-        <section className="mx-auto max-w-7xl px-6 pb-24 pt-16 md:px-10 md:pb-32 md:pt-20 lg:px-12">
-          <FeaturedAdventures tours={featuredTours} />
         </section>
 
         <section className="mx-auto w-full max-w-4xl px-6 py-12 md:px-10 lg:px-12">
@@ -203,13 +213,16 @@ export default async function Home({ params }: HomePageProps) {
         <OurBrands locale={locale} />
 
         <LiveItBanner />
-        <LiveItBannerSticky />
 
         <BlogSection locale={locale} />
 
         <BoutiqueBanner />
 
         <AllianceLogos />
+
+        <p className="mx-auto max-w-3xl px-6 pb-12 text-center text-sm leading-relaxed text-slate-500">
+          {tHome("seoIntro")}
+        </p>
       </main>
     </div>
   );

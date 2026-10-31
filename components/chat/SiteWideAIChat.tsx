@@ -13,7 +13,29 @@ import { whatsAppUrl } from "@/lib/tour-chat/systemPrompt";
 import type { TourChatMessage, TourChatResponse } from "@/lib/tour-chat/types";
 
 const CLIENT_TIMEOUT_MS = 10_000;
-const TEASER_DELAY_MS = 6_000;
+const TEASER_DELAY_MS = 20_000;
+const TEASER_VISIBLE_MS = 9_000;
+const TEASER_SEEN_KEY = "af-chat-teaser-seen";
+
+/**
+ * The tip bubble shows once per tab session. It used to come back every time
+ * the chat was closed, and on a phone it sat over the Search button.
+ */
+function teaserAlreadySeen(): boolean {
+  try {
+    return window.sessionStorage.getItem(TEASER_SEEN_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function markTeaserSeen(): void {
+  try {
+    window.sessionStorage.setItem(TEASER_SEEN_KEY, "1");
+  } catch {
+    /* Storage disabled: teaserDismissed in state still stops it for this page view. */
+  }
+}
 
 type SiteWideAIChatProps = {
   locale: AppLocale;
@@ -294,10 +316,22 @@ export default function SiteWideAIChat({ locale }: SiteWideAIChatProps) {
         : copy.placeholder;
 
   useEffect(() => {
-    if (open || teaserDismissed) return;
-    const timer = window.setTimeout(() => setShowTeaser(true), TEASER_DELAY_MS);
+    if (open || teaserDismissed || teaserAlreadySeen()) return;
+    const timer = window.setTimeout(() => {
+      setShowTeaser(true);
+      markTeaserSeen();
+    }, TEASER_DELAY_MS);
     return () => window.clearTimeout(timer);
   }, [open, teaserDismissed]);
+
+  useEffect(() => {
+    if (!showTeaser) return;
+    const timer = window.setTimeout(() => {
+      setShowTeaser(false);
+      setTeaserDismissed(true);
+    }, TEASER_VISIBLE_MS);
+    return () => window.clearTimeout(timer);
+  }, [showTeaser]);
 
   useEffect(() => {
     if (!open) return;
@@ -314,6 +348,8 @@ export default function SiteWideAIChat({ locale }: SiteWideAIChatProps) {
   function openChat() {
     setOpen(true);
     setShowTeaser(false);
+    setTeaserDismissed(true);
+    markTeaserSeen();
     trackGAEvent("open_booking_assistant", {
       locale,
       device: getAnalyticsDevice(),
@@ -439,6 +475,7 @@ export default function SiteWideAIChat({ locale }: SiteWideAIChatProps) {
   function dismissTeaser() {
     setShowTeaser(false);
     setTeaserDismissed(true);
+    markTeaserSeen();
   }
 
   function activateWhatsAppFallback() {
@@ -513,7 +550,12 @@ export default function SiteWideAIChat({ locale }: SiteWideAIChatProps) {
   }
 
   return (
-    <div className="pointer-events-none fixed bottom-24 right-4 z-50 transition-[bottom,right] duration-300 ease-out md:bottom-6 md:right-6">
+    // On a tour page a sticky booking bar owns the bottom of the phone screen, so the launcher rides above it.
+    <div
+      className={`pointer-events-none fixed right-4 z-50 transition-[bottom,right] duration-300 ease-out md:bottom-6 md:right-6 ${
+        pageTourSlug ? "bottom-24" : "bottom-4"
+      }`}
+    >
       {!open ? (
         <div className="pointer-events-auto relative flex flex-col items-end gap-2">
           {showTeaser ? (

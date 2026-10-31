@@ -99,7 +99,7 @@ export default async function ReviewsSection() {
   const orderedReviews = [...reviews].sort(byCommentThenDate);
 
   return (
-    <section className="w-full bg-white py-10 md:py-24">
+    <section id="reviews" className="w-full scroll-mt-20 bg-white py-10 md:py-24">
       <div className="mx-auto grid max-w-7xl gap-6 px-6 md:gap-12 md:px-10 lg:grid-cols-[360px_1fr] lg:items-center lg:gap-16 lg:px-12">
         <div className="border border-slate-200 bg-slate-50 p-4 md:p-10">
           <p className="text-sm font-semibold text-slate-700">{t("summaryTitle")}</p>

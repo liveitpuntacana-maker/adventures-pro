@@ -27,9 +27,11 @@
     "licenseNotice": "Adventures Finder opera con la licencia de turismo {license}, emitida por el MITUR, el Ministerio de Turismo de la República Dominicana."
   },
   "Home": {
-    "brandEyebrow": "Adventures Finder",
     "defaultTitle": "Las Mejores Excursiones y Tours en República Dominicana",
-    "defaultSubtitle": "Reserva directamente con expertos locales. Descubre aventuras únicas, traslados seguros y experiencias sin estrés.",
+    "trustRating": "{count, plural, =1 {1 reseña en Google} other {# reseñas en Google}}",
+    "trustCancellation": "Cancelación gratis hasta 24 horas antes",
+    "trustConfirmation": "Confirmación instantánea",
+    "seoIntro": "Reserva directamente con expertos locales. Descubre aventuras únicas, traslados seguros y experiencias sin estrés.",
     "heroAltBeach": "Playa de arena blanca con palmeras y agua turquesa en Punta Cana",
     "heroAltZipline": "Mujer en una tirolesa sobre la selva dominicana",
     "heroAltMonkeys": "Mujer sonriente haciéndose una selfie con monos ardilla"
